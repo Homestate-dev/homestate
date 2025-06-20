@@ -33,7 +33,7 @@ jobs:
           python-version: '3.11'
 
       - name: Install backend deps (optional)
-        run: pip install -r server/requirements.txt
+        run: pip install -r requirements.txt
 
       # ---------- Heroku CLI ----------
       - name: Install Heroku CLI
@@ -46,4 +46,5 @@ jobs:
           heroku_api_key: ${{ secrets.HEROKU_API_KEY }}
           heroku_app_name: homestate
           heroku_email: homestate.dev@gmail.com
-          usedocker: false         # ya tenemos la CLI; Docker no es necesario
+          usedocker: false
+          appdir: server         # ya tenemos la CLI; Docker no es necesario
