@@ -58,7 +58,7 @@ MIDDLEWARE = [
 ROOT_URLCONF = 'server.backend.urls'
 
 
-WSGI_APPLICATION = 'serverbackend.wsgi.application'
+WSGI_APPLICATION = 'server.backend.wsgi.application'
 
 
 

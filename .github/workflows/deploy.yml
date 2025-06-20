@@ -47,4 +47,4 @@ jobs:
           heroku_app_name: homestate
           heroku_email: homestate.dev@gmail.com
           usedocker: false
-          appdir: server         # ya tenemos la CLI; Docker no es necesario
+      
