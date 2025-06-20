@@ -44,6 +44,6 @@ jobs:
         uses: akhileshns/heroku-deploy@v3.13.15
         with:
           heroku_api_key: ${{ secrets.HEROKU_API_KEY }}
-          heroku_app_name: homestate-ecuador
+          heroku_app_name: homestate
           heroku_email: homestate.dev@gmail.com
           usedocker: false         # ya tenemos la CLI; Docker no es necesario
