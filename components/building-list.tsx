@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Plus, Building2, MapPin, Car, Users, Eye, Edit, QrCode, Trash2, UserCog, Activity } from "lucide-react"
+import { Plus, Building2, MapPin, Car, Users, Eye, Edit, QrCode, Trash2, UserCog, Activity, ExternalLink } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -66,6 +66,14 @@ export function BuildingList({ buildings, onSelectBuilding, onBuildingCreated }:
   const handleDeleteDialogClose = () => {
     setShowDeleteDialog(false)
     setBuildingToDelete(null)
+  }
+
+  const handleVisitMicrosite = (building: Building) => {
+    const micrositeUrl = `https://homestate-17ca5a8016cd.herokuapp.com/${building.permalink}`
+    window.open(micrositeUrl, '_blank')
+    toast.success("Micrositio abierto", {
+      description: `Se abrió el micrositio de ${building.nombre} en una nueva pestaña.`,
+    })
   }
 
   return (
@@ -217,7 +225,13 @@ export function BuildingList({ buildings, onSelectBuilding, onBuildingCreated }:
                     </div>
                   )}
 
-                  <div className="flex gap-2 pt-2">
+                  {/* Mostrar permalink */}
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-gray-600">Micrositio:</span>
+                    <span className="font-mono text-xs text-blue-600">/{building.permalink}</span>
+                  </div>
+
+                  <div className="flex gap-1 pt-2">
                     <Button
                       size="sm"
                       className="flex-1 bg-orange-600 hover:bg-orange-700"
@@ -225,6 +239,15 @@ export function BuildingList({ buildings, onSelectBuilding, onBuildingCreated }:
                     >
                       <Eye className="h-4 w-4 mr-1" />
                       Gestionar
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      variant="outline" 
+                      onClick={() => handleVisitMicrosite(building)}
+                      className="hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200"
+                      title={`Visitar micrositio: /${building.permalink}`}
+                    >
+                      <ExternalLink className="h-4 w-4" />
                     </Button>
                     <Button size="sm" variant="outline" onClick={() => generateQR(building.id)}>
                       <QrCode className="h-4 w-4" />
