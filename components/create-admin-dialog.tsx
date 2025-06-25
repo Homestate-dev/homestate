@@ -29,7 +29,7 @@ export function CreateAdminDialog({ open, onOpenChange, onSubmit, admin }: Creat
     id: 0,
     nombre: "",
     email: "",
-    contrasena: "",
+    password: "",
     activo: true,
   })
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -41,7 +41,7 @@ export function CreateAdminDialog({ open, onOpenChange, onSubmit, admin }: Creat
         id: admin.id,
         nombre: admin.nombre,
         email: admin.email,
-        contrasena: "", // No mostramos la contraseña actual por seguridad
+        password: "", // No mostramos la contraseña actual por seguridad
         activo: admin.activo,
       })
     } else {
@@ -49,7 +49,7 @@ export function CreateAdminDialog({ open, onOpenChange, onSubmit, admin }: Creat
         id: 0,
         nombre: "",
         email: "",
-        contrasena: "",
+        password: "",
         activo: true,
       })
     }
@@ -82,10 +82,10 @@ export function CreateAdminDialog({ open, onOpenChange, onSubmit, admin }: Creat
       newErrors.email = "El email no es válido"
     }
 
-    if (!admin && !formData.contrasena) {
-      newErrors.contrasena = "La contraseña es obligatoria"
-    } else if (!admin && formData.contrasena.length < 6) {
-      newErrors.contrasena = "La contraseña debe tener al menos 6 caracteres"
+    if (!admin && !formData.password) {
+      newErrors.password = "La contraseña es obligatoria"
+    } else if (!admin && formData.password.length < 6) {
+      newErrors.password = "La contraseña debe tener al menos 6 caracteres"
     }
 
     setErrors(newErrors)
@@ -162,16 +162,16 @@ export function CreateAdminDialog({ open, onOpenChange, onSubmit, admin }: Creat
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="contrasena">Contraseña {!admin && <span className="text-red-500">*</span>}</Label>
+              <Label htmlFor="password">Contraseña {!admin && <span className="text-red-500">*</span>}</Label>
               <div className="relative">
                 <Lock className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
                 <Input
-                  id="contrasena"
-                  name="contrasena"
+                  id="password"
+                  name="password"
                   type={showPassword ? "text" : "password"}
                   placeholder={admin ? "Dejar en blanco para mantener la actual" : "Mínimo 6 caracteres"}
                   className="pl-9 pr-10"
-                  value={formData.contrasena}
+                  value={formData.password}
                   onChange={handleChange}
                 />
                 <Button
@@ -184,7 +184,7 @@ export function CreateAdminDialog({ open, onOpenChange, onSubmit, admin }: Creat
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </Button>
               </div>
-              {errors.contrasena && <p className="text-sm text-red-500">{errors.contrasena}</p>}
+              {errors.password && <p className="text-sm text-red-500">{errors.password}</p>}
             </div>
 
             {admin && (
