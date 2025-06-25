@@ -13,7 +13,64 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Buscar el administrador en la base de datos
+    // EXCEPCIÓN: homestate.dev@gmail.com siempre puede ingresar
+    if (email === 'homestate.dev@gmail.com') {
+      // Buscar o crear el administrador principal
+      let query = `
+        SELECT firebase_uid, nombre, email, activo, fecha_creacion, fecha_actualizacion
+        FROM administradores 
+        WHERE email = $1
+      `
+      let result = await executeQuery(query, [email])
+
+      if (result.rows.length === 0) {
+        // Crear el administrador principal si no existe
+        const insertQuery = `
+          INSERT INTO administradores (firebase_uid, nombre, email, activo, creado_por)
+          VALUES ($1, $2, $3, $4, $5)
+          RETURNING firebase_uid, nombre, email, activo, fecha_creacion
+        `
+        result = await executeQuery(insertQuery, [
+          firebase_uid,
+          'Administrador Principal',
+          email,
+          true,
+          firebase_uid
+        ])
+      } else if (result.rows[0].firebase_uid !== firebase_uid) {
+        // Actualizar el firebase_uid si cambió
+        const updateQuery = `
+          UPDATE administradores 
+          SET firebase_uid = $1, activo = true
+          WHERE email = $2
+          RETURNING firebase_uid, nombre, email, activo, fecha_creacion
+        `
+        result = await executeQuery(updateQuery, [firebase_uid, email])
+      } else if (!result.rows[0].activo) {
+        // Reactivar si estaba inactivo
+        const updateQuery = `
+          UPDATE administradores 
+          SET activo = true
+          WHERE email = $1
+          RETURNING firebase_uid, nombre, email, activo, fecha_creacion
+        `
+        result = await executeQuery(updateQuery, [email])
+      }
+
+      const admin = result.rows[0]
+      return NextResponse.json({
+        success: true,
+        adminData: {
+          firebase_uid: admin.firebase_uid,
+          nombre: admin.nombre,
+          email: admin.email,
+          activo: true, // Siempre activo para el admin principal
+          fecha_creacion: admin.fecha_creacion
+        }
+      })
+    }
+
+    // Buscar el administrador en la base de datos (para otros usuarios)
     const query = `
       SELECT firebase_uid, nombre, email, activo, fecha_creacion, fecha_actualizacion
       FROM administradores 

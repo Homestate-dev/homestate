@@ -150,7 +150,7 @@ export function ApartmentManagement({ buildingId, buildingName }: ApartmentManag
         </div>
         <Button 
           onClick={() => setShowCreateForm(true)} 
-          className={`bg-orange-600 hover:bg-orange-700 ${isMobile ? 'w-full' : ''}`}
+          className={`bg-orange-600 hover:bg-orange-700 text-white ${isMobile ? 'w-full' : ''}`}
         >
           <Plus className="h-4 w-4 mr-2" />
           Nuevo Departamento

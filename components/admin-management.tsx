@@ -261,7 +261,7 @@ export function AdminManagement({ buildingId }: AdminManagementProps) {
             </p>
           )}
         </div>
-        <Button onClick={() => setIsCreateDialogOpen(true)} className="bg-orange-600 hover:bg-orange-700">
+        <Button onClick={() => setIsCreateDialogOpen(true)} className="bg-orange-600 hover:bg-orange-700 text-white">
           <UserPlus className="h-4 w-4 mr-2" />
           Nuevo Administrador
         </Button>

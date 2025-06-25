@@ -1,17 +1,22 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Activity, Calendar, User, FileText, Trash2, UserPlus, Edit, Eye } from "lucide-react"
+import { Activity, Calendar, User, FileText, Trash2, UserPlus, Edit, Eye, Download, Search } from "lucide-react"
+import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
+import { Input } from "@/components/ui/input"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { useAuth } from "@/contexts/auth-context"
 import { toast } from "sonner"
 
 interface AdminAction {
   id: number
   admin_firebase_uid: string
+  admin_nombre: string
+  admin_email: string
   accion: string
   tipo: string
   metadata: any
@@ -20,19 +25,34 @@ interface AdminAction {
 
 export function MyActivities() {
   const [activities, setActivities] = useState<AdminAction[]>([])
+  const [filteredActivities, setFilteredActivities] = useState<AdminAction[]>([])
   const [loading, setLoading] = useState(true)
+  const [searchTerm, setSearchTerm] = useState("")
   const { user, adminData } = useAuth()
+
+  const isMainAdmin = user?.email === 'homestate.dev@gmail.com'
 
   useEffect(() => {
     if (user && adminData) {
-      fetchMyActivities()
+      fetchActivities()
     }
   }, [user, adminData])
 
-  const fetchMyActivities = async () => {
+  useEffect(() => {
+    // Filtrar actividades por término de búsqueda
+    const filtered = activities.filter(activity =>
+      activity.admin_nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      activity.admin_email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      activity.accion.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      activity.tipo.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+    setFilteredActivities(filtered)
+  }, [activities, searchTerm])
+
+  const fetchActivities = async () => {
     try {
       setLoading(true)
-      const response = await fetch(`/api/admins/${user?.uid}/actions`)
+      const response = await fetch('/api/admins/activities')
       const data = await response.json()
       
       if (data.success) {
@@ -45,6 +65,58 @@ export function MyActivities() {
       toast.error('Error al cargar actividades')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const downloadCSV = () => {
+    if (filteredActivities.length === 0) {
+      toast.error('No hay datos para descargar')
+      return
+    }
+
+    // Crear headers del CSV
+    const headers = [
+      'ID',
+      'Administrador',
+      'Email',
+      'Acción',
+      'Tipo',
+      'Fecha',
+      'Metadata'
+    ]
+
+    // Crear filas del CSV
+    const rows = filteredActivities.map(activity => [
+      activity.id,
+      activity.admin_nombre,
+      activity.admin_email,
+      `"${activity.accion.replace(/"/g, '""')}"`, // Escapar comillas
+      activity.tipo,
+      new Date(activity.fecha).toLocaleString('es-ES'),
+      `"${JSON.stringify(activity.metadata || {}).replace(/"/g, '""')}"`
+    ])
+
+    // Combinar headers y rows
+    const csvContent = [headers, ...rows]
+      .map(row => row.join(','))
+      .join('\n')
+
+    // Crear y descargar archivo
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+    const link = document.createElement('a')
+    
+    if (link.download !== undefined) {
+      const url = URL.createObjectURL(blob)
+      link.setAttribute('href', url)
+      link.setAttribute('download', `actividades_administradores_${new Date().toISOString().split('T')[0]}.csv`)
+      link.style.visibility = 'hidden'
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      
+      toast.success('CSV descargado exitosamente')
+    } else {
+      toast.error('Su navegador no soporta descargas automáticas')
     }
   }
 
@@ -113,17 +185,11 @@ export function MyActivities() {
     return { total, byType }
   }
 
-  if (loading) {
+  if (!isMainAdmin) {
     return (
-      <div className="space-y-6">
-        <div className="flex items-center gap-2">
-          <Activity className="h-6 w-6 text-orange-600" />
-          <h3 className="text-2xl font-bold text-gray-900">Mis Actividades</h3>
-        </div>
-        <div className="text-center py-8">
-          <Activity className="h-8 w-8 text-gray-400 mx-auto mb-2 animate-spin" />
-          <p className="text-gray-600">Cargando actividades...</p>
-        </div>
+      <div className="text-center py-8">
+        <Activity className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+        <p className="text-gray-600">Solo el administrador principal puede ver todas las actividades</p>
       </div>
     )
   }
@@ -134,122 +200,168 @@ export function MyActivities() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <div className="flex items-center gap-2">
+          <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
             <Activity className="h-6 w-6 text-orange-600" />
-            <h3 className="text-2xl font-bold text-gray-900">Mis Actividades</h3>
-          </div>
-          <p className="text-gray-600 mt-1">Historial completo de todas tus acciones en el sistema</p>
+            Actividades de Administradores
+          </h2>
+          <p className="text-gray-600">Historial completo de acciones realizadas por todos los administradores</p>
         </div>
-        <div className="flex items-center gap-2 text-sm text-gray-600">
-          <User className="h-4 w-4" />
-          <span>{adminData?.nombre}</span>
-        </div>
+        <Button 
+          onClick={downloadCSV}
+          className="bg-green-600 hover:bg-green-700 text-white"
+          disabled={filteredActivities.length === 0}
+        >
+          <Download className="h-4 w-4 mr-2" />
+          Descargar CSV
+        </Button>
       </div>
 
-      {/* Estadísticas */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2">
-              <FileText className="h-5 w-5 text-orange-600" />
-              <div>
-                <p className="text-sm text-gray-600">Total Actividades</p>
-                <p className="text-2xl font-bold">{stats.total}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2">
-              <UserPlus className="h-5 w-5 text-green-600" />
-              <div>
-                <p className="text-sm text-gray-600">Creaciones</p>
-                <p className="text-2xl font-bold">{stats.byType.creación || 0}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2">
-              <Edit className="h-5 w-5 text-blue-600" />
-              <div>
-                <p className="text-sm text-gray-600">Actualizaciones</p>
-                <p className="text-2xl font-bold">{(stats.byType.actualización || 0) + (stats.byType.edición || 0)}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2">
-              <Trash2 className="h-5 w-5 text-red-600" />
-              <div>
-                <p className="text-sm text-gray-600">Eliminaciones</p>
-                <p className="text-2xl font-bold">{stats.byType.eliminación || 0}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Lista de actividades */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Calendar className="h-5 w-5" />
-            Historial Detallado
-          </CardTitle>
+          <CardTitle>Historial de Actividades</CardTitle>
           <CardDescription>
-            Todas tus actividades ordenadas por fecha más reciente
+            Registro de todas las acciones realizadas en el sistema
           </CardDescription>
+          
+          {/* Buscador */}
+          <div className="mt-4 relative">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
+            <Input
+              placeholder="Buscar por administrador, email, acción o tipo..."
+              className="pl-8"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
         </CardHeader>
+        
         <CardContent>
-          {activities.length === 0 ? (
+          {loading ? (
             <div className="text-center py-8">
-              <Activity className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-              <p className="text-gray-500">No hay actividades registradas</p>
+              <Activity className="h-12 w-12 text-orange-600 mx-auto mb-4 animate-spin" />
+              <p className="text-gray-600">Cargando actividades...</p>
+            </div>
+          ) : filteredActivities.length === 0 ? (
+            <div className="text-center py-8">
+              <Activity className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <p className="text-gray-600">
+                {searchTerm ? 'No se encontraron actividades' : 'No hay actividades registradas'}
+              </p>
+              {searchTerm && (
+                <p className="text-sm text-gray-500 mt-2">
+                  Intenta con otro término de búsqueda
+                </p>
+              )}
             </div>
           ) : (
-            <ScrollArea className="h-[600px] pr-4">
-              <div className="space-y-4">
-                {activities.map((activity, index) => (
-                  <div key={activity.id}>
-                    <div className="flex items-start gap-4 p-4 rounded-lg hover:bg-gray-50 transition-colors">
-                      <div className="flex-shrink-0 mt-1">
-                        {getActionIcon(activity.tipo)}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-start justify-between gap-4">
-                          <div className="flex-1">
-                            <p className="text-sm font-medium text-gray-900 mb-1">
-                              {activity.accion}
-                            </p>
-                            <div className="flex items-center gap-2 mb-2">
-                              <Badge className={`text-xs ${getActionColor(activity.tipo)}`}>
-                                {activity.tipo}
-                              </Badge>
-                              <span className="text-xs text-gray-500">
-                                {formatDate(activity.fecha)}
-                              </span>
-                            </div>
-                            {activity.metadata && (
-                              <div className="text-xs text-gray-600 bg-gray-100 rounded p-2 mt-2">
-                                <pre className="whitespace-pre-wrap font-mono">
-                                  {JSON.stringify(activity.metadata, null, 2)}
-                                </pre>
-                              </div>
-                            )}
-                          </div>
-                        </div>
+            <div className="space-y-4">
+              {/* Resumen */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                <Card>
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-2">
+                      <Activity className="h-5 w-5 text-blue-600" />
+                      <div>
+                        <p className="text-sm text-gray-600">Total Actividades</p>
+                        <p className="text-2xl font-bold">{filteredActivities.length}</p>
                       </div>
                     </div>
-                    {index < activities.length - 1 && <Separator className="my-2" />}
-                  </div>
-                ))}
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-2">
+                      <Activity className="h-5 w-5 text-green-600" />
+                      <div>
+                        <p className="text-sm text-gray-600">Creaciones</p>
+                        <p className="text-2xl font-bold">
+                          {filteredActivities.filter(a => a.tipo === 'creación').length}
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-2">
+                      <Activity className="h-5 w-5 text-yellow-600" />
+                      <div>
+                        <p className="text-sm text-gray-600">Ediciones</p>
+                        <p className="text-2xl font-bold">
+                          {filteredActivities.filter(a => a.tipo === 'edición').length}
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-2">
+                      <Activity className="h-5 w-5 text-red-600" />
+                      <div>
+                        <p className="text-sm text-gray-600">Eliminaciones</p>
+                        <p className="text-2xl font-bold">
+                          {filteredActivities.filter(a => a.tipo === 'eliminación').length}
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
-            </ScrollArea>
+
+              {/* Tabla de actividades */}
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Administrador</TableHead>
+                    <TableHead>Acción</TableHead>
+                    <TableHead>Tipo</TableHead>
+                    <TableHead>Fecha</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredActivities.slice(0, 50).map((activity) => (
+                    <TableRow key={activity.id}>
+                      <TableCell>
+                        <div>
+                          <p className="font-medium">{activity.admin_nombre}</p>
+                          <p className="text-sm text-gray-600">{activity.admin_email}</p>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <p className="text-sm">{activity.accion}</p>
+                      </TableCell>
+                      <TableCell>
+                        <Badge 
+                          variant="outline"
+                          className={
+                            activity.tipo === 'creación' ? 'border-green-200 text-green-800' :
+                            activity.tipo === 'edición' ? 'border-yellow-200 text-yellow-800' :
+                            activity.tipo === 'eliminación' ? 'border-red-200 text-red-800' :
+                            'border-gray-200 text-gray-800'
+                          }
+                        >
+                          {activity.tipo}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-1 text-sm text-gray-600">
+                          <Calendar className="h-3.5 w-3.5" />
+                          {formatDate(activity.fecha)}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+
+              {filteredActivities.length > 50 && (
+                <div className="text-center py-4 text-sm text-gray-600">
+                  Mostrando las primeras 50 actividades de {filteredActivities.length} total.
+                  Usa el buscador para filtrar resultados específicos.
+                </div>
+              )}
+            </div>
           )}
         </CardContent>
       </Card>
