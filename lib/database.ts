@@ -186,8 +186,8 @@ export async function getBuildings() {
       imagenes_secundarias,
       fecha_creacion,
       fecha_actualizacion,
-      (SELECT COUNT(*) FROM departamentos WHERE edificio_id = edificios.id) as departamentos_count,
-      (SELECT COUNT(*) FROM departamentos WHERE edificio_id = edificios.id AND disponible = true) as disponibles_count
+      0 as departamentos_count,
+      0 as disponibles_count
     FROM edificios 
     ORDER BY fecha_creacion DESC
   `
@@ -216,8 +216,8 @@ export async function getBuildingById(id: number) {
       imagenes_secundarias,
       fecha_creacion,
       fecha_actualizacion,
-      (SELECT COUNT(*) FROM departamentos WHERE edificio_id = edificios.id) as departamentos_count,
-      (SELECT COUNT(*) FROM departamentos WHERE edificio_id = edificios.id AND disponible = true) as disponibles_count
+      0 as departamentos_count,
+      0 as disponibles_count
     FROM edificios 
     WHERE id = $1
   `
