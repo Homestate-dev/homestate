@@ -4,19 +4,37 @@ import { Building2, ArrowLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { BuildingList } from "@/components/building-list"
 import { BuildingDetail } from "@/components/building-detail"
+import type { Building } from "@/types/building"
 
 // Datos de ejemplo de edificios
-const edificiosEjemplo = [
+const edificiosEjemplo: Building[] = [
   {
     id: 1,
     nombre: "Edificio Mirador",
     direccion: "Av. Principal 123",
+    ciudad: "Santiago",
+    pais: "Chile",
+    codigo_postal: "8320000",
+    telefono: "+56 2 2345 6789",
+    email: "info@edificiomirador.cl",
+    sitio_web: "https://edificiomirador.cl",
+    descripcion: "Edificio residencial con vista panorámica",
+    fecha_construccion: "2020",
+    pisos: 15,
+    departamentos_totales: 12,
+    departamentos_disponibles: 8,
+    departamentos_ocupados: 3,
+    departamentos_reservados: 1,
+    departamentos_mantenimiento: 0,
+    amenidades: ["Piscina", "Gimnasio", "Sala de eventos"],
+    imagenes: ["https://ik.imagekit.io/dnots37tx/ChatGPT%20Image%202%20jun%202025,%2008_31_32.png?updatedAt=1748864528746"],
+    estado: "activo",
+    fecha_creacion: "2024-01-15",
+    fecha_actualizacion: "2024-01-15",
     permalink: "edificio-mirador",
     politica_mascotas: "Se permiten mascotas pequeñas",
     tipo_estacionamiento: "Cochera cubierta",
-    url_imagen_principal:
-      "https://ik.imagekit.io/dnots37tx/ChatGPT%20Image%202%20jun%202025,%2008_31_32.png?updatedAt=1748864528746",
-    fecha_creacion: "2024-01-15",
+    url_imagen_principal: "https://ik.imagekit.io/dnots37tx/ChatGPT%20Image%202%20jun%202025,%2008_31_32.png?updatedAt=1748864528746",
     departamentos_count: 12,
     disponibles_count: 8,
   },
@@ -24,12 +42,29 @@ const edificiosEjemplo = [
     id: 2,
     nombre: "Torre del Sol",
     direccion: "Calle Secundaria 456",
+    ciudad: "Santiago",
+    pais: "Chile",
+    codigo_postal: "8320001",
+    telefono: "+56 2 2345 6790",
+    email: "info@torredelsol.cl",
+    sitio_web: "https://torredelsol.cl",
+    descripcion: "Torre residencial moderna",
+    fecha_construccion: "2021",
+    pisos: 12,
+    departamentos_totales: 8,
+    departamentos_disponibles: 3,
+    departamentos_ocupados: 4,
+    departamentos_reservados: 1,
+    departamentos_mantenimiento: 0,
+    amenidades: ["Terraza", "Sala de estudio", "Bicicletero"],
+    imagenes: ["https://ik.imagekit.io/dnots37tx/ChatGPT%20Image%202%20jun%202025,%2008_34_51.png?updatedAt=1748864665156"],
+    estado: "activo",
+    fecha_creacion: "2024-02-20",
+    fecha_actualizacion: "2024-02-20",
     permalink: "torre-del-sol",
     politica_mascotas: "No se permiten mascotas",
     tipo_estacionamiento: "Garage",
-    url_imagen_principal:
-      "https://ik.imagekit.io/dnots37tx/ChatGPT%20Image%202%20jun%202025,%2008_34_51.png?updatedAt=1748864665156",
-    fecha_creacion: "2024-02-20",
+    url_imagen_principal: "https://ik.imagekit.io/dnots37tx/ChatGPT%20Image%202%20jun%202025,%2008_34_51.png?updatedAt=1748864665156",
     departamentos_count: 8,
     disponibles_count: 3,
   },
@@ -72,7 +107,7 @@ export default function BackOfficePage() {
       {/* Contenido principal */}
       <div className="max-w-7xl mx-auto p-6">
         {selectedBuilding ? (
-          <BuildingDetail building={selectedBuildingData!} onBack={handleBackToList} />
+          <BuildingDetail building={selectedBuildingData!} />
         ) : (
           <BuildingList buildings={edificiosEjemplo} onSelectBuilding={handleBuildingSelect} />
         )}

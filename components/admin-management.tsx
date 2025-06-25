@@ -168,7 +168,10 @@ export function AdminManagement({ buildingId }: AdminManagementProps) {
                     <TableCell className="font-medium">{admin.nombre}</TableCell>
                     <TableCell>{admin.email}</TableCell>
                     <TableCell>
-                      <Badge variant={admin.activo ? "success" : "destructive"}>
+                      <Badge 
+                        variant={admin.activo ? "default" : "destructive"}
+                        className={admin.activo ? "bg-green-100 text-green-800 border-green-200" : ""}
+                      >
                         {admin.activo ? "Activo" : "Inactivo"}
                       </Badge>
                     </TableCell>
