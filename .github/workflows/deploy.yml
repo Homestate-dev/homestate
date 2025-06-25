@@ -14,6 +14,8 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
 
     - name: Setup Node.js
       uses: actions/setup-node@v4
@@ -42,6 +44,11 @@ jobs:
         echo "  login ${{ secrets.HEROKU_EMAIL }}" >> ~/.netrc
         echo "  password ${{ secrets.HEROKU_API_KEY }}" >> ~/.netrc
         chmod 600 ~/.netrc
+
+    - name: Configure Git
+      run: |
+        git config --global user.email "deploy@homestate.com"
+        git config --global user.name "HomEstate Deploy"
 
     - name: Deploy to Heroku
       run: |
