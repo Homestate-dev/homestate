@@ -118,11 +118,11 @@ export function BuildingList({ buildings, onSelectBuilding, onBuildingCreated }:
               <div>
                 <p className="text-sm text-gray-600">Tasa Ocupación</p>
                 <p className="text-2xl font-bold">
-                  {Math.round(
-                    (buildings.reduce((acc, b) => acc + (b.departamentos_count - b.disponibles_count), 0) /
-                      buildings.reduce((acc, b) => acc + b.departamentos_count, 0)) *
-                      100,
-                  )}
+                  {(() => {
+                    const totalDepartamentos = buildings.reduce((acc, b) => acc + b.departamentos_count, 0)
+                    const ocupados = buildings.reduce((acc, b) => acc + (b.departamentos_count - b.disponibles_count), 0)
+                    return totalDepartamentos > 0 ? Math.round((ocupados / totalDepartamentos) * 100) : 0
+                  })()}
                   %
                 </p>
               </div>
