@@ -170,16 +170,30 @@ export function CreateBuildingDialog({ open, onOpenChange, onBuildingCreated }: 
       return
     }
 
-    if (!mainImage) {
-      toast.error('La imagen principal es obligatoria')
-      return
-    }
+    // Temporalmente hacer la imagen opcional hasta que Firebase esté configurado
+    // if (!mainImage) {
+    //   toast.error('La imagen principal es obligatoria')
+    //   return
+    // }
 
     setLoading(true)
     
     try {
-      // Subir imágenes
-      const images = await uploadImages(buildingData.permalink)
+      // Temporalmente usar URL placeholder hasta que Firebase esté configurado
+      let images = {
+        main: mainImage ? '/placeholder.svg' : '/placeholder.svg',
+        secondary: []
+      }
+
+      // Si hay imágenes, intentar subirlas (pero no fallar si no funciona)
+      if (mainImage) {
+        try {
+          images = await uploadImages(buildingData.permalink)
+        } catch (uploadError) {
+          console.warn('Error uploading images, using placeholder:', uploadError)
+          // Continuar con placeholder
+        }
+      }
       
       // Crear edificio en la base de datos
       const response = await fetch('/api/buildings', {

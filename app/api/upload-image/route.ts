@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { bucket } from '@/lib/firebase-admin'
+import { getFirebaseBucket } from '@/lib/firebase-admin'
 
 export async function POST(request: NextRequest) {
   try {
@@ -17,7 +17,8 @@ export async function POST(request: NextRequest) {
     // Convertir File a Buffer
     const buffer = Buffer.from(await image.arrayBuffer())
     
-    // Crear el archivo en Firebase Storage
+    // Obtener bucket de Firebase Storage
+    const bucket = getFirebaseBucket()
     const file = bucket.file(path)
     
     await file.save(buffer, {
