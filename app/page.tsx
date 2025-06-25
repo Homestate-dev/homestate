@@ -1,9 +1,11 @@
 "use client"
 import { useState } from "react"
-import { Building2, ArrowLeft } from "lucide-react"
+import { Building2, ArrowLeft, LogOut } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { BuildingList } from "@/components/building-list"
 import { BuildingDetail } from "@/components/building-detail"
+import { LoginForm } from "@/components/login-form"
+import { useAuth } from "@/contexts/auth-context"
 import type { Building } from "@/types/building"
 
 // Datos de ejemplo de edificios
@@ -72,6 +74,7 @@ const edificiosEjemplo: Building[] = [
 
 export default function BackOfficePage() {
   const [selectedBuilding, setSelectedBuilding] = useState<number | null>(null)
+  const { isAuthenticated, login, logout } = useAuth()
 
   const handleBuildingSelect = (buildingId: number) => {
     setSelectedBuilding(buildingId)
@@ -82,6 +85,11 @@ export default function BackOfficePage() {
   }
 
   const selectedBuildingData = edificiosEjemplo.find((b) => b.id === selectedBuilding)
+
+  // Si no está autenticado, mostrar el formulario de login
+  if (!isAuthenticated) {
+    return <LoginForm onLoginSuccess={login} />
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -95,12 +103,18 @@ export default function BackOfficePage() {
               <p className="text-sm text-gray-600">Panel de Administración</p>
             </div>
           </div>
-          {selectedBuilding && (
-            <Button variant="outline" onClick={handleBackToList}>
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Volver a Edificios
+          <div className="flex items-center gap-3">
+            {selectedBuilding && (
+              <Button variant="outline" onClick={handleBackToList}>
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Volver a Edificios
+              </Button>
+            )}
+            <Button variant="outline" onClick={logout} className="text-red-600 hover:text-red-700">
+              <LogOut className="h-4 w-4 mr-2" />
+              Cerrar sesión
             </Button>
-          )}
+          </div>
         </div>
       </div>
 
