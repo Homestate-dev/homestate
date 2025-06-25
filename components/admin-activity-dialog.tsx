@@ -1,64 +1,20 @@
 "use client"
 
-import { Clock, Search, Download, Filter } from "lucide-react"
+import { Clock, Search, Download, Filter, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 
-// Datos de ejemplo para el historial de actividades
-const actividadesMock = [
-  {
-    id: 1,
-    accion: "Creó un nuevo edificio: Torre del Sol",
-    fecha: "2025-06-02T09:15:00",
-    tipo: "creación",
-  },
-  {
-    id: 2,
-    accion: "Editó información del edificio: Edificio Mirador",
-    fecha: "2025-06-01T16:30:00",
-    tipo: "edición",
-  },
-  {
-    id: 3,
-    accion: "Agregó un nuevo departamento: 301 en Edificio Mirador",
-    fecha: "2025-06-01T14:45:00",
-    tipo: "creación",
-  },
-  {
-    id: 4,
-    accion: "Generó código QR para: Torre del Sol",
-    fecha: "2025-06-01T11:20:00",
-    tipo: "generación",
-  },
-  {
-    id: 5,
-    accion: "Cambió estado de departamento 102 a: No disponible",
-    fecha: "2025-05-31T10:05:00",
-    tipo: "edición",
-  },
-  {
-    id: 6,
-    accion: "Eliminó departamento: 203 de Torre del Sol",
-    fecha: "2025-05-30T15:40:00",
-    tipo: "eliminación",
-  },
-  {
-    id: 7,
-    accion: "Generó reporte de ocupación para: Edificio Mirador",
-    fecha: "2025-05-30T09:25:00",
-    tipo: "reporte",
-  },
-  {
-    id: 8,
-    accion: "Inició sesión en el sistema",
-    fecha: "2025-05-30T08:50:00",
-    tipo: "sesión",
-  },
-]
+interface AdminAction {
+  id: number
+  accion: string
+  fecha: string
+  tipo: string
+  metadata?: any
+}
 
 type AdminActivityDialogProps = {
   open: boolean
@@ -69,6 +25,34 @@ type AdminActivityDialogProps = {
 export function AdminActivityDialog({ open, onOpenChange, admin }: AdminActivityDialogProps) {
   const [searchTerm, setSearchTerm] = useState("")
   const [filterType, setFilterType] = useState("todos")
+  const [activities, setActivities] = useState<AdminAction[]>([])
+  const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    if (open && admin?.firebase_uid) {
+      fetchAdminActions()
+    }
+  }, [open, admin?.firebase_uid])
+
+  const fetchAdminActions = async () => {
+    if (!admin?.firebase_uid) return
+
+    try {
+      setLoading(true)
+      const response = await fetch(`/api/admins/${admin.firebase_uid}/actions`)
+      const data = await response.json()
+      
+      if (data.success) {
+        setActivities(data.data)
+      } else {
+        console.error('Error al cargar acciones:', data.error)
+      }
+    } catch (error) {
+      console.error('Error al obtener acciones:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   if (!admin) return null
 
@@ -83,7 +67,7 @@ export function AdminActivityDialog({ open, onOpenChange, admin }: AdminActivity
     }).format(date)
   }
 
-  const filteredActivities = actividadesMock.filter(
+  const filteredActivities = activities.filter(
     (actividad) =>
       actividad.accion.toLowerCase().includes(searchTerm.toLowerCase()) &&
       (filterType === "todos" || actividad.tipo === filterType),
@@ -149,7 +133,16 @@ export function AdminActivityDialog({ open, onOpenChange, admin }: AdminActivity
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredActivities.length === 0 ? (
+                {loading ? (
+                  <TableRow>
+                    <TableCell colSpan={2} className="text-center py-8">
+                      <div className="flex items-center justify-center gap-2 text-gray-500">
+                        <Loader2 className="h-5 w-5 animate-spin" />
+                        Cargando actividades...
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ) : filteredActivities.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={2} className="text-center py-8 text-gray-500">
                       No se encontraron actividades

@@ -2,6 +2,7 @@ import type React from "react"
 import type { Metadata } from "next"
 import "./globals.css"
 import { AuthProvider } from "@/contexts/auth-context"
+import { Toaster } from "sonner"
 
 export const metadata: Metadata = {
   title: "HomEstate Back Office",
@@ -19,6 +20,7 @@ export default function RootLayout({
       <body>
         <AuthProvider>
           {children}
+          <Toaster position="top-right" />
         </AuthProvider>
       </body>
     </html>
