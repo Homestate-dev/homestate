@@ -10,6 +10,14 @@ export async function PUT(
     const { nombre, email, activo, currentUserEmail, currentUserUid } = body
     const targetUid = params.uid
 
+    // No permitir que el administrador se modifique a sí mismo
+    if (currentUserUid === targetUid) {
+      return NextResponse.json(
+        { success: false, error: 'No puedes modificar tu propio estado' },
+        { status: 403 }
+      )
+    }
+
     // Solo homestate.dev@gmail.com puede activar/desactivar administradores
     if (activo !== undefined && currentUserEmail !== 'homestate.dev@gmail.com') {
       return NextResponse.json(

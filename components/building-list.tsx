@@ -15,9 +15,12 @@ interface Building {
   nombre: string
   direccion: string
   permalink: string
-  politica_mascotas: string
-  tipo_estacionamiento: string
+  costo_expensas: number
+  areas_comunales: string[]
+  seguridad: string[]
+  aparcamiento: string[]
   url_imagen_principal: string
+  imagenes_secundarias: string[]
   fecha_creacion: string
   departamentos_count: number
   disponibles_count: number
@@ -26,9 +29,10 @@ interface Building {
 interface BuildingListProps {
   buildings: Building[]
   onSelectBuilding: (buildingId: number) => void
+  onBuildingCreated?: () => void
 }
 
-export function BuildingList({ buildings, onSelectBuilding }: BuildingListProps) {
+export function BuildingList({ buildings, onSelectBuilding, onBuildingCreated }: BuildingListProps) {
   const [showCreateDialog, setShowCreateDialog] = useState(false)
 
   const generateQR = (buildingId: number) => {
@@ -45,8 +49,6 @@ export function BuildingList({ buildings, onSelectBuilding }: BuildingListProps)
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-bold text-gray-900">Panel de Administración</h2>
-          <p className="text-gray-600 mt-1">Gestiona edificios, propiedades y administradores</p>
         </div>
         <Button onClick={() => setShowCreateDialog(true)} className="bg-orange-600 hover:bg-orange-700">
           <Plus className="h-4 w-4 mr-2" />
@@ -159,19 +161,32 @@ export function BuildingList({ buildings, onSelectBuilding }: BuildingListProps)
                     <Badge variant="outline">{building.departamentos_count}</Badge>
                   </div>
 
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-600">Estacionamiento:</span>
-                    <span className="font-medium">{building.tipo_estacionamiento}</span>
-                  </div>
+                  {building.costo_expensas > 0 && (
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-gray-600">Expensas:</span>
+                      <span className="font-medium">${building.costo_expensas}</span>
+                    </div>
+                  )}
 
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-600">Mascotas:</span>
-                    <span className="font-medium text-xs">
-                      {building.politica_mascotas.length > 20
-                        ? `${building.politica_mascotas.substring(0, 20)}...`
-                        : building.politica_mascotas}
-                    </span>
-                  </div>
+                  {building.areas_comunales.length > 0 && (
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-gray-600">Amenidades:</span>
+                      <span className="font-medium text-xs">
+                        {building.areas_comunales.slice(0, 2).join(', ')}
+                        {building.areas_comunales.length > 2 && ` +${building.areas_comunales.length - 2}`}
+                      </span>
+                    </div>
+                  )}
+
+                  {building.seguridad.length > 0 && (
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-gray-600">Seguridad:</span>
+                      <span className="font-medium text-xs">
+                        {building.seguridad.slice(0, 2).join(', ')}
+                        {building.seguridad.length > 2 && ` +${building.seguridad.length - 2}`}
+                      </span>
+                    </div>
+                  )}
 
                   <div className="flex gap-2 pt-2">
                     <Button
@@ -203,7 +218,11 @@ export function BuildingList({ buildings, onSelectBuilding }: BuildingListProps)
         </TabsContent>
       </Tabs>
 
-      <CreateBuildingDialog open={showCreateDialog} onOpenChange={setShowCreateDialog} />
+      <CreateBuildingDialog 
+        open={showCreateDialog} 
+        onOpenChange={setShowCreateDialog}
+        onBuildingCreated={onBuildingCreated}
+      />
     </div>
   )
 }

@@ -3,109 +3,77 @@
 import type React from "react"
 
 import { useState } from "react"
-import { Upload, Building2 } from "lucide-react"
+import { Upload, Building2, X, Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Separator } from "@/components/ui/separator"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { useAuth } from "@/contexts/auth-context"
+import { toast } from "sonner"
 
 interface CreateBuildingDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
+  onBuildingCreated?: () => void
 }
 
-export function CreateBuildingDialog({ open, onOpenChange }: CreateBuildingDialogProps) {
+export function CreateBuildingDialog({ open, onOpenChange, onBuildingCreated }: CreateBuildingDialogProps) {
+  const { user } = useAuth()
+  const [loading, setLoading] = useState(false)
   const [buildingData, setBuildingData] = useState({
     nombre: "",
     direccion: "",
     permalink: "",
-    politica_mascotas: "",
-    tipo_estacionamiento: "",
-    servicios: [] as string[],
-    tipos_seguridad: [] as string[],
-    expensas: [] as { descripcion: string; valor: number }[],
+    costo_expensas: 0,
+    areas_comunales: [] as string[],
+    seguridad: [] as string[],
+    aparcamiento: [] as string[],
   })
 
-  const [uploadedImage, setUploadedImage] = useState<string | null>(null)
+  const [mainImage, setMainImage] = useState<File | null>(null)
+  const [mainImagePreview, setMainImagePreview] = useState<string | null>(null)
+  const [secondaryImages, setSecondaryImages] = useState<File[]>([])
+  const [secondaryImagePreviews, setSecondaryImagePreviews] = useState<string[]>([])
 
-  const serviciosDisponibles = [
-    "Piscina climatizada",
+  const areasComunalesDisponibles = [
+    "Áreas comunales",
+    "Piscina climatizada", 
     "Gimnasio equipado",
     "Salón de eventos",
-    "Terraza con parrillas",
+    "Terraza con barbacoa",
     "Área de juegos infantiles",
     "Sala de coworking",
-    "Lavandería común",
-    "Jardín",
-    "Roof garden",
-    "Sala de cine",
-    "Spa",
-    "Cancha de tenis",
+    "Lavandería común"
   ]
 
-  const tiposSeguridadDisponibles = [
-    "Portero 24/7",
-    "Cámaras de seguridad",
+  const seguridadDisponible = [
+    "24/7 con guardia de seguridad",
+    "Cámaras de seguridad", 
     "Acceso controlado",
     "Intercomunicador",
-    "Sistema de alarma",
-    "Vigilancia privada",
+    "Sistema de alarma"
   ]
 
-  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (file) {
-      const imageUrl = URL.createObjectURL(file)
-      setUploadedImage(imageUrl)
-    }
-  }
-
-  const handleServicioChange = (servicio: string, checked: boolean) => {
-    setBuildingData((prev) => ({
-      ...prev,
-      servicios: checked ? [...prev.servicios, servicio] : prev.servicios.filter((s) => s !== servicio),
-    }))
-  }
-
-  const handleSeguridadChange = (seguridad: string, checked: boolean) => {
-    setBuildingData((prev) => ({
-      ...prev,
-      tipos_seguridad: checked
-        ? [...prev.tipos_seguridad, seguridad]
-        : prev.tipos_seguridad.filter((s) => s !== seguridad),
-    }))
-  }
-
-  const addExpensa = () => {
-    setBuildingData((prev) => ({
-      ...prev,
-      expensas: [...prev.expensas, { descripcion: "", valor: 0 }],
-    }))
-  }
-
-  const updateExpensa = (index: number, field: string, value: string | number) => {
-    setBuildingData((prev) => ({
-      ...prev,
-      expensas: prev.expensas.map((exp, i) => (i === index ? { ...exp, [field]: value } : exp)),
-    }))
-  }
-
-  const removeExpensa = (index: number) => {
-    setBuildingData((prev) => ({
-      ...prev,
-      expensas: prev.expensas.filter((_, i) => i !== index),
-    }))
-  }
+  const aparcamientoDisponible = [
+    "Subterráneo cubierto",
+    "45 espacios totales",
+    "8 espacios para visitantes", 
+    "Acceso automático",
+    "Vigilancia 24/7"
+  ]
 
   const generatePermalink = (nombre: string) => {
-    return nombre
+    let permalink = nombre
       .toLowerCase()
-      .replace(/[^a-z0-9\s]/g, "")
-      .replace(/\s+/g, "-")
+      .replace(/^edificio\s+/i, '') // Quitar "edificio" del inicio
+      .replace(/[^a-z0-9\s]/g, '') // Solo letras, números y espacios
+      .replace(/\s+/g, '-') // Reemplazar espacios con guiones
       .trim()
+    
+    return `edificio-${permalink}`
   }
 
   const handleNombreChange = (nombre: string) => {
@@ -116,12 +84,146 @@ export function CreateBuildingDialog({ open, onOpenChange }: CreateBuildingDialo
     }))
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleMainImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (file) {
+      setMainImage(file)
+      const imageUrl = URL.createObjectURL(file)
+      setMainImagePreview(imageUrl)
+    }
+  }
+
+  const handleSecondaryImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files || [])
+    setSecondaryImages(prev => [...prev, ...files])
+    
+    files.forEach(file => {
+      const imageUrl = URL.createObjectURL(file)
+      setSecondaryImagePreviews(prev => [...prev, imageUrl])
+    })
+  }
+
+  const removeSecondaryImage = (index: number) => {
+    setSecondaryImages(prev => prev.filter((_, i) => i !== index))
+    setSecondaryImagePreviews(prev => prev.filter((_, i) => i !== index))
+  }
+
+  const handleCheckboxChange = (category: keyof typeof buildingData, value: string, checked: boolean) => {
+    setBuildingData((prev) => ({
+      ...prev,
+      [category]: checked 
+        ? [...(prev[category] as string[]), value]
+        : (prev[category] as string[]).filter((item) => item !== value),
+    }))
+  }
+
+  const uploadImages = async (buildingName: string) => {
+    const images: { main?: string; secondary: string[] } = { secondary: [] }
+    
+    try {
+      // Subir imagen principal
+      if (mainImage) {
+        const mainFormData = new FormData()
+        mainFormData.append('image', mainImage)
+        mainFormData.append('path', `edificios/${buildingName}/principal.jpg`)
+        
+        const mainResponse = await fetch('/api/upload-image', {
+          method: 'POST',
+          body: mainFormData,
+        })
+        
+        if (mainResponse.ok) {
+          const mainData = await mainResponse.json()
+          images.main = mainData.url
+        }
+      }
+
+      // Subir imágenes secundarias
+      for (let i = 0; i < secondaryImages.length; i++) {
+        const formData = new FormData()
+        formData.append('image', secondaryImages[i])
+        formData.append('path', `edificios/${buildingName}/secundaria_${i + 1}.jpg`)
+        
+        const response = await fetch('/api/upload-image', {
+          method: 'POST',
+          body: formData,
+        })
+        
+        if (response.ok) {
+          const data = await response.json()
+          images.secondary.push(data.url)
+        }
+      }
+      
+      return images
+    } catch (error) {
+      console.error('Error uploading images:', error)
+      throw error
+    }
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    console.log("Datos del edificio:", buildingData)
-    console.log("Imagen:", uploadedImage)
-    // Aquí iría la lógica para guardar el edificio
-    onOpenChange(false)
+    
+    if (!buildingData.nombre || !buildingData.direccion) {
+      toast.error('Por favor complete los campos obligatorios')
+      return
+    }
+
+    if (!mainImage) {
+      toast.error('La imagen principal es obligatoria')
+      return
+    }
+
+    setLoading(true)
+    
+    try {
+      // Subir imágenes
+      const images = await uploadImages(buildingData.permalink)
+      
+      // Crear edificio en la base de datos
+      const response = await fetch('/api/buildings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...buildingData,
+          url_imagen_principal: images.main,
+          imagenes_secundarias: images.secondary,
+          currentUserUid: user?.uid
+        }),
+      })
+
+      const data = await response.json()
+      
+      if (data.success) {
+        toast.success('Edificio creado exitosamente')
+        onOpenChange(false)
+        onBuildingCreated?.() // Recargar lista de edificios
+        // Resetear formulario
+        setBuildingData({
+          nombre: "",
+          direccion: "",
+          permalink: "",
+          costo_expensas: 0,
+          areas_comunales: [],
+          seguridad: [],
+          aparcamiento: [],
+        })
+        setMainImage(null)
+        setMainImagePreview(null)
+        setSecondaryImages([])
+        setSecondaryImagePreviews([])
+      } else {
+        toast.error(data.error || 'Error al crear edificio')
+      }
+    } catch (error) {
+      console.error('Error creating building:', error)
+      toast.error('Error al crear edificio')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -139,186 +241,193 @@ export function CreateBuildingDialog({ open, onOpenChange }: CreateBuildingDialo
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Información básica */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold">Información Básica</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="nombre">Nombre del edificio *</Label>
-                <Input
-                  id="nombre"
-                  value={buildingData.nombre}
-                  onChange={(e) => handleNombreChange(e.target.value)}
-                  placeholder="Ej: Edificio Mirador"
-                  required
-                />
-              </div>
-              <div>
-                <Label htmlFor="permalink">Permalink (URL amigable)</Label>
-                <Input
-                  id="permalink"
-                  value={buildingData.permalink}
-                  onChange={(e) => setBuildingData((prev) => ({ ...prev, permalink: e.target.value }))}
-                  placeholder="edificio-mirador"
-                />
-              </div>
-              <div className="md:col-span-2">
-                <Label htmlFor="direccion">Dirección *</Label>
-                <Input
-                  id="direccion"
-                  value={buildingData.direccion}
-                  onChange={(e) => setBuildingData((prev) => ({ ...prev, direccion: e.target.value }))}
-                  placeholder="Ej: Av. Principal 123, Ciudad"
-                  required
-                />
-              </div>
-              <div>
-                <Label htmlFor="tipo_estacionamiento">Tipo de estacionamiento *</Label>
-                <Select
-                  value={buildingData.tipo_estacionamiento}
-                  onValueChange={(value) => setBuildingData((prev) => ({ ...prev, tipo_estacionamiento: value }))}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Seleccionar tipo" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="No tiene">No tiene</SelectItem>
-                    <SelectItem value="Cochera cubierta">Cochera cubierta</SelectItem>
-                    <SelectItem value="Cochera descubierta">Cochera descubierta</SelectItem>
-                    <SelectItem value="Garage">Garage</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label htmlFor="politica_mascotas">Política de mascotas</Label>
-                <Input
-                  id="politica_mascotas"
-                  value={buildingData.politica_mascotas}
-                  onChange={(e) => setBuildingData((prev) => ({ ...prev, politica_mascotas: e.target.value }))}
-                  placeholder="Ej: Se permiten mascotas pequeñas"
-                />
-              </div>
-            </div>
-          </div>
-
-          <Separator />
-
-          {/* Imagen principal */}
-          <div>
-            <h3 className="text-lg font-semibold mb-3">Imagen Principal</h3>
-            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-              {uploadedImage ? (
-                <div className="space-y-2">
-                  <img
-                    src={uploadedImage || "/placeholder.svg"}
-                    alt="Preview"
-                    className="mx-auto h-32 w-auto rounded"
+          <Card>
+            <CardHeader>
+              <CardTitle>Información Básica</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="nombre">Nombre del edificio *</Label>
+                  <Input
+                    id="nombre"
+                    value={buildingData.nombre}
+                    onChange={(e) => handleNombreChange(e.target.value)}
+                    placeholder="Ej: Edificio Mirador"
+                    required
                   />
-                  <p className="text-sm text-green-600">Imagen cargada correctamente</p>
                 </div>
-              ) : (
-                <>
-                  <Upload className="h-8 w-8 mx-auto text-gray-400 mb-2" />
-                  <p className="text-sm text-gray-600 mb-2">Arrastra una imagen aquí o</p>
-                </>
-              )}
-              <Label htmlFor="image-upload" className="cursor-pointer">
-                <Button variant="outline" size="sm" asChild>
-                  <span>Seleccionar imagen</span>
-                </Button>
-              </Label>
-              <Input id="image-upload" type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
-            </div>
-          </div>
-
-          <Separator />
-
-          {/* Servicios */}
-          <div>
-            <h3 className="text-lg font-semibold mb-3">Servicios y Amenidades</h3>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-              {serviciosDisponibles.map((servicio) => (
-                <div key={servicio} className="flex items-center space-x-2">
-                  <Checkbox
-                    id={servicio}
-                    checked={buildingData.servicios.includes(servicio)}
-                    onCheckedChange={(checked) => handleServicioChange(servicio, checked as boolean)}
+                <div>
+                  <Label htmlFor="permalink">Permalink (generado automáticamente)</Label>
+                  <Input
+                    id="permalink"
+                    value={buildingData.permalink}
+                    placeholder="edificio-mirador"
+                    disabled
                   />
-                  <Label htmlFor={servicio} className="text-sm">
-                    {servicio}
-                  </Label>
                 </div>
-              ))}
-            </div>
-          </div>
+                <div className="md:col-span-2">
+                  <Label htmlFor="direccion">Dirección *</Label>
+                  <Input
+                    id="direccion"
+                    value={buildingData.direccion}
+                    onChange={(e) => setBuildingData((prev) => ({ ...prev, direccion: e.target.value }))}
+                    placeholder="Ej: Av. Principal 123, Ciudad"
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="costo_expensas">Costo de expensas (opcional)</Label>
+                  <Input
+                    id="costo_expensas"
+                    type="number"
+                    value={buildingData.costo_expensas}
+                    onChange={(e) => setBuildingData((prev) => ({ ...prev, costo_expensas: Number(e.target.value) }))}
+                    placeholder="0"
+                    min="0"
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
-          <Separator />
+          {/* Áreas Comunales */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Información del edificio</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {areasComunalesDisponibles.map((area) => (
+                  <div key={area} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`area-${area}`}
+                      checked={buildingData.areas_comunales.includes(area)}
+                      onCheckedChange={(checked) => 
+                        handleCheckboxChange('areas_comunales', area, checked as boolean)
+                      }
+                    />
+                    <Label htmlFor={`area-${area}`} className="text-sm">{area}</Label>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
 
           {/* Seguridad */}
-          <div>
-            <h3 className="text-lg font-semibold mb-3">Tipos de Seguridad</h3>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-              {tiposSeguridadDisponibles.map((seguridad) => (
-                <div key={seguridad} className="flex items-center space-x-2">
-                  <Checkbox
-                    id={seguridad}
-                    checked={buildingData.tipos_seguridad.includes(seguridad)}
-                    onCheckedChange={(checked) => handleSeguridadChange(seguridad, checked as boolean)}
-                  />
-                  <Label htmlFor={seguridad} className="text-sm">
-                    {seguridad}
-                  </Label>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <Separator />
-
-          {/* Expensas */}
-          <div>
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-lg font-semibold">Expensas</h3>
-              <Button type="button" variant="outline" size="sm" onClick={addExpensa}>
-                Agregar Expensa
-              </Button>
-            </div>
-            <div className="space-y-3">
-              {buildingData.expensas.map((expensa, index) => (
-                <div key={index} className="flex gap-2 items-end">
-                  <div className="flex-1">
-                    <Label htmlFor={`expensa-desc-${index}`}>Descripción</Label>
-                    <Input
-                      id={`expensa-desc-${index}`}
-                      value={expensa.descripcion}
-                      onChange={(e) => updateExpensa(index, "descripcion", e.target.value)}
-                      placeholder="Ej: Mantenimiento"
+          <Card>
+            <CardHeader>
+              <CardTitle>Seguridad</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                {seguridadDisponible.map((seg) => (
+                  <div key={seg} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`seg-${seg}`}
+                      checked={buildingData.seguridad.includes(seg)}
+                      onCheckedChange={(checked) => 
+                        handleCheckboxChange('seguridad', seg, checked as boolean)
+                      }
                     />
+                    <Label htmlFor={`seg-${seg}`} className="text-sm">{seg}</Label>
                   </div>
-                  <div className="w-32">
-                    <Label htmlFor={`expensa-valor-${index}`}>Valor (USD)</Label>
-                    <Input
-                      id={`expensa-valor-${index}`}
-                      type="number"
-                      step="0.01"
-                      value={expensa.valor}
-                      onChange={(e) => updateExpensa(index, "valor", Number.parseFloat(e.target.value) || 0)}
-                      placeholder="0.00"
-                    />
-                  </div>
-                  <Button type="button" variant="outline" size="sm" onClick={() => removeExpensa(index)}>
-                    Eliminar
-                  </Button>
-                </div>
-              ))}
-            </div>
-          </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
 
-          <div className="flex justify-end gap-2 pt-4">
+          {/* Aparcamiento */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Aparcamiento</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                {aparcamientoDisponible.map((park) => (
+                  <div key={park} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`park-${park}`}
+                      checked={buildingData.aparcamiento.includes(park)}
+                      onCheckedChange={(checked) => 
+                        handleCheckboxChange('aparcamiento', park, checked as boolean)
+                      }
+                    />
+                    <Label htmlFor={`park-${park}`} className="text-sm">{park}</Label>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Imágenes */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Imágenes</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Imagen principal */}
+              <div>
+                <Label htmlFor="main-image">Imagen Principal *</Label>
+                <Input
+                  id="main-image"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleMainImageUpload}
+                  required
+                />
+                {mainImagePreview && (
+                  <div className="mt-2">
+                    <img src={mainImagePreview} alt="Preview" className="w-32 h-32 object-cover rounded" />
+                  </div>
+                )}
+              </div>
+
+              {/* Imágenes secundarias */}
+              <div>
+                <Label htmlFor="secondary-images">Imágenes Secundarias (opcional)</Label>
+                <Input
+                  id="secondary-images"
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={handleSecondaryImageUpload}
+                />
+                {secondaryImagePreviews.length > 0 && (
+                  <div className="mt-2 grid grid-cols-4 gap-2">
+                    {secondaryImagePreviews.map((preview, index) => (
+                      <div key={index} className="relative">
+                        <img src={preview} alt={`Preview ${index + 1}`} className="w-24 h-24 object-cover rounded" />
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          size="sm"
+                          className="absolute -top-2 -right-2 h-6 w-6 rounded-full p-0"
+                          onClick={() => removeSecondaryImage(index)}
+                        >
+                          <X className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          <div className="flex justify-end gap-2">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancelar
             </Button>
-            <Button type="submit" className="bg-orange-600 hover:bg-orange-700">
-              Crear Edificio
+            <Button type="submit" className="bg-orange-600 hover:bg-orange-700" disabled={loading}>
+              {loading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Creando...
+                </>
+              ) : (
+                'Crear Edificio'
+              )}
             </Button>
           </div>
         </form>

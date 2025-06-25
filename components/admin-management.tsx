@@ -137,13 +137,25 @@ export function AdminManagement({ buildingId }: AdminManagementProps) {
   }
 
   const handleToggleStatus = async (adminUid: string) => {
+    const admin = admins.find((a) => a.firebase_uid === adminUid)
+    if (!admin) return
+
+    // No permitir que el administrador se modifique a sí mismo
+    if (user?.uid === adminUid) {
+      toast.error('No puedes modificar tu propio estado')
+      return
+    }
+
+    // homestate.dev@gmail.com siempre debe estar activo
+    if (admin.email === 'homestate.dev@gmail.com') {
+      toast.error('El administrador principal siempre debe estar activo')
+      return
+    }
+
     if (!isMainAdmin) {
       toast.error('Solo el administrador principal puede activar/desactivar usuarios')
       return
     }
-
-    const admin = admins.find((a) => a.firebase_uid === adminUid)
-    if (!admin) return
 
     try {
       const response = await fetch(`/api/admins/${adminUid}`, {
