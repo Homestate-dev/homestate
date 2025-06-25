@@ -108,7 +108,7 @@ export default async function BuildingMicrositePage({
         )}
 
         {/* Imágenes secundarias */}
-        {building.imagenes_secundarias && building.imagenes_secundarias.length > 0 && (
+        {building.imagenes_secundarias.length > 0 && (
           <div className="mb-8">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">
               Imágenes Secundarias ({building.imagenes_secundarias.length})

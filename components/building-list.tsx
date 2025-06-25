@@ -80,7 +80,7 @@ export function BuildingList({ buildings, onSelectBuilding, onBuildingCreated }:
   }
 
   const handleVisitMicrosite = (building: Building) => {
-    const micrositeUrl = `https://homestate-17ca5a8016cd.herokuapp.com/${building.permalink}`
+    const micrositeUrl = `https://homestate-17ca5a8016cd.herokuapp.com/edificio/${building.permalink}`
     window.open(micrositeUrl, '_blank')
     toast.success("Micrositio abierto", {
       description: `Se abrió el micrositio de ${building.nombre} en una nueva pestaña.`,
