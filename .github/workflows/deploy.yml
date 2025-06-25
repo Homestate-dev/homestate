@@ -34,11 +34,18 @@ jobs:
 
     - name: Login to Heroku
       run: |
-        echo ${{ secrets.HEROKU_API_KEY }} | heroku auth:token --stdin
-        heroku git:remote -a ${{ env.HEROKU_APP_NAME }}
+        mkdir -p ~/.netrc
+        echo "machine api.heroku.com" >> ~/.netrc
+        echo "  login ${{ secrets.HEROKU_EMAIL }}" >> ~/.netrc
+        echo "  password ${{ secrets.HEROKU_API_KEY }}" >> ~/.netrc
+        echo "machine git.heroku.com" >> ~/.netrc
+        echo "  login ${{ secrets.HEROKU_EMAIL }}" >> ~/.netrc
+        echo "  password ${{ secrets.HEROKU_API_KEY }}" >> ~/.netrc
+        chmod 600 ~/.netrc
 
     - name: Deploy to Heroku
       run: |
+        heroku git:remote -a ${{ env.HEROKU_APP_NAME }}
         git add .
         git commit -m "Deploy to Heroku" || echo "No changes to commit"
         git push heroku HEAD:main --force 
