@@ -1,37 +1,55 @@
 "use client"
 import { createContext, useContext, useState, useEffect, ReactNode } from "react"
+import { onAuthStateChanged, signOut, User } from "firebase/auth"
+import { auth } from "@/lib/firebase"
 
 interface AuthContextType {
   isAuthenticated: boolean
-  login: () => void
-  logout: () => void
+  user: User | null
+  login: (user: User) => void
+  logout: () => Promise<void>
+  loading: boolean
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [user, setUser] = useState<User | null>(null)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Verificar si hay una sesión guardada en localStorage
-    const savedAuth = localStorage.getItem('homestate-auth')
-    if (savedAuth === 'true') {
-      setIsAuthenticated(true)
-    }
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setUser(user)
+        setIsAuthenticated(true)
+      } else {
+        setUser(null)
+        setIsAuthenticated(false)
+      }
+      setLoading(false)
+    })
+
+    return () => unsubscribe()
   }, [])
 
-  const login = () => {
+  const login = (user: User) => {
+    setUser(user)
     setIsAuthenticated(true)
-    localStorage.setItem('homestate-auth', 'true')
   }
 
-  const logout = () => {
-    setIsAuthenticated(false)
-    localStorage.removeItem('homestate-auth')
+  const logout = async () => {
+    try {
+      await signOut(auth)
+      setUser(null)
+      setIsAuthenticated(false)
+    } catch (error) {
+      console.error('Error al cerrar sesión:', error)
+    }
   }
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, login, logout }}>
+    <AuthContext.Provider value={{ isAuthenticated, user, login, logout, loading }}>
       {children}
     </AuthContext.Provider>
   )

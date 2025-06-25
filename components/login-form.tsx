@@ -5,9 +5,11 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { signInWithEmailAndPassword } from "firebase/auth"
+import { auth } from "@/lib/firebase"
 
 interface LoginFormProps {
-  onLoginSuccess: () => void
+  onLoginSuccess: (user: any) => void
 }
 
 export function LoginForm({ onLoginSuccess }: LoginFormProps) {
@@ -22,17 +24,36 @@ export function LoginForm({ onLoginSuccess }: LoginFormProps) {
     setIsLoading(true)
     setError("")
 
-    // Simular un delay de autenticación
-    await new Promise(resolve => setTimeout(resolve, 1000))
-
-    // Credenciales hardcodeadas
-    if (email === "homestate.dev@gmail.com" && password === "eupbO78sem456PlErA20siblipl") {
-      onLoginSuccess()
-    } else {
-      setError("Credenciales incorrectas. Por favor, verifica tu email y contraseña.")
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, email, password)
+      onLoginSuccess(userCredential.user)
+    } catch (error: any) {
+      console.error('Error al iniciar sesión:', error)
+      
+      // Mapear errores de Firebase a mensajes en español
+      let errorMessage = "Error al iniciar sesión. Por favor, intenta de nuevo."
+      
+      switch (error.code) {
+        case 'auth/user-not-found':
+        case 'auth/wrong-password':
+        case 'auth/invalid-credential':
+          errorMessage = "Credenciales incorrectas. Verifica tu email y contraseña."
+          break
+        case 'auth/invalid-email':
+          errorMessage = "El formato del email no es válido."
+          break
+        case 'auth/too-many-requests':
+          errorMessage = "Demasiados intentos fallidos. Intenta más tarde."
+          break
+        case 'auth/network-request-failed':
+          errorMessage = "Error de conexión. Verifica tu conexión a internet."
+          break
+      }
+      
+      setError(errorMessage)
+    } finally {
+      setIsLoading(false)
     }
-
-    setIsLoading(false)
   }
 
   return (

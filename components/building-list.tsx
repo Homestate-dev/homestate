@@ -7,7 +7,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { CreateBuildingDialog } from "@/components/create-building-dialog"
 import { AdminManagement } from "@/components/admin-management"
-import { DatabaseStatus } from "@/components/database-status"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import Image from "next/image"
 
@@ -48,9 +47,6 @@ export function BuildingList({ buildings, onSelectBuilding }: BuildingListProps)
         <div>
           <h2 className="text-3xl font-bold text-gray-900">Panel de Administración</h2>
           <p className="text-gray-600 mt-1">Gestiona edificios, propiedades y administradores</p>
-          <div className="mt-2">
-            <DatabaseStatus />
-          </div>
         </div>
         <Button onClick={() => setShowCreateDialog(true)} className="bg-orange-600 hover:bg-orange-700">
           <Plus className="h-4 w-4 mr-2" />

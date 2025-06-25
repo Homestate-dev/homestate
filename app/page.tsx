@@ -6,6 +6,7 @@ import { BuildingList } from "@/components/building-list"
 import { BuildingDetail } from "@/components/building-detail"
 import { LoginForm } from "@/components/login-form"
 import { useAuth } from "@/contexts/auth-context"
+import { DatabaseStatus } from "@/components/database-status"
 import type { Building } from "@/types/building"
 
 // Datos de ejemplo de edificios
@@ -74,7 +75,7 @@ const edificiosEjemplo: Building[] = [
 
 export default function BackOfficePage() {
   const [selectedBuilding, setSelectedBuilding] = useState<number | null>(null)
-  const { isAuthenticated, login, logout } = useAuth()
+  const { isAuthenticated, user, login, logout, loading } = useAuth()
 
   const handleBuildingSelect = (buildingId: number) => {
     setSelectedBuilding(buildingId)
@@ -85,6 +86,18 @@ export default function BackOfficePage() {
   }
 
   const selectedBuildingData = edificiosEjemplo.find((b) => b.id === selectedBuilding)
+
+  // Mostrar loading mientras se verifica la autenticación
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <Building2 className="h-12 w-12 text-orange-600 mx-auto mb-4 animate-spin" />
+          <p className="text-gray-600">Verificando autenticación...</p>
+        </div>
+      </div>
+    )
+  }
 
   // Si no está autenticado, mostrar el formulario de login
   if (!isAuthenticated) {
@@ -103,17 +116,34 @@ export default function BackOfficePage() {
               <p className="text-sm text-gray-600">Panel de Administración</p>
             </div>
           </div>
-          <div className="flex items-center gap-3">
-            {selectedBuilding && (
-              <Button variant="outline" onClick={handleBackToList}>
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Volver a Edificios
-              </Button>
+          
+          <div className="flex items-center gap-4">
+            <DatabaseStatus />
+            
+            {user && (
+              <div className="flex items-center gap-2 px-3 py-1 bg-gray-50 rounded-lg">
+                <div className="w-8 h-8 bg-orange-600 rounded-full flex items-center justify-center text-white text-sm font-medium">
+                  {user.email?.charAt(0).toUpperCase()}
+                </div>
+                <div className="text-sm">
+                  <p className="font-medium text-gray-900">{user.email}</p>
+                  <p className="text-gray-600">Administrador</p>
+                </div>
+              </div>
             )}
-            <Button variant="outline" onClick={logout} className="text-red-600 hover:text-red-700">
-              <LogOut className="h-4 w-4 mr-2" />
-              Cerrar sesión
-            </Button>
+            
+            <div className="flex items-center gap-3">
+              {selectedBuilding && (
+                <Button variant="outline" onClick={handleBackToList}>
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  Volver a Edificios
+                </Button>
+              )}
+              <Button variant="outline" onClick={logout} className="text-red-600 hover:text-red-700">
+                <LogOut className="h-4 w-4 mr-2" />
+                Cerrar sesión
+              </Button>
+            </div>
           </div>
         </div>
       </div>
