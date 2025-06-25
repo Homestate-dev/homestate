@@ -39,7 +39,7 @@ const adminsMock = [
 ]
 
 type AdminManagementProps = {
-  buildingId: number
+  buildingId?: number
 }
 
 export function AdminManagement({ buildingId }: AdminManagementProps) {
@@ -121,7 +121,7 @@ export function AdminManagement({ buildingId }: AdminManagementProps) {
             <Users className="h-6 w-6 text-orange-600" />
             Gestión de Administradores
           </h2>
-          <p className="text-gray-600">Administre los usuarios con acceso al sistema</p>
+          <p className="text-gray-600">Administre los usuarios con acceso global al sistema</p>
         </div>
         <Button onClick={() => setIsCreateDialogOpen(true)} className="bg-orange-600 hover:bg-orange-700">
           <UserPlus className="h-4 w-4 mr-2" />

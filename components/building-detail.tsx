@@ -1,12 +1,11 @@
 import type React from "react"
 import type { Building } from "@/types/building"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Home, BarChart3, QrCode, Settings, Users } from "lucide-react"
+import { Home, BarChart3, QrCode, Settings } from "lucide-react"
 import { ApartmentManagement } from "./apartment-management"
 import { BuildingReports } from "./building-reports"
 import { QRGenerator } from "./qr-generator"
 import { BuildingSettings } from "./building-settings"
-import { AdminManagement } from "./admin-management"
 
 interface BuildingDetailProps {
   building: Building
@@ -15,7 +14,7 @@ interface BuildingDetailProps {
 export const BuildingDetail: React.FC<BuildingDetailProps> = ({ building }) => {
   return (
     <Tabs defaultValue="apartments" className="w-full">
-      <TabsList className="grid w-full grid-cols-5 lg:w-[600px]">
+      <TabsList className="grid w-full grid-cols-4 lg:w-[500px]">
         <TabsTrigger value="apartments" className="flex items-center gap-2">
           <Home className="h-4 w-4" />
           Departamentos
@@ -32,10 +31,6 @@ export const BuildingDetail: React.FC<BuildingDetailProps> = ({ building }) => {
           <Settings className="h-4 w-4" />
           Configuración
         </TabsTrigger>
-        <TabsTrigger value="admins" className="flex items-center gap-2">
-          <Users className="h-4 w-4" />
-          Administradores
-        </TabsTrigger>
       </TabsList>
       <TabsContent value="apartments">
         <ApartmentManagement buildingId={building.id} buildingName={building.nombre} />
@@ -48,9 +43,6 @@ export const BuildingDetail: React.FC<BuildingDetailProps> = ({ building }) => {
       </TabsContent>
       <TabsContent value="settings">
         <BuildingSettings building={building} />
-      </TabsContent>
-      <TabsContent value="admins">
-        <AdminManagement buildingId={building.id} />
       </TabsContent>
     </Tabs>
   )
