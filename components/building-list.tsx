@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { Plus, Building2, MapPin, Car, Users, Eye, Edit, QrCode, Trash2, UserCog, Activity, ExternalLink } from "lucide-react"
+import { useIsMobile } from "@/hooks/use-mobile"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -41,6 +42,7 @@ export function BuildingList({ buildings, onSelectBuilding, onBuildingCreated }:
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [buildingToDelete, setBuildingToDelete] = useState<Building | null>(null)
   const { adminData } = useAuth()
+  const isMobile = useIsMobile()
 
   // Verificar si es el administrador principal
   const isMainAdmin = adminData?.email === 'homestate.dev@gmail.com'
@@ -78,83 +80,86 @@ export function BuildingList({ buildings, onSelectBuilding, onBuildingCreated }:
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className={`flex ${isMobile ? 'flex-col space-y-4' : 'items-center justify-between'}`}>
         <div>
         </div>
-        <Button onClick={() => setShowCreateDialog(true)} className="bg-orange-600 hover:bg-orange-700">
+        <Button 
+          onClick={() => setShowCreateDialog(true)} 
+          className={`bg-orange-600 hover:bg-orange-700 ${isMobile ? 'w-full' : ''}`}
+        >
           <Plus className="h-4 w-4 mr-2" />
           Nuevo Edificio
         </Button>
       </div>
 
       <Tabs defaultValue="buildings" className="w-full">
-        <TabsList className={`grid w-full ${isMainAdmin ? 'grid-cols-3' : 'grid-cols-2'} lg:w-[600px]`}>
-          <TabsTrigger value="buildings" className="flex items-center gap-2">
+        <TabsList className={`${isMobile ? 'grid w-full' : 'grid w-full lg:w-[600px]'} ${isMainAdmin ? 'grid-cols-3' : 'grid-cols-2'}`}>
+          <TabsTrigger value="buildings" className={`flex items-center gap-2 ${isMobile ? 'text-xs' : ''}`}>
             <Building2 className="h-4 w-4" />
-            Edificios
+            {isMobile ? 'Edificios' : 'Edificios'}
           </TabsTrigger>
-          <TabsTrigger value="admins" className="flex items-center gap-2">
+          <TabsTrigger value="admins" className={`flex items-center gap-2 ${isMobile ? 'text-xs' : ''}`}>
             <UserCog className="h-4 w-4" />
-            Administradores
+            {isMobile ? 'Admins' : 'Administradores'}
           </TabsTrigger>
           {isMainAdmin && (
-            <TabsTrigger value="my-activities" className="flex items-center gap-2">
+            <TabsTrigger value="my-activities" className={`flex items-center gap-2 ${isMobile ? 'text-xs' : ''}`}>
               <Activity className="h-4 w-4" />
-              Ver mis actividades
+              {isMobile ? 'Actividad' : 'Ver mis actividades'}
             </TabsTrigger>
           )}
         </TabsList>
         
         <TabsContent value="buildings" className="space-y-6">
-          <div className="flex items-center justify-between">
+          <div className={`flex ${isMobile ? 'flex-col space-y-2' : 'items-center justify-between'}`}>
             <div>
-              <h3 className="text-2xl font-bold text-gray-900">Gestión de Edificios</h3>
-              <p className="text-gray-600 mt-1">Administra todos tus edificios y propiedades</p>
+              <h3 className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold text-gray-900`}>Gestión de Edificios</h3>
+              <p className={`text-gray-600 mt-1 ${isMobile ? 'text-sm' : ''}`}>Administra todos tus edificios y propiedades</p>
             </div>
           </div>
 
       {/* Estadísticas generales */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className={`grid ${isMobile ? 'grid-cols-2 gap-2' : 'grid-cols-1 md:grid-cols-4 gap-4'}`}>
         <Card>
-          <CardContent className="p-4">
+          <CardContent className={`${isMobile ? 'p-3' : 'p-4'}`}>
             <div className="flex items-center gap-2">
-              <Building2 className="h-5 w-5 text-orange-600" />
+              <Building2 className={`${isMobile ? 'h-4 w-4' : 'h-5 w-5'} text-orange-600`} />
               <div>
-                <p className="text-sm text-gray-600">Total Edificios</p>
-                <p className="text-2xl font-bold">{buildings.length}</p>
+                <p className={`${isMobile ? 'text-xs' : 'text-sm'} text-gray-600`}>Total Edificios</p>
+                <p className={`${isMobile ? 'text-lg' : 'text-2xl'} font-bold`}>{buildings.length}</p>
               </div>
             </div>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="p-4">
+          <CardContent className={`${isMobile ? 'p-3' : 'p-4'}`}>
             <div className="flex items-center gap-2">
-              <Users className="h-5 w-5 text-blue-600" />
+              <Users className={`${isMobile ? 'h-4 w-4' : 'h-5 w-5'} text-blue-600`} />
               <div>
-                <p className="text-sm text-gray-600">Total Departamentos</p>
-                <p className="text-2xl font-bold">{buildings.reduce((acc, b) => acc + b.departamentos_count, 0)}</p>
+                <p className={`${isMobile ? 'text-xs' : 'text-sm'} text-gray-600`}>Total Depto.</p>
+                <p className={`${isMobile ? 'text-lg' : 'text-2xl'} font-bold`}>{buildings.reduce((acc, b) => acc + b.departamentos_count, 0)}</p>
               </div>
             </div>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="p-4">
+          <CardContent className={`${isMobile ? 'p-3' : 'p-4'}`}>
             <div className="flex items-center gap-2">
-              <Eye className="h-5 w-5 text-green-600" />
+              <Eye className={`${isMobile ? 'h-4 w-4' : 'h-5 w-5'} text-green-600`} />
               <div>
-                <p className="text-sm text-gray-600">Disponibles</p>
-                <p className="text-2xl font-bold">{buildings.reduce((acc, b) => acc + b.disponibles_count, 0)}</p>
+                <p className={`${isMobile ? 'text-xs' : 'text-sm'} text-gray-600`}>Disponibles</p>
+                <p className={`${isMobile ? 'text-lg' : 'text-2xl'} font-bold`}>{buildings.reduce((acc, b) => acc + b.disponibles_count, 0)}</p>
               </div>
             </div>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="p-4">
+          <CardContent className={`${isMobile ? 'p-3' : 'p-4'}`}>
             <div className="flex items-center gap-2">
-              <Car className="h-5 w-5 text-purple-600" />
+              <Car className={`${isMobile ? 'h-4 w-4' : 'h-5 w-5'} text-purple-600`} />
               <div>
-                <p className="text-sm text-gray-600">Tasa Ocupación</p>
-                <p className="text-2xl font-bold">
+                <p className={`${isMobile ? 'text-xs' : 'text-sm'} text-gray-600`}>Tasa Ocup.</p>
+                <p className={`${isMobile ? 'text-lg' : 'text-2xl'} font-bold`}>
                   {(() => {
                     const totalDepartamentos = buildings.reduce((acc, b) => acc + b.departamentos_count, 0)
                     const ocupados = buildings.reduce((acc, b) => acc + (b.departamentos_count - b.disponibles_count), 0)
@@ -169,10 +174,10 @@ export function BuildingList({ buildings, onSelectBuilding, onBuildingCreated }:
       </div>
 
           {/* Lista de edificios */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className={`grid ${isMobile ? 'grid-cols-1 gap-4' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'}`}>
             {buildings.map((building) => (
               <Card key={building.id} className="overflow-hidden hover:shadow-lg transition-shadow">
-                <div className="relative h-48 w-full">
+                <div className={`relative ${isMobile ? 'h-32' : 'h-48'} w-full`}>
                   <Image
                     src={building.url_imagen_principal || "/placeholder.svg"}
                     alt={building.nombre}
@@ -180,33 +185,33 @@ export function BuildingList({ buildings, onSelectBuilding, onBuildingCreated }:
                     className="object-cover"
                   />
                   <div className="absolute top-2 right-2">
-                    <Badge className="bg-orange-600 hover:bg-orange-700">{building.disponibles_count} disponibles</Badge>
+                    <Badge className={`bg-orange-600 hover:bg-orange-700 ${isMobile ? 'text-xs' : ''}`}>{building.disponibles_count} disponibles</Badge>
                   </div>
                 </div>
 
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-lg">{building.nombre}</CardTitle>
-                  <CardDescription className="flex items-center gap-1">
+                <CardHeader className={`${isMobile ? 'p-3 pb-2' : 'pb-2'}`}>
+                  <CardTitle className={`${isMobile ? 'text-base' : 'text-lg'}`}>{building.nombre}</CardTitle>
+                  <CardDescription className={`flex items-center gap-1 ${isMobile ? 'text-xs' : ''}`}>
                     <MapPin className="h-4 w-4" />
                     {building.direccion}
                   </CardDescription>
                 </CardHeader>
 
-                <CardContent className="space-y-3">
-                  <div className="flex items-center justify-between text-sm">
+                <CardContent className={`space-y-3 ${isMobile ? 'p-3 pt-0' : ''}`}>
+                  <div className={`flex items-center justify-between ${isMobile ? 'text-xs' : 'text-sm'}`}>
                     <span className="text-gray-600">Departamentos:</span>
                     <Badge variant="outline">{building.departamentos_count}</Badge>
                   </div>
 
                   {building.costo_expensas > 0 && (
-                    <div className="flex items-center justify-between text-sm">
+                    <div className={`flex items-center justify-between ${isMobile ? 'text-xs' : 'text-sm'}`}>
                       <span className="text-gray-600">Expensas:</span>
                       <span className="font-medium">${building.costo_expensas}</span>
                     </div>
                   )}
 
                   {building.areas_comunales.length > 0 && (
-                    <div className="flex items-center justify-between text-sm">
+                    <div className={`flex items-center justify-between ${isMobile ? 'text-xs' : 'text-sm'}`}>
                       <span className="text-gray-600">Amenidades:</span>
                       <span className="font-medium text-xs">
                         {building.areas_comunales.slice(0, 2).join(', ')}
@@ -216,7 +221,7 @@ export function BuildingList({ buildings, onSelectBuilding, onBuildingCreated }:
                   )}
 
                   {building.seguridad.length > 0 && (
-                    <div className="flex items-center justify-between text-sm">
+                    <div className={`flex items-center justify-between ${isMobile ? 'text-xs' : 'text-sm'}`}>
                       <span className="text-gray-600">Seguridad:</span>
                       <span className="font-medium text-xs">
                         {building.seguridad.slice(0, 2).join(', ')}
@@ -226,7 +231,7 @@ export function BuildingList({ buildings, onSelectBuilding, onBuildingCreated }:
                   )}
 
                   {/* Mostrar permalink */}
-                  <div className="flex items-center justify-between text-sm">
+                  <div className={`flex items-center justify-between ${isMobile ? 'text-xs' : 'text-sm'}`}>
                     <span className="text-gray-600">Micrositio:</span>
                     <span className="font-mono text-xs text-blue-600">/{building.permalink}</span>
                   </div>

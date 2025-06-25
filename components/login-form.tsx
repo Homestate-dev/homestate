@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { signInWithEmailAndPassword } from "firebase/auth"
 import { auth } from "@/lib/firebase"
+import { useIsMobile } from "@/hooks/use-mobile"
 
 interface LoginFormProps {
   onLoginSuccess: (user: any) => Promise<boolean>
@@ -19,6 +20,7 @@ export function LoginForm({ onLoginSuccess }: LoginFormProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
   const [isInactive, setIsInactive] = useState(false)
+  const isMobile = useIsMobile()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -65,26 +67,28 @@ export function LoginForm({ onLoginSuccess }: LoginFormProps) {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-      <Card className="w-full max-w-md">
+    <div className={`min-h-screen bg-gray-50 flex items-center justify-center ${isMobile ? 'p-4' : 'p-8'}`}>
+      <Card className={`w-full ${isMobile ? 'max-w-sm' : 'max-w-md'}`}>
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
-            <Building2 className="h-12 w-12 text-orange-600" />
+            <Building2 className={`${isMobile ? 'h-10 w-10' : 'h-12 w-12'} text-orange-600`} />
           </div>
-          <CardTitle className="text-2xl font-bold text-gray-900">HomEstate</CardTitle>
-          <CardDescription className="text-gray-600">
+          <CardTitle className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold text-gray-900`}>
+            HomEstate
+          </CardTitle>
+          <CardDescription className={`text-gray-600 ${isMobile ? 'text-sm' : ''}`}>
             Panel de Administración
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className={isMobile ? 'p-4' : ''}>
           <form onSubmit={handleSubmit} className="space-y-4">
             {error && (
               <Alert variant={isInactive ? "default" : "destructive"} className={isInactive ? "border-orange-200 bg-orange-50" : ""}>
                 {isInactive && <AlertTriangle className="h-4 w-4 text-orange-600" />}
-                <AlertDescription className={isInactive ? "text-orange-800" : ""}>
+                <AlertDescription className={`${isInactive ? "text-orange-800" : ""} ${isMobile ? 'text-sm' : ''}`}>
                   {error}
                   {isInactive && (
-                    <div className="mt-2 text-sm">
+                    <div className={`mt-2 ${isMobile ? 'text-xs' : 'text-sm'}`}>
                       <p className="font-semibold">Contacta al administrador:</p>
                       <p>📧 homestate.dev@gmail.com</p>
                     </div>
@@ -94,7 +98,7 @@ export function LoginForm({ onLoginSuccess }: LoginFormProps) {
             )}
             
             <div className="space-y-2">
-              <label htmlFor="email" className="text-sm font-medium text-gray-700">
+              <label htmlFor="email" className={`${isMobile ? 'text-xs' : 'text-sm'} font-medium text-gray-700`}>
                 Correo electrónico
               </label>
               <Input
@@ -104,12 +108,12 @@ export function LoginForm({ onLoginSuccess }: LoginFormProps) {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="w-full"
+                className={`w-full ${isMobile ? 'h-12 text-base' : ''}`}
               />
             </div>
 
             <div className="space-y-2">
-              <label htmlFor="password" className="text-sm font-medium text-gray-700">
+              <label htmlFor="password" className={`${isMobile ? 'text-xs' : 'text-sm'} font-medium text-gray-700`}>
                 Contraseña
               </label>
               <div className="relative">
@@ -120,12 +124,12 @@ export function LoginForm({ onLoginSuccess }: LoginFormProps) {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  className="w-full pr-10"
+                  className={`w-full pr-10 ${isMobile ? 'h-12 text-base' : ''}`}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                  className={`absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 ${isMobile ? 'touch-target' : ''}`}
                 >
                   {showPassword ? (
                     <EyeOff className="h-4 w-4" />
@@ -138,7 +142,7 @@ export function LoginForm({ onLoginSuccess }: LoginFormProps) {
 
             <Button
               type="submit"
-              className="w-full bg-orange-600 hover:bg-orange-700 text-white"
+              className={`w-full bg-orange-600 hover:bg-orange-700 text-white ${isMobile ? 'h-12 text-base touch-target' : ''}`}
               disabled={isLoading}
             >
               {isLoading ? "Iniciando sesión..." : "Iniciar sesión"}
@@ -146,7 +150,7 @@ export function LoginForm({ onLoginSuccess }: LoginFormProps) {
           </form>
 
           <div className="mt-6 text-center">
-            <p className="text-xs text-gray-500">
+            <p className={`${isMobile ? 'text-xs' : 'text-xs'} text-gray-500`}>
               Acceso restringido solo para administradores autorizados
             </p>
           </div>

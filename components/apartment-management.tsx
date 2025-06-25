@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Separator } from "@/components/ui/separator"
+import { useIsMobile } from "@/hooks/use-mobile"
 
 // Datos de ejemplo de departamentos
 const departamentosEjemplo = [
@@ -57,6 +58,7 @@ export function ApartmentManagement({ buildingId, buildingName }: ApartmentManag
   const [departamentos, setDepartamentos] = useState(departamentosEjemplo)
   const [showCreateForm, setShowCreateForm] = useState(false)
   const [uploadedImages, setUploadedImages] = useState<string[]>([])
+  const isMobile = useIsMobile()
   const [newApartment, setNewApartment] = useState({
     numero: "",
     nombre: "",
@@ -137,59 +139,66 @@ export function ApartmentManagement({ buildingId, buildingName }: ApartmentManag
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className={`flex ${isMobile ? 'flex-col space-y-4' : 'items-center justify-between'}`}>
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Departamentos - {buildingName}</h2>
-          <p className="text-gray-600">Gestiona todos los departamentos de este edificio</p>
+          <h2 className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold text-gray-900`}>
+            Departamentos - {buildingName}
+          </h2>
+          <p className={`text-gray-600 ${isMobile ? 'text-sm' : ''}`}>
+            Gestiona todos los departamentos de este edificio
+          </p>
         </div>
-        <Button onClick={() => setShowCreateForm(true)} className="bg-orange-600 hover:bg-orange-700">
+        <Button 
+          onClick={() => setShowCreateForm(true)} 
+          className={`bg-orange-600 hover:bg-orange-700 ${isMobile ? 'w-full' : ''}`}
+        >
           <Plus className="h-4 w-4 mr-2" />
           Nuevo Departamento
         </Button>
       </div>
 
       {/* Estadísticas */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className={`grid ${isMobile ? 'grid-cols-2 gap-3' : 'grid-cols-1 md:grid-cols-4 gap-4'}`}>
         <Card>
-          <CardContent className="p-4">
+          <CardContent className={`${isMobile ? 'p-3' : 'p-4'}`}>
             <div className="flex items-center gap-2">
-              <Home className="h-5 w-5 text-orange-600" />
+              <Home className={`${isMobile ? 'h-4 w-4' : 'h-5 w-5'} text-orange-600`} />
               <div>
-                <p className="text-sm text-gray-600">Total</p>
-                <p className="text-2xl font-bold">{departamentos.length}</p>
+                <p className={`${isMobile ? 'text-xs' : 'text-sm'} text-gray-600`}>Total</p>
+                <p className={`${isMobile ? 'text-lg' : 'text-2xl'} font-bold`}>{departamentos.length}</p>
               </div>
             </div>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="p-4">
+          <CardContent className={`${isMobile ? 'p-3' : 'p-4'}`}>
             <div className="flex items-center gap-2">
-              <Eye className="h-5 w-5 text-green-600" />
+              <Eye className={`${isMobile ? 'h-4 w-4' : 'h-5 w-5'} text-green-600`} />
               <div>
-                <p className="text-sm text-gray-600">Disponibles</p>
-                <p className="text-2xl font-bold">{departamentos.filter((d) => d.disponible).length}</p>
+                <p className={`${isMobile ? 'text-xs' : 'text-sm'} text-gray-600`}>Disponibles</p>
+                <p className={`${isMobile ? 'text-lg' : 'text-2xl'} font-bold`}>{departamentos.filter((d) => d.disponible).length}</p>
               </div>
             </div>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="p-4">
+          <CardContent className={`${isMobile ? 'p-3' : 'p-4'}`}>
             <div className="flex items-center gap-2">
-              <EyeOff className="h-5 w-5 text-red-600" />
+              <EyeOff className={`${isMobile ? 'h-4 w-4' : 'h-5 w-5'} text-red-600`} />
               <div>
-                <p className="text-sm text-gray-600">No disponibles</p>
-                <p className="text-2xl font-bold">{departamentos.filter((d) => !d.disponible).length}</p>
+                <p className={`${isMobile ? 'text-xs' : 'text-sm'} text-gray-600`}>No disponibles</p>
+                <p className={`${isMobile ? 'text-lg' : 'text-2xl'} font-bold`}>{departamentos.filter((d) => !d.disponible).length}</p>
               </div>
             </div>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="p-4">
+          <CardContent className={`${isMobile ? 'p-3' : 'p-4'}`}>
             <div className="flex items-center gap-2">
-              <Maximize className="h-5 w-5 text-blue-600" />
+              <Maximize className={`${isMobile ? 'h-4 w-4' : 'h-5 w-5'} text-blue-600`} />
               <div>
-                <p className="text-sm text-gray-600">Área promedio</p>
-                <p className="text-2xl font-bold">
+                <p className={`${isMobile ? 'text-xs' : 'text-sm'} text-gray-600`}>Área prom.</p>
+                <p className={`${isMobile ? 'text-lg' : 'text-2xl'} font-bold`}>
                   {departamentos.length > 0
                     ? Math.round(departamentos.reduce((acc, d) => acc + d.area, 0) / departamentos.length)
                     : 0}

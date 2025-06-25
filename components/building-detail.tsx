@@ -6,30 +6,33 @@ import { ApartmentManagement } from "./apartment-management"
 import { BuildingReports } from "./building-reports"
 import { QRGenerator } from "./qr-generator"
 import { BuildingSettings } from "./building-settings"
+import { useIsMobile } from "@/hooks/use-mobile"
 
 interface BuildingDetailProps {
   building: Building
 }
 
 export const BuildingDetail: React.FC<BuildingDetailProps> = ({ building }) => {
+  const isMobile = useIsMobile()
+  
   return (
     <Tabs defaultValue="apartments" className="w-full">
-      <TabsList className="grid w-full grid-cols-4 lg:w-[500px]">
-        <TabsTrigger value="apartments" className="flex items-center gap-2">
+      <TabsList className={`${isMobile ? 'grid w-full grid-cols-2 grid-rows-2 h-auto' : 'grid w-full grid-cols-4 lg:w-[500px]'}`}>
+        <TabsTrigger value="apartments" className={`flex items-center gap-2 ${isMobile ? 'text-xs p-2' : ''}`}>
           <Home className="h-4 w-4" />
-          Departamentos
+          {isMobile ? 'Deptos' : 'Departamentos'}
         </TabsTrigger>
-        <TabsTrigger value="reports" className="flex items-center gap-2">
+        <TabsTrigger value="reports" className={`flex items-center gap-2 ${isMobile ? 'text-xs p-2' : ''}`}>
           <BarChart3 className="h-4 w-4" />
-          Reportes
+          {isMobile ? 'Reportes' : 'Reportes'}
         </TabsTrigger>
-        <TabsTrigger value="qr" className="flex items-center gap-2">
+        <TabsTrigger value="qr" className={`flex items-center gap-2 ${isMobile ? 'text-xs p-2' : ''}`}>
           <QrCode className="h-4 w-4" />
-          Código QR
+          {isMobile ? 'QR' : 'Código QR'}
         </TabsTrigger>
-        <TabsTrigger value="settings" className="flex items-center gap-2">
+        <TabsTrigger value="settings" className={`flex items-center gap-2 ${isMobile ? 'text-xs p-2' : ''}`}>
           <Settings className="h-4 w-4" />
-          Configuración
+          {isMobile ? 'Config' : 'Configuración'}
         </TabsTrigger>
       </TabsList>
       <TabsContent value="apartments">
