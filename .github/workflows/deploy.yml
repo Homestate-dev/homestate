@@ -52,7 +52,8 @@ jobs:
 
     - name: Deploy to Heroku
       run: |
+        rm -f pnpm-lock.yaml
         heroku git:remote -a ${{ env.HEROKU_APP_NAME }}
         git add .
-        git commit -m "Deploy to Heroku" || echo "No changes to commit"
+        git commit -m "Deploy to Heroku - Remove pnpm lock" || echo "No changes to commit"
         git push heroku HEAD:main --force 
