@@ -192,13 +192,67 @@ export async function getBuildings() {
     ORDER BY fecha_creacion DESC
   `
   const result = await executeQuery(query)
-  return result.rows.map(row => ({
-    ...row,
-    areas_comunales: JSON.parse(row.areas_comunales || '[]'),
-    seguridad: JSON.parse(row.seguridad || '[]'),
-    aparcamiento: JSON.parse(row.aparcamiento || '[]'),
-    imagenes_secundarias: JSON.parse(row.imagenes_secundarias || '[]')
-  }))
+  return result.rows.map(row => {
+    try {
+      return {
+        ...row,
+        areas_comunales: safeJsonParse(row.areas_comunales, []),
+        seguridad: safeJsonParse(row.seguridad, []),
+        aparcamiento: safeJsonParse(row.aparcamiento, []),
+        imagenes_secundarias: safeJsonParse(row.imagenes_secundarias, [])
+      }
+    } catch (error) {
+      console.error('Error parsing building data:', error, 'Row:', row)
+      return {
+        ...row,
+        areas_comunales: [],
+        seguridad: [],
+        aparcamiento: [],
+        imagenes_secundarias: []
+      }
+    }
+  })
+}
+
+function safeJsonParse(jsonString: string | null, defaultValue: any = null) {
+  if (!jsonString) return defaultValue
+  
+  try {
+    // Primero intentar parsear directamente
+    return JSON.parse(jsonString)
+  } catch (error) {
+    console.warn('Error parsing JSON, trying to fix encoding:', jsonString.substring(0, 50))
+    try {
+      // Si falla, intentar arreglar caracteres especiales
+      const fixedString = jsonString
+        .replace(/Á/g, 'Á')
+        .replace(/É/g, 'É')
+        .replace(/Í/g, 'Í')
+        .replace(/Ó/g, 'Ó')
+        .replace(/Ú/g, 'Ú')
+        .replace(/á/g, 'á')
+        .replace(/é/g, 'é')
+        .replace(/í/g, 'í')
+        .replace(/ó/g, 'ó')
+        .replace(/ú/g, 'ú')
+        .replace(/ñ/g, 'ñ')
+        .replace(/Ñ/g, 'Ñ')
+      
+      return JSON.parse(fixedString)
+    } catch (secondError) {
+      console.error('Failed to parse JSON even after fixing:', secondError)
+      return defaultValue
+    }
+  }
+}
+
+function safeJsonStringify(data: any): string {
+  try {
+    return JSON.stringify(data)
+  } catch (error) {
+    console.error('Error stringifying JSON:', error)
+    return '[]'
+  }
 }
 
 export async function getBuildingById(id: number) {
@@ -226,12 +280,23 @@ export async function getBuildingById(id: number) {
   if (result.rows.length === 0) return null
   
   const building = result.rows[0]
-  return {
-    ...building,
-    areas_comunales: JSON.parse(building.areas_comunales || '[]'),
-    seguridad: JSON.parse(building.seguridad || '[]'),
-    aparcamiento: JSON.parse(building.aparcamiento || '[]'),
-    imagenes_secundarias: JSON.parse(building.imagenes_secundarias || '[]')
+  try {
+    return {
+      ...building,
+      areas_comunales: safeJsonParse(building.areas_comunales, []),
+      seguridad: safeJsonParse(building.seguridad, []),
+      aparcamiento: safeJsonParse(building.aparcamiento, []),
+      imagenes_secundarias: safeJsonParse(building.imagenes_secundarias, [])
+    }
+  } catch (error) {
+    console.error('Error parsing building by ID:', error)
+    return {
+      ...building,
+      areas_comunales: [],
+      seguridad: [],
+      aparcamiento: [],
+      imagenes_secundarias: []
+    }
   }
 }
 
