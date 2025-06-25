@@ -6,14 +6,23 @@ export async function GET(
   { params }: { params: { uid: string } }
 ) {
   try {
+    const firebase_uid = params.uid
     const url = new URL(request.url)
-    const limit = parseInt(url.searchParams.get('limit') || '50')
-    
-    const actions = await getAdminActions(params.uid, limit)
-    
+    const limit = parseInt(url.searchParams.get('limit') || '100')
+
+    if (!firebase_uid) {
+      return NextResponse.json(
+        { success: false, error: 'UID es requerido' },
+        { status: 400 }
+      )
+    }
+
+    const actions = await getAdminActions(firebase_uid, limit)
+
     return NextResponse.json({ 
       success: true, 
-      data: actions 
+      data: actions,
+      count: actions.length
     })
 
   } catch (error) {

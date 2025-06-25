@@ -1,15 +1,17 @@
 "use client"
 
 import { useState } from "react"
-import { Plus, Building2, MapPin, Car, Users, Eye, Edit, QrCode, Trash2, UserCog } from "lucide-react"
+import { Plus, Building2, MapPin, Car, Users, Eye, Edit, QrCode, Trash2, UserCog, Activity } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { CreateBuildingDialog } from "@/components/create-building-dialog"
 import { DeleteBuildingDialog } from "@/components/delete-building-dialog"
 import { AdminManagement } from "@/components/admin-management"
+import { MyActivities } from "@/components/my-activities"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { toast } from "sonner"
+import { useAuth } from "@/contexts/auth-context"
 import Image from "next/image"
 
 interface Building {
@@ -38,6 +40,10 @@ export function BuildingList({ buildings, onSelectBuilding, onBuildingCreated }:
   const [showCreateDialog, setShowCreateDialog] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [buildingToDelete, setBuildingToDelete] = useState<Building | null>(null)
+  const { adminData } = useAuth()
+
+  // Verificar si es el administrador principal
+  const isMainAdmin = adminData?.email === 'homestate.dev@gmail.com'
 
   const generateQR = (buildingId: number) => {
     console.log(`Generando QR para edificio ${buildingId}`)
@@ -74,7 +80,7 @@ export function BuildingList({ buildings, onSelectBuilding, onBuildingCreated }:
       </div>
 
       <Tabs defaultValue="buildings" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 lg:w-[400px]">
+        <TabsList className={`grid w-full ${isMainAdmin ? 'grid-cols-3' : 'grid-cols-2'} lg:w-[600px]`}>
           <TabsTrigger value="buildings" className="flex items-center gap-2">
             <Building2 className="h-4 w-4" />
             Edificios
@@ -83,6 +89,12 @@ export function BuildingList({ buildings, onSelectBuilding, onBuildingCreated }:
             <UserCog className="h-4 w-4" />
             Administradores
           </TabsTrigger>
+          {isMainAdmin && (
+            <TabsTrigger value="my-activities" className="flex items-center gap-2">
+              <Activity className="h-4 w-4" />
+              Ver mis actividades
+            </TabsTrigger>
+          )}
         </TabsList>
         
         <TabsContent value="buildings" className="space-y-6">
@@ -238,6 +250,12 @@ export function BuildingList({ buildings, onSelectBuilding, onBuildingCreated }:
         <TabsContent value="admins">
           <AdminManagement buildingId={0} />
         </TabsContent>
+
+        {isMainAdmin && (
+          <TabsContent value="my-activities">
+            <MyActivities />
+          </TabsContent>
+        )}
       </Tabs>
 
       <CreateBuildingDialog 

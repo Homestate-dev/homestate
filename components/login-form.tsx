@@ -1,6 +1,6 @@
 "use client"
 import { useState } from "react"
-import { Building2, Eye, EyeOff } from "lucide-react"
+import { Building2, Eye, EyeOff, AlertTriangle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -9,7 +9,7 @@ import { signInWithEmailAndPassword } from "firebase/auth"
 import { auth } from "@/lib/firebase"
 
 interface LoginFormProps {
-  onLoginSuccess: (user: any) => void
+  onLoginSuccess: (user: any) => Promise<boolean>
 }
 
 export function LoginForm({ onLoginSuccess }: LoginFormProps) {
@@ -18,15 +18,23 @@ export function LoginForm({ onLoginSuccess }: LoginFormProps) {
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
+  const [isInactive, setIsInactive] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
     setError("")
+    setIsInactive(false)
 
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password)
-      onLoginSuccess(userCredential.user)
+      const loginSuccess = await onLoginSuccess(userCredential.user)
+      
+      if (!loginSuccess) {
+        // El usuario está inactivo, se manejó en el contexto
+        setIsInactive(true)
+        setError("Tu cuenta está inactiva. Por favor comunícate con el administrador superior para poder recuperar la actividad en HomEstate.")
+      }
     } catch (error: any) {
       console.error('Error al iniciar sesión:', error)
       
@@ -71,8 +79,17 @@ export function LoginForm({ onLoginSuccess }: LoginFormProps) {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             {error && (
-              <Alert variant="destructive">
-                <AlertDescription>{error}</AlertDescription>
+              <Alert variant={isInactive ? "default" : "destructive"} className={isInactive ? "border-orange-200 bg-orange-50" : ""}>
+                {isInactive && <AlertTriangle className="h-4 w-4 text-orange-600" />}
+                <AlertDescription className={isInactive ? "text-orange-800" : ""}>
+                  {error}
+                  {isInactive && (
+                    <div className="mt-2 text-sm">
+                      <p className="font-semibold">Contacta al administrador:</p>
+                      <p>📧 homestate.dev@gmail.com</p>
+                    </div>
+                  )}
+                </AlertDescription>
               </Alert>
             )}
             
