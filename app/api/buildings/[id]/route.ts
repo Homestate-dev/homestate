@@ -1,0 +1,100 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { getBuildingById, deleteBuilding, logAdminAction } from '@/lib/database'
+import { deleteBuildingImages } from '@/lib/firebase-admin'
+
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const buildingId = parseInt(params.id)
+    if (isNaN(buildingId)) {
+      return NextResponse.json(
+        { success: false, error: 'ID de edificio inválido' },
+        { status: 400 }
+      )
+    }
+
+    const body = await request.json()
+    const { currentUserUid, buildingName } = body
+
+    if (!currentUserUid) {
+      return NextResponse.json(
+        { success: false, error: 'Usuario no autenticado' },
+        { status: 401 }
+      )
+    }
+
+    // Obtener los datos del edificio antes de eliminarlo
+    const building = await getBuildingById(buildingId)
+    if (!building) {
+      return NextResponse.json(
+        { success: false, error: 'Edificio no encontrado' },
+        { status: 404 }
+      )
+    }
+
+    // Verificar que el nombre coincida (seguridad adicional)
+    if (buildingName && building.nombre !== buildingName) {
+      return NextResponse.json(
+        { success: false, error: 'El nombre del edificio no coincide' },
+        { status: 400 }
+      )
+    }
+
+    // Intentar eliminar las imágenes de Firebase primero
+    let imagesDeletionResult = null
+    try {
+      imagesDeletionResult = await deleteBuildingImages({
+        nombre: building.nombre,
+        url_imagen_principal: building.url_imagen_principal,
+        imagenes_secundarias: building.imagenes_secundarias
+      })
+      console.log('Images deletion result:', imagesDeletionResult)
+    } catch (error) {
+      console.error('Error deleting building images:', error)
+      // Continuar con la eliminación del edificio aunque falle la eliminación de imágenes
+    }
+
+    // Eliminar el edificio de la base de datos
+    const deletedBuilding = await deleteBuilding(buildingId)
+    
+    if (!deletedBuilding) {
+      return NextResponse.json(
+        { success: false, error: 'No se pudo eliminar el edificio' },
+        { status: 500 }
+      )
+    }
+
+    // Registrar la acción del administrador
+    await logAdminAction(
+      currentUserUid,
+      `Eliminó edificio: ${building.nombre}`,
+      'eliminación',
+      { 
+        building_deleted: buildingId, 
+        building_name: building.nombre,
+        images_deleted: imagesDeletionResult?.deletedFiles?.length || 0,
+        images_failed: imagesDeletionResult?.failedFiles?.length || 0
+      }
+    )
+
+    return NextResponse.json({ 
+      success: true, 
+      message: 'Edificio eliminado exitosamente',
+      data: {
+        building: deletedBuilding,
+        imagesDeleted: imagesDeletionResult?.deletedFiles?.length || 0,
+        imagesFailed: imagesDeletionResult?.failedFiles?.length || 0
+      }
+    })
+
+  } catch (error: any) {
+    console.error('Error al eliminar edificio:', error)
+    
+    return NextResponse.json(
+      { success: false, error: 'Error interno del servidor al eliminar edificio' },
+      { status: 500 }
+    )
+  }
+} 

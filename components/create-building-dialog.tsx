@@ -40,7 +40,7 @@ export function CreateBuildingDialog({ open, onOpenChange, onBuildingCreated }: 
 
   const areasComunalesDisponibles = [
     "Áreas comunales",
-    "Piscina climatizada", 
+    "Piscina climatizada",
     "Gimnasio equipado",
     "Salón de eventos",
     "Terraza con barbacoa",
@@ -51,7 +51,7 @@ export function CreateBuildingDialog({ open, onOpenChange, onBuildingCreated }: 
 
   const seguridadDisponible = [
     "24/7 con guardia de seguridad",
-    "Cámaras de seguridad", 
+    "Cámaras de seguridad",
     "Acceso controlado",
     "Intercomunicador",
     "Sistema de alarma"
@@ -213,7 +213,7 @@ export function CreateBuildingDialog({ open, onOpenChange, onBuildingCreated }: 
       
       if (data.success) {
         toast.success('Edificio creado exitosamente')
-        onOpenChange(false)
+    onOpenChange(false)
         onBuildingCreated?.() // Recargar lista de edificios
         // Resetear formulario
         setBuildingData({
@@ -260,39 +260,39 @@ export function CreateBuildingDialog({ open, onOpenChange, onBuildingCreated }: 
               <CardTitle>Información Básica</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="nombre">Nombre del edificio *</Label>
-                  <Input
-                    id="nombre"
-                    value={buildingData.nombre}
-                    onChange={(e) => handleNombreChange(e.target.value)}
-                    placeholder="Ej: Edificio Mirador"
-                    required
-                  />
-                </div>
-                <div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="nombre">Nombre del edificio *</Label>
+                <Input
+                  id="nombre"
+                  value={buildingData.nombre}
+                  onChange={(e) => handleNombreChange(e.target.value)}
+                  placeholder="Ej: Edificio Mirador"
+                  required
+                />
+              </div>
+              <div>
                   <Label htmlFor="permalink">Permalink (generado automáticamente)</Label>
-                  <Input
-                    id="permalink"
-                    value={buildingData.permalink}
-                    placeholder="edificio-mirador"
+                <Input
+                  id="permalink"
+                  value={buildingData.permalink}
+                  placeholder="edificio-mirador"
                     disabled
-                  />
-                </div>
-                <div className="md:col-span-2">
-                  <Label htmlFor="direccion">Dirección *</Label>
-                  <Input
-                    id="direccion"
-                    value={buildingData.direccion}
-                    onChange={(e) => setBuildingData((prev) => ({ ...prev, direccion: e.target.value }))}
-                    placeholder="Ej: Av. Principal 123, Ciudad"
-                    required
-                  />
-                </div>
-                <div>
+                />
+              </div>
+              <div className="md:col-span-2">
+                <Label htmlFor="direccion">Dirección *</Label>
+                <Input
+                  id="direccion"
+                  value={buildingData.direccion}
+                  onChange={(e) => setBuildingData((prev) => ({ ...prev, direccion: e.target.value }))}
+                  placeholder="Ej: Av. Principal 123, Ciudad"
+                  required
+                />
+              </div>
+              <div>
                   <Label htmlFor="costo_expensas">Costo de expensas (opcional)</Label>
-                  <Input
+                <Input
                     id="costo_expensas"
                     type="number"
                     value={buildingData.costo_expensas}
@@ -301,7 +301,7 @@ export function CreateBuildingDialog({ open, onOpenChange, onBuildingCreated }: 
                     min="0"
                   />
                 </div>
-              </div>
+            </div>
             </CardContent>
           </Card>
 
@@ -314,7 +314,7 @@ export function CreateBuildingDialog({ open, onOpenChange, onBuildingCreated }: 
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {areasComunalesDisponibles.map((area) => (
                   <div key={area} className="flex items-center space-x-2">
-                    <Checkbox
+                  <Checkbox
                       id={`area-${area}`}
                       checked={buildingData.areas_comunales.includes(area)}
                       onCheckedChange={(checked) => 
@@ -322,9 +322,9 @@ export function CreateBuildingDialog({ open, onOpenChange, onBuildingCreated }: 
                       }
                     />
                     <Label htmlFor={`area-${area}`} className="text-sm">{area}</Label>
-                  </div>
-                ))}
-              </div>
+                </div>
+              ))}
+            </div>
             </CardContent>
           </Card>
 
@@ -337,7 +337,7 @@ export function CreateBuildingDialog({ open, onOpenChange, onBuildingCreated }: 
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 {seguridadDisponible.map((seg) => (
                   <div key={seg} className="flex items-center space-x-2">
-                    <Checkbox
+                  <Checkbox
                       id={`seg-${seg}`}
                       checked={buildingData.seguridad.includes(seg)}
                       onCheckedChange={(checked) => 
@@ -345,9 +345,9 @@ export function CreateBuildingDialog({ open, onOpenChange, onBuildingCreated }: 
                       }
                     />
                     <Label htmlFor={`seg-${seg}`} className="text-sm">{seg}</Label>
-                  </div>
-                ))}
-              </div>
+                </div>
+              ))}
+            </div>
             </CardContent>
           </Card>
 
@@ -383,7 +383,7 @@ export function CreateBuildingDialog({ open, onOpenChange, onBuildingCreated }: 
               {/* Imagen principal */}
               <div>
                 <Label htmlFor="main-image">Imagen Principal *</Label>
-                <Input
+                    <Input
                   id="main-image"
                   type="file"
                   accept="image/*"
@@ -420,12 +420,12 @@ export function CreateBuildingDialog({ open, onOpenChange, onBuildingCreated }: 
                           onClick={() => removeSecondaryImage(index)}
                         >
                           <X className="h-3 w-3" />
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
+                  </Button>
+                </div>
+              ))}
+            </div>
                 )}
-              </div>
+          </div>
             </CardContent>
           </Card>
 

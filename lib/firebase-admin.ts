@@ -52,4 +52,124 @@ export function getFirebaseBucket() {
     console.error('Error getting Firebase bucket:', error)
     throw error
   }
+}
+
+// Función para eliminar un archivo de Firebase Storage
+export async function deleteFirebaseFile(filePath: string) {
+  try {
+    const bucket = getFirebaseBucket()
+    const file = bucket.file(filePath)
+    
+    // Verificar si el archivo existe antes de intentar eliminarlo
+    const [exists] = await file.exists()
+    if (!exists) {
+      console.warn(`File ${filePath} does not exist, skipping deletion`)
+      return { success: true, message: `File ${filePath} does not exist` }
+    }
+    
+    await file.delete()
+    console.log(`Successfully deleted file: ${filePath}`)
+    return { success: true, message: `File ${filePath} deleted successfully` }
+  } catch (error) {
+    console.error(`Error deleting file ${filePath}:`, error)
+    throw error
+  }
+}
+
+// Función para eliminar múltiples archivos de Firebase Storage
+export async function deleteFirebaseFiles(filePaths: string[]) {
+  const results = []
+  
+  for (const filePath of filePaths) {
+    try {
+      const result = await deleteFirebaseFile(filePath)
+      results.push({ filePath, ...result })
+    } catch (error) {
+      console.error(`Failed to delete file ${filePath}:`, error)
+      results.push({ 
+        filePath, 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Unknown error' 
+      })
+    }
+  }
+  
+  return results
+}
+
+// Función para extraer el path del archivo desde una URL de Firebase Storage
+export function getFilePathFromUrl(url: string): string | null {
+  try {
+    // Extraer el path del archivo desde la URL de Firebase Storage
+    // Formato: https://firebasestorage.googleapis.com/v0/b/bucket/o/path%2Fto%2Ffile.jpg?alt=media&token=...
+    const urlObj = new URL(url)
+    const pathMatch = urlObj.pathname.match(/\/o\/(.+)/)
+    
+    if (pathMatch && pathMatch[1]) {
+      // Decodificar el path (reemplazar %2F con /)
+      return decodeURIComponent(pathMatch[1])
+    }
+    
+    return null
+  } catch (error) {
+    console.error('Error extracting file path from URL:', error)
+    return null
+  }
+}
+
+// Función para eliminar todas las imágenes de un edificio
+export async function deleteBuildingImages(building: {
+  nombre: string
+  url_imagen_principal?: string
+  imagenes_secundarias?: string[]
+}) {
+  const filesToDelete: string[] = []
+  
+  // Agregar imagen principal si existe
+  if (building.url_imagen_principal) {
+    const mainImagePath = getFilePathFromUrl(building.url_imagen_principal)
+    if (mainImagePath) {
+      filesToDelete.push(mainImagePath)
+    }
+  }
+  
+  // Agregar imágenes secundarias si existen
+  if (building.imagenes_secundarias && building.imagenes_secundarias.length > 0) {
+    for (const imageUrl of building.imagenes_secundarias) {
+      const imagePath = getFilePathFromUrl(imageUrl)
+      if (imagePath) {
+        filesToDelete.push(imagePath)
+      }
+    }
+  }
+  
+  // También intentar eliminar la carpeta completa del edificio
+  const folderPath = `edificios/${building.nombre}/`
+  try {
+    const bucket = getFirebaseBucket()
+    const [files] = await bucket.getFiles({ prefix: folderPath })
+    
+    for (const file of files) {
+      filesToDelete.push(file.name)
+    }
+  } catch (error) {
+    console.warn('Could not list files in building folder:', error)
+  }
+  
+  if (filesToDelete.length === 0) {
+    return { success: true, message: 'No images to delete', deletedFiles: [] }
+  }
+  
+  // Eliminar todos los archivos
+  const results = await deleteFirebaseFiles(filesToDelete)
+  
+  const successCount = results.filter(r => r.success).length
+  const failCount = results.filter(r => !r.success).length
+  
+  return {
+    success: failCount === 0,
+    message: `Deleted ${successCount} files${failCount > 0 ? `, failed to delete ${failCount} files` : ''}`,
+    deletedFiles: results.filter(r => r.success).map(r => r.filePath),
+    failedFiles: results.filter(r => !r.success).map(r => ({ path: r.filePath, error: r.error }))
+  }
 } 

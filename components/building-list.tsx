@@ -6,8 +6,10 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { CreateBuildingDialog } from "@/components/create-building-dialog"
+import { DeleteBuildingDialog } from "@/components/delete-building-dialog"
 import { AdminManagement } from "@/components/admin-management"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { toast } from "sonner"
 import Image from "next/image"
 
 interface Building {
@@ -34,15 +36,30 @@ interface BuildingListProps {
 
 export function BuildingList({ buildings, onSelectBuilding, onBuildingCreated }: BuildingListProps) {
   const [showCreateDialog, setShowCreateDialog] = useState(false)
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+  const [buildingToDelete, setBuildingToDelete] = useState<Building | null>(null)
 
   const generateQR = (buildingId: number) => {
     console.log(`Generando QR para edificio ${buildingId}`)
     // Aquí iría la lógica para generar QR
   }
 
-  const deleteBuilding = (buildingId: number) => {
-    console.log(`Eliminando edificio ${buildingId}`)
-    // Aquí iría la lógica para eliminar
+  const handleDeleteClick = (building: Building) => {
+    setBuildingToDelete(building)
+    setShowDeleteDialog(true)
+  }
+
+  const handleBuildingDeleted = () => {
+    toast.success("Edificio eliminado", {
+      description: `El edificio "${buildingToDelete?.nombre}" ha sido eliminado exitosamente.`,
+    })
+    setBuildingToDelete(null)
+    onBuildingCreated?.() // Recargar la lista
+  }
+
+  const handleDeleteDialogClose = () => {
+    setShowDeleteDialog(false)
+    setBuildingToDelete(null)
   }
 
   return (
@@ -203,7 +220,12 @@ export function BuildingList({ buildings, onSelectBuilding, onBuildingCreated }:
                     <Button size="sm" variant="outline">
                       <Edit className="h-4 w-4" />
                     </Button>
-                    <Button size="sm" variant="outline" onClick={() => deleteBuilding(building.id)}>
+                    <Button 
+                      size="sm" 
+                      variant="outline" 
+                      onClick={() => handleDeleteClick(building)}
+                      className="hover:bg-red-50 hover:text-red-600 hover:border-red-200"
+                    >
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
@@ -222,6 +244,13 @@ export function BuildingList({ buildings, onSelectBuilding, onBuildingCreated }:
         open={showCreateDialog} 
         onOpenChange={setShowCreateDialog}
         onBuildingCreated={onBuildingCreated}
+      />
+
+      <DeleteBuildingDialog
+        open={showDeleteDialog}
+        onOpenChange={handleDeleteDialogClose}
+        building={buildingToDelete}
+        onBuildingDeleted={handleBuildingDeleted}
       />
     </div>
   )
