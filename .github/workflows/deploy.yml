@@ -3,8 +3,6 @@ name: Deploy to Heroku
 on:
   push:
     branches: [ main, master ]
-  pull_request:
-    branches: [ main, master ]
 
 env:
   HEROKU_APP_NAME: homestate
@@ -34,15 +32,13 @@ jobs:
         curl https://cli-assets.heroku.com/install.sh | sh
         echo "$HOME/.local/bin" >> $GITHUB_PATH
 
+    - name: Login to Heroku
+      run: |
+        echo ${{ secrets.HEROKU_API_KEY }} | heroku auth:token --stdin
+        heroku git:remote -a ${{ env.HEROKU_APP_NAME }}
+
     - name: Deploy to Heroku
-      uses: akhileshns/heroku-deploy@v3.12.14
-      with:
-        heroku_api_key: ${{ secrets.HEROKU_API_KEY }}
-        heroku_app_name: ${{ env.HEROKU_APP_NAME }}
-        heroku_email: ${{ secrets.HEROKU_EMAIL }}
-        appdir: "."
-        buildpack: "heroku/nodejs"
-        healthcheck: "https://${{ env.HEROKU_APP_NAME }}.herokuapp.com/health"
-        checkstring: "ok"
-        delay: "10"
-        procfile: "web: npm start" 
+      run: |
+        git add .
+        git commit -m "Deploy to Heroku" || echo "No changes to commit"
+        git push heroku HEAD:main --force 
