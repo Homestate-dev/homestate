@@ -64,9 +64,11 @@ export function ApartmentManagement({ buildingId, buildingName, buildingPermalin
   const [editingDepartment, setEditingDepartment] = useState<Department | null>(null)
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
   const [uploadedImages, setUploadedImages] = useState<File[]>([])
+  const [editUploadedImages, setEditUploadedImages] = useState<File[]>([])
   const [creating, setCreating] = useState(false)
   const [updating, setUpdating] = useState(false)
   const [deletingImages, setDeletingImages] = useState<string[]>([])
+  const [uploadingNewImages, setUploadingNewImages] = useState(false)
   const isMobile = useIsMobile()
   const { user } = useAuth()
 
@@ -158,6 +160,7 @@ export function ApartmentManagement({ buildingId, buildingName, buildingPermalin
         setShowEditDialog(false)
         setEditingDepartment(null)
         setDeletingImages([])
+        setEditUploadedImages([])
         fetchDepartments()
       } else {
         toast.error(data.error || 'Error al actualizar departamento')
@@ -244,6 +247,69 @@ export function ApartmentManagement({ buildingId, buildingName, buildingPermalin
 
   const removeImage = (index: number) => {
     setUploadedImages((prev) => prev.filter((_, i) => i !== index))
+  }
+
+  const handleEditImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files
+    if (files) {
+      setEditUploadedImages((prev) => [...prev, ...Array.from(files)])
+    }
+  }
+
+  const removeEditImage = (index: number) => {
+    setEditUploadedImages((prev) => prev.filter((_, i) => i !== index))
+  }
+
+  const handleUploadNewImages = async () => {
+    if (!user || !editingDepartment || editUploadedImages.length === 0) {
+      return
+    }
+
+    setUploadingNewImages(true)
+
+    try {
+      const formData = new FormData()
+      
+      // Agregar imágenes nuevas
+      editUploadedImages.forEach((file) => {
+        formData.append('images', file)
+      })
+
+      // Agregar datos necesarios
+      formData.append('edificio_id', editingDepartment.edificio_id.toString())
+      formData.append('departamento_id', editingDepartment.id.toString())
+      formData.append('departamento_numero', editingDepartment.numero)
+      formData.append('currentUserUid', user.uid)
+      formData.append('buildingPermalink', buildingPermalink)
+
+      const response = await fetch('/api/departments/upload-images', {
+        method: 'POST',
+        body: formData
+      })
+
+      const data = await response.json()
+
+      if (data.success) {
+        // Actualizar el departamento en edición con las nuevas imágenes
+        const newImageUrls = data.imageUrls || []
+        setEditingDepartment(prev => prev ? {
+          ...prev,
+          imagenes: [...prev.imagenes, ...newImageUrls]
+        } : null)
+        
+        // Limpiar imágenes subidas
+        setEditUploadedImages([])
+        
+        toast.success(`${newImageUrls.length} imagen(es) agregada(s) exitosamente`)
+      } else {
+        toast.error(data.error || 'Error al subir imágenes')
+      }
+    } catch (error) {
+      console.error('Error al subir nuevas imágenes:', error)
+      toast.error('Error al subir imágenes')
+    } finally {
+      setUploadingNewImages(false)
+    }
   }
 
   const toggleDisponibilidad = async (id: number) => {
@@ -1024,7 +1090,7 @@ export function ApartmentManagement({ buildingId, buildingName, buildingPermalin
                       <div className="text-center py-8 bg-gray-50 rounded-lg">
                         <Upload className="h-8 w-8 text-gray-400 mx-auto mb-2" />
                         <p className="text-gray-600">No hay imágenes</p>
-                        <p className="text-sm text-gray-500">Las imágenes se pueden agregar al crear un nuevo departamento</p>
+                        <p className="text-sm text-gray-500">Agrega imágenes usando el área de carga inferior</p>
                       </div>
                     )}
                   </div>
@@ -1032,7 +1098,7 @@ export function ApartmentManagement({ buildingId, buildingName, buildingPermalin
                   <div className="text-center py-8 bg-gray-50 rounded-lg">
                     <Upload className="h-8 w-8 text-gray-400 mx-auto mb-2" />
                     <p className="text-gray-600">No hay imágenes</p>
-                    <p className="text-sm text-gray-500">Las imágenes se pueden agregar al crear un nuevo departamento</p>
+                    <p className="text-sm text-gray-500">Agrega imágenes usando el área de carga inferior</p>
                   </div>
                 )}
 
@@ -1043,11 +1109,84 @@ export function ApartmentManagement({ buildingId, buildingName, buildingPermalin
                       <p className="font-medium mb-1">Gestión de imágenes:</p>
                       <ul className="space-y-1 text-sm">
                         <li>• Haz clic en "Eliminar" sobre cualquier imagen para removerla permanentemente</li>
-                        <li>• Las imágenes se eliminan tanto de la base de datos como del almacenamiento</li>
-                        <li>• Para agregar nuevas imágenes, usa la opción "Nuevo Departamento"</li>
+                        <li>• Puedes agregar nuevas imágenes usando el área de carga inferior</li>
                       </ul>
                     </div>
                   </div>
+                </div>
+
+                {/* Agregar nuevas imágenes */}
+                <div className="space-y-4 border-t pt-4">
+                  <h4 className="text-md font-medium text-gray-900">Agregar Nuevas Imágenes</h4>
+                  
+                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                    <Upload className="h-8 w-8 mx-auto text-gray-400 mb-2" />
+                    <p className="text-sm text-gray-600 mb-2">Arrastra imágenes aquí o</p>
+                    <Label htmlFor="edit-apartment-images" className="cursor-pointer">
+                      <Button variant="outline" size="sm" asChild>
+                        <span>Seleccionar imágenes</span>
+                      </Button>
+                    </Label>
+                    <Input
+                      id="edit-apartment-images"
+                      type="file"
+                      multiple
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleEditImageUpload}
+                    />
+                  </div>
+
+                  {editUploadedImages.length > 0 && (
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <p className="text-sm font-medium text-gray-700">
+                          Imágenes a subir ({editUploadedImages.length})
+                        </p>
+                        <Button
+                          type="button"
+                          onClick={handleUploadNewImages}
+                          disabled={uploadingNewImages}
+                          className="bg-green-600 hover:bg-green-700"
+                          size="sm"
+                        >
+                          {uploadingNewImages ? (
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          ) : (
+                            <Upload className="h-4 w-4 mr-2" />
+                          )}
+                          {uploadingNewImages ? 'Subiendo...' : 'Subir Imágenes'}
+                        </Button>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        {editUploadedImages.map((file, index) => (
+                          <div key={index} className="relative">
+                            <div className="aspect-square relative bg-gray-100 rounded border overflow-hidden">
+                              <img
+                                src={URL.createObjectURL(file)}
+                                alt={`Nueva imagen ${index + 1}`}
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                            <Button
+                              type="button"
+                              variant="destructive"
+                              size="sm"
+                              className="absolute -top-2 -right-2 h-6 w-6 rounded-full p-0"
+                              onClick={() => removeEditImage(index)}
+                              disabled={uploadingNewImages}
+                            >
+                              <X className="h-3 w-3" />
+                            </Button>
+                            <p className="text-xs text-center text-gray-500 mt-1">
+                              {file.name}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -1059,6 +1198,7 @@ export function ApartmentManagement({ buildingId, buildingName, buildingPermalin
                     setShowEditDialog(false)
                     setEditingDepartment(null)
                     setDeletingImages([])
+                    setEditUploadedImages([])
                   }}
                 >
                   Cancelar
