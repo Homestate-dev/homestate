@@ -98,9 +98,21 @@ export default async function BuildingMicrositePage({
         </div>
       </div>
 
+     
+
       {/* Contenido principal */}
       <div className="max-w-4xl mx-auto px-4 py-8">
-        
+         {/* Mensaje de desarrollo */}
+      <div className="bg-orange-50 border border-orange-200 rounded-lg p-6 mb-8">
+          <h3 className="text-lg font-semibold text-orange-800 mb-2">
+            🚧 ¡Estamos desarrollando el sector de micrositios!
+          </h3>
+          <p className="text-orange-700">
+            Este micrositio está en desarrollo activo. Pronto tendrás acceso a más información 
+            sobre departamentos disponibles, precios, y podrás consultar las visitas directamente desde aquí.
+          </p>
+        </div>
+
         {/* Información básica */}
         <div className="mb-8">
           <h2 className="text-3xl font-bold text-gray-900 mb-4">
@@ -208,16 +220,7 @@ export default async function BuildingMicrositePage({
           </div>
         )}
 
-        {/* Mensaje de desarrollo */}
-        <div className="bg-orange-50 border border-orange-200 rounded-lg p-6 mb-8">
-          <h3 className="text-lg font-semibold text-orange-800 mb-2">
-            🚧 ¡Estamos desarrollando el sector de micrositios!
-          </h3>
-          <p className="text-orange-700">
-            Este micrositio está en desarrollo activo. Pronto tendrás acceso a más información 
-            sobre departamentos disponibles, precios, y podrás agendar visitas directamente desde aquí.
-          </p>
-        </div>
+        
 
         {/* Footer simple */}
         <div className="mt-12 pt-8 border-t border-gray-200 text-center">
