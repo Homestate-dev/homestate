@@ -10,13 +10,14 @@ import { useIsMobile } from "@/hooks/use-mobile"
 
 interface BuildingDetailProps {
   building: Building
+  initialTab?: string
 }
 
-export const BuildingDetail: React.FC<BuildingDetailProps> = ({ building }) => {
+export const BuildingDetail: React.FC<BuildingDetailProps> = ({ building, initialTab = "apartments" }) => {
   const isMobile = useIsMobile()
   
   return (
-    <Tabs defaultValue="apartments" className="w-full">
+    <Tabs defaultValue={initialTab} className="w-full">
       <TabsList className={`${isMobile ? 'grid w-full grid-cols-2 grid-rows-2 h-auto' : 'grid w-full grid-cols-4 lg:w-[500px]'}`}>
         <TabsTrigger value="apartments" className={`flex items-center gap-2 ${isMobile ? 'text-xs p-2' : ''}`}>
           <Home className="h-4 w-4" />

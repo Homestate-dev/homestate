@@ -28,6 +28,7 @@ interface Building {
 
 export default function BackOfficePage() {
   const [selectedBuilding, setSelectedBuilding] = useState<number | null>(null)
+  const [selectedTab, setSelectedTab] = useState<string>("apartments")
   const [buildings, setBuildings] = useState<Building[]>([])
   const [loadingBuildings, setLoadingBuildings] = useState(true)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -59,12 +60,14 @@ export default function BackOfficePage() {
     }
   }
 
-  const handleBuildingSelect = (buildingId: number) => {
+  const handleBuildingSelect = (buildingId: number, initialTab: string = "apartments") => {
     setSelectedBuilding(buildingId)
+    setSelectedTab(initialTab)
   }
 
   const handleBackToList = () => {
     setSelectedBuilding(null)
+    setSelectedTab("apartments")
   }
 
   const selectedBuildingData = buildings.find((b) => b.id === selectedBuilding)
@@ -195,7 +198,7 @@ export default function BackOfficePage() {
             <p className="text-gray-600">Cargando edificios...</p>
           </div>
         ) : selectedBuilding ? (
-          <BuildingDetail building={selectedBuildingData!} />
+          <BuildingDetail building={selectedBuildingData!} initialTab={selectedTab} />
         ) : (
           <BuildingList 
             buildings={buildings} 

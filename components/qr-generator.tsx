@@ -1,13 +1,10 @@
 "use client"
 
-import { useState } from "react"
-import { QrCode, Download, Copy, Share2 } from "lucide-react"
+import { useState, useRef } from "react"
+import { QrCode, Download } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Badge } from "@/components/ui/badge"
+import QRCodeLib from "qrcode"
 
 interface Building {
   id: number
@@ -22,34 +19,89 @@ interface QRGeneratorProps {
 
 export function QRGenerator({ building }: QRGeneratorProps) {
   const [qrGenerated, setQrGenerated] = useState(false)
-  const [qrUrl, setQrUrl] = useState("")
-  const [customMessage, setCustomMessage] = useState("")
+  const [qrDataUrl, setQrDataUrl] = useState("")
+  const canvasRef = useRef<HTMLCanvasElement>(null)
 
-  const generateQR = () => {
-    // Simular generación de QR
-    const baseUrl = "https://homestate.com"
-    const fullUrl = `${baseUrl}/${building.permalink}`
-    setQrUrl(fullUrl)
-    setQrGenerated(true)
-  }
+  const qrUrl = `https://homestate-17ca5a8016cd.herokuapp.com/edificio/${building.permalink}`
 
-  const downloadQR = () => {
-    console.log("Descargando QR...")
-    // Aquí iría la lógica para descargar el QR
-  }
-
-  const copyUrl = () => {
-    navigator.clipboard.writeText(qrUrl)
-    console.log("URL copiada al portapapeles")
-  }
-
-  const shareQR = () => {
-    if (navigator.share) {
-      navigator.share({
-        title: building.nombre,
-        text: `Conoce ${building.nombre}`,
-        url: qrUrl,
+  const generateQR = async () => {
+    try {
+      // Generar QR con la biblioteca qrcode
+      const dataUrl = await QRCodeLib.toDataURL(qrUrl, {
+        width: 256,
+        margin: 2,
+        color: {
+          dark: '#000000',
+          light: '#ffffff'
+        }
       })
+      
+      setQrDataUrl(dataUrl)
+      setQrGenerated(true)
+    } catch (error) {
+      console.error('Error generando QR:', error)
+    }
+  }
+
+  const downloadQR = async (format: 'png' | 'svg') => {
+    try {
+      if (format === 'png') {
+        // Descargar PNG
+        const link = document.createElement('a')
+        link.href = qrDataUrl
+        link.download = `qr-${building.permalink}.png`
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+      } else if (format === 'svg') {
+        // Generar y descargar SVG
+        const svgString = await QRCodeLib.toString(qrUrl, {
+          type: 'svg',
+          width: 256,
+          margin: 2,
+          color: {
+            dark: '#000000',
+            light: '#ffffff'
+          }
+        })
+        
+        const blob = new Blob([svgString], { type: 'image/svg+xml' })
+        const link = document.createElement('a')
+        link.href = URL.createObjectURL(blob)
+        link.download = `qr-${building.permalink}.svg`
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+        URL.revokeObjectURL(link.href)
+      }
+    } catch (error) {
+      console.error('Error descargando QR:', error)
+    }
+  }
+
+  const downloadVectorized = async () => {
+    try {
+      // Generar un SVG de alta calidad para uso vectorizado
+      const svgString = await QRCodeLib.toString(qrUrl, {
+        type: 'svg',
+        width: 512, // Mayor resolución para vectorizado
+        margin: 4,
+        color: {
+          dark: '#000000',
+          light: '#ffffff'
+        }
+      })
+      
+      const blob = new Blob([svgString], { type: 'image/svg+xml' })
+      const link = document.createElement('a')
+      link.href = URL.createObjectURL(blob)
+      link.download = `qr-vectorizado-${building.permalink}.svg`
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      URL.revokeObjectURL(link.href)
+    } catch (error) {
+      console.error('Error descargando QR vectorizado:', error)
     }
   }
 
@@ -57,44 +109,30 @@ export function QRGenerator({ building }: QRGeneratorProps) {
     <div className="space-y-6">
       <div>
         <h2 className="text-2xl font-bold text-gray-900">Generador de Código QR</h2>
-        <p className="text-gray-600">Crea códigos QR para facilitar el acceso a la información del edificio</p>
+        <p className="text-gray-600">Genera y descarga códigos QR para el edificio {building.nombre}</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Configuración del QR */}
+        {/* Información del edificio */}
         <Card>
           <CardHeader>
-            <CardTitle>Configuración del QR</CardTitle>
-            <CardDescription>Personaliza la información que se mostrará</CardDescription>
+            <CardTitle>Información del Edificio</CardTitle>
+            <CardDescription>Datos del edificio para el código QR</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <Label htmlFor="building-name">Nombre del edificio</Label>
-              <Input id="building-name" value={building.nombre} disabled />
+              <h3 className="font-semibold text-gray-900">{building.nombre}</h3>
+              <p className="text-sm text-gray-600">{building.direccion}</p>
             </div>
 
-            <div>
-              <Label htmlFor="building-address">Dirección</Label>
-              <Input id="building-address" value={building.direccion} disabled />
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <p className="text-sm text-gray-600 mb-2">El código QR dirigirá a:</p>
+              <p className="text-sm font-mono bg-white p-2 rounded border">
+                homestate-17ca5a8016cd.herokuapp.com/edificio/{building.permalink}
+              </p>
             </div>
 
-            <div>
-              <Label htmlFor="permalink">URL del edificio</Label>
-              <Input id="permalink" value={`homestate.com/${building.permalink}`} disabled />
-            </div>
-
-            <div>
-              <Label htmlFor="custom-message">Mensaje personalizado (opcional)</Label>
-              <Textarea
-                id="custom-message"
-                value={customMessage}
-                onChange={(e) => setCustomMessage(e.target.value)}
-                placeholder="Ej: ¡Descubre tu nuevo hogar en este increíble edificio!"
-                rows={3}
-              />
-            </div>
-
-            <Button onClick={generateQR} className="w-full bg-black hover:bg-gray-800 text-white">
+            <Button onClick={generateQR} className="w-full bg-orange-600 hover:bg-orange-700 text-white">
               <QrCode className="h-4 w-4 mr-2" />
               Generar Código QR
             </Button>
@@ -104,58 +142,52 @@ export function QRGenerator({ building }: QRGeneratorProps) {
         {/* Vista previa y descarga */}
         <Card>
           <CardHeader>
-            <CardTitle>Vista Previa del QR</CardTitle>
+            <CardTitle>Código QR</CardTitle>
             <CardDescription>
-              {qrGenerated ? "Tu código QR está listo" : "Genera un código QR para ver la vista previa"}
+              {qrGenerated ? "Tu código QR está listo para descargar" : "Genera un código QR para comenzar"}
             </CardDescription>
           </CardHeader>
           <CardContent>
             {qrGenerated ? (
               <div className="space-y-4">
-                {/* Simulación del QR */}
+                {/* QR Code Display */}
                 <div className="flex justify-center">
-                  <div className="w-48 h-48 bg-white border-2 border-gray-300 rounded-lg flex items-center justify-center">
-                    <div className="text-center">
-                      <QrCode className="h-24 w-24 mx-auto text-gray-400 mb-2" />
-                      <p className="text-sm text-gray-600">Código QR</p>
-                      <p className="text-xs text-gray-500">{building.nombre}</p>
-                    </div>
+                  <div className="p-4 bg-white border-2 border-gray-300 rounded-lg">
+                    <img 
+                      src={qrDataUrl} 
+                      alt={`Código QR para ${building.nombre}`}
+                      className="w-48 h-48"
+                    />
                   </div>
                 </div>
 
-                {/* Información del QR */}
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">URL destino:</span>
-                    <Badge variant="outline" className="text-xs">
-                      {qrUrl}
-                    </Badge>
-                  </div>
-                  {customMessage && (
-                    <div>
-                      <span className="text-sm text-gray-600">Mensaje:</span>
-                      <p className="text-sm bg-gray-50 p-2 rounded mt-1">{customMessage}</p>
-                    </div>
-                  )}
-                </div>
-
-                {/* Acciones */}
-                <div className="space-y-2">
-                  <Button onClick={downloadQR} className="w-full bg-orange-600 hover:bg-orange-700">
+                {/* Opciones de descarga */}
+                <div className="space-y-3">
+                  <h4 className="font-semibold text-gray-900">Descargar en diferentes formatos:</h4>
+                  
+                  <Button 
+                    onClick={() => downloadQR('png')} 
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                  >
                     <Download className="h-4 w-4 mr-2" />
-                    Descargar QR (PNG)
+                    PNG para folletería
                   </Button>
 
-                  <div className="grid grid-cols-2 gap-2">
-                    <Button variant="outline" onClick={copyUrl}>
-                      <Copy className="h-4 w-4 mr-2" />
-                      Copiar URL
-                    </Button>
-                    <Button variant="outline" onClick={shareQR}>
-                      <Share2 className="h-4 w-4 mr-2" />
-                      Compartir
-                    </Button>
-                  </div>
+                  <Button 
+                    onClick={() => downloadQR('svg')} 
+                    className="w-full bg-green-600 hover:bg-green-700 text-white"
+                  >
+                    <Download className="h-4 w-4 mr-2" />
+                    SVG estándar
+                  </Button>
+
+                  <Button 
+                    onClick={downloadVectorized} 
+                    className="w-full bg-purple-600 hover:bg-purple-700 text-white"
+                  >
+                    <Download className="h-4 w-4 mr-2" />
+                    Vectorizado (alta calidad)
+                  </Button>
                 </div>
               </div>
             ) : (

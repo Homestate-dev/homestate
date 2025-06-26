@@ -34,11 +34,12 @@ interface Building {
 
 interface BuildingListProps {
   buildings: Building[]
-  onSelectBuilding: (buildingId: number) => void
+  onSelectBuilding: (buildingId: number, initialTab?: string) => void
   onBuildingCreated?: () => void
+  onQRClick?: (buildingId: number) => void
 }
 
-export function BuildingList({ buildings, onSelectBuilding, onBuildingCreated }: BuildingListProps) {
+export function BuildingList({ buildings, onSelectBuilding, onBuildingCreated, onQRClick }: BuildingListProps) {
   const [showCreateDialog, setShowCreateDialog] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [buildingToDelete, setBuildingToDelete] = useState<Building | null>(null)
@@ -56,9 +57,9 @@ export function BuildingList({ buildings, onSelectBuilding, onBuildingCreated }:
     building.permalink.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
-  const generateQR = (buildingId: number) => {
-    console.log(`Generando QR para edificio ${buildingId}`)
-    // Aquí iría la lógica para generar QR
+  const generateQR = (building: Building) => {
+    // Navegar directamente a la pestaña QR del edificio
+    onSelectBuilding(building.id, "qr")
   }
 
   const handleDeleteClick = (building: Building) => {
@@ -285,7 +286,7 @@ export function BuildingList({ buildings, onSelectBuilding, onBuildingCreated }:
                       >
                         <ExternalLink className="h-4 w-4" />
                       </Button>
-                      <Button size="sm" variant="outline" onClick={() => generateQR(building.id)}>
+                      <Button size="sm" variant="outline" onClick={() => generateQR(building)}>
                         <QrCode className="h-4 w-4" />
                       </Button>
                       <Button size="sm" variant="outline">
