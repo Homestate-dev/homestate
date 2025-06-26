@@ -214,8 +214,18 @@ export async function getBuildings() {
   })
 }
 
-function safeJsonParse(jsonString: string | null, defaultValue: any = null) {
+function safeJsonParse(jsonString: string | any[] | null, defaultValue: any = null) {
   if (!jsonString) return defaultValue
+  
+  // Si ya es un array o objeto, devolverlo directamente
+  if (Array.isArray(jsonString) || typeof jsonString === 'object') {
+    return jsonString
+  }
+  
+  // Solo intentar parsear si es un string
+  if (typeof jsonString !== 'string') {
+    return defaultValue
+  }
   
   try {
     // Primero intentar parsear directamente

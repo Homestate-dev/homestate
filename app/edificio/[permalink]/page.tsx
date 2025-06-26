@@ -2,6 +2,27 @@ import { notFound } from 'next/navigation'
 import { executeQuery } from '@/lib/database'
 import Image from 'next/image'
 
+function safeJsonParse(jsonString: string | any[] | null, defaultValue: any = null) {
+  if (!jsonString) return defaultValue
+  
+  // Si ya es un array o objeto, devolverlo directamente
+  if (Array.isArray(jsonString) || typeof jsonString === 'object') {
+    return jsonString
+  }
+  
+  // Solo intentar parsear si es un string
+  if (typeof jsonString !== 'string') {
+    return defaultValue
+  }
+  
+  try {
+    return JSON.parse(jsonString)
+  } catch (error) {
+    console.error('Error parsing JSON:', error)
+    return defaultValue
+  }
+}
+
 interface Building {
   id: number
   nombre: string
@@ -41,10 +62,10 @@ async function getBuildingByPermalink(permalink: string): Promise<Building | nul
     const building = result.rows[0]
     return {
       ...building,
-      areas_comunales: building.areas_comunales ? JSON.parse(building.areas_comunales) : [],
-      seguridad: building.seguridad ? JSON.parse(building.seguridad) : [],
-      aparcamiento: building.aparcamiento ? JSON.parse(building.aparcamiento) : [],
-      imagenes_secundarias: building.imagenes_secundarias ? JSON.parse(building.imagenes_secundarias) : []
+      areas_comunales: safeJsonParse(building.areas_comunales, []),
+      seguridad: safeJsonParse(building.seguridad, []),
+      aparcamiento: safeJsonParse(building.aparcamiento, []),
+      imagenes_secundarias: safeJsonParse(building.imagenes_secundarias, [])
     }
   } catch (error) {
     console.error('Error fetching building by permalink:', error)
