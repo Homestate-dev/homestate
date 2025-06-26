@@ -3,7 +3,7 @@
 import type React from "react"
 
 import { useState, useEffect } from "react"
-import { Plus, Eye, Edit, EyeOff, Home, Maximize, Upload, X, Loader2 } from "lucide-react"
+import { Plus, Eye, Edit, EyeOff, Home, Maximize, Upload, X, Loader2, ChevronLeft, ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -17,6 +17,7 @@ import { Separator } from "@/components/ui/separator"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { toast } from "sonner"
 import { useAuth } from "@/contexts/auth-context"
+import Image from "next/image"
 
 interface Department {
   id: number
@@ -57,8 +58,14 @@ export function ApartmentManagement({ buildingId, buildingName, buildingPermalin
   const [departamentos, setDepartamentos] = useState<Department[]>([])
   const [loading, setLoading] = useState(true)
   const [showCreateForm, setShowCreateForm] = useState(false)
+  const [showViewDialog, setShowViewDialog] = useState(false)
+  const [showEditDialog, setShowEditDialog] = useState(false)
+  const [selectedDepartment, setSelectedDepartment] = useState<Department | null>(null)
+  const [editingDepartment, setEditingDepartment] = useState<Department | null>(null)
+  const [currentImageIndex, setCurrentImageIndex] = useState(0)
   const [uploadedImages, setUploadedImages] = useState<File[]>([])
   const [creating, setCreating] = useState(false)
+  const [updating, setUpdating] = useState(false)
   const isMobile = useIsMobile()
   const { user } = useAuth()
 
@@ -105,6 +112,75 @@ export function ApartmentManagement({ buildingId, buildingName, buildingPermalin
       toast.error('Error al cargar departamentos')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleViewDepartment = (department: Department) => {
+    setSelectedDepartment(department)
+    setCurrentImageIndex(0)
+    setShowViewDialog(true)
+  }
+
+  const handleEditDepartment = (department: Department) => {
+    setEditingDepartment({ ...department })
+    setShowEditDialog(true)
+  }
+
+  const handleUpdateDepartment = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    if (!user || !editingDepartment) {
+      toast.error('Error en la actualización')
+      return
+    }
+
+    setUpdating(true)
+
+    try {
+      const { id, fecha_creacion, fecha_actualizacion, edificio_id, ...updateData } = editingDepartment
+
+      const response = await fetch(`/api/departments/${editingDepartment.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...updateData,
+          currentUserUid: user.uid
+        })
+      })
+
+      const data = await response.json()
+
+      if (data.success) {
+        toast.success(data.message || 'Departamento actualizado exitosamente')
+        setShowEditDialog(false)
+        setEditingDepartment(null)
+        fetchDepartments()
+      } else {
+        toast.error(data.error || 'Error al actualizar departamento')
+      }
+    } catch (error) {
+      console.error('Error al actualizar departamento:', error)
+      toast.error('Error al actualizar departamento')
+    } finally {
+      setUpdating(false)
+    }
+  }
+
+  const nextImage = () => {
+    if (selectedDepartment && selectedDepartment.imagenes.length > 1) {
+      setCurrentImageIndex((prev) => 
+        prev === selectedDepartment.imagenes.length - 1 ? 0 : prev + 1
+      )
+    }
+  }
+
+  const prevImage = () => {
+    if (selectedDepartment && selectedDepartment.imagenes.length > 1) {
+      setCurrentImageIndex((prev) => 
+        prev === 0 ? selectedDepartment.imagenes.length - 1 : prev - 1
+      )
     }
   }
 
@@ -382,16 +458,27 @@ export function ApartmentManagement({ buildingId, buildingName, buildingPermalin
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        <Button size="sm" variant="outline">
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => handleViewDepartment(dept)}
+                          title="Ver departamento"
+                        >
                           <Eye className="h-4 w-4" />
                         </Button>
-                        <Button size="sm" variant="outline">
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => handleEditDepartment(dept)}
+                          title="Editar departamento"
+                        >
                           <Edit className="h-4 w-4" />
                         </Button>
                         <Button 
                           size="sm" 
                           variant="outline" 
                           onClick={() => toggleDisponibilidad(dept.id)}
+                          title={dept.disponible ? "Marcar como no disponible" : "Marcar como disponible"}
                         >
                           {dept.disponible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                         </Button>
@@ -404,6 +491,465 @@ export function ApartmentManagement({ buildingId, buildingName, buildingPermalin
           )}
         </CardContent>
       </Card>
+
+      {/* Dialog para ver departamento (Vista Rápida) */}
+      <Dialog open={showViewDialog} onOpenChange={setShowViewDialog}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              {selectedDepartment?.nombre} - Departamento {selectedDepartment?.numero}
+            </DialogTitle>
+            <DialogDescription>
+              Vista rápida del departamento en {buildingName}
+            </DialogDescription>
+          </DialogHeader>
+
+          {selectedDepartment && (
+            <div className="space-y-6">
+              {/* Galería de imágenes */}
+              {selectedDepartment.imagenes.length > 0 && (
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">Imágenes</h3>
+                  <div className="relative">
+                    <div className="aspect-video relative bg-gray-100 rounded-lg overflow-hidden">
+                      <Image
+                        src={selectedDepartment.imagenes[currentImageIndex] || "/placeholder.jpg"}
+                        alt={`${selectedDepartment.nombre} - Imagen ${currentImageIndex + 1}`}
+                        fill
+                        className="object-cover"
+                      />
+                      {selectedDepartment.imagenes.length > 1 && (
+                        <>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-white"
+                            onClick={prevImage}
+                          >
+                            <ChevronLeft className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-white"
+                            onClick={nextImage}
+                          >
+                            <ChevronRight className="h-4 w-4" />
+                          </Button>
+                        </>
+                      )}
+                    </div>
+                    {selectedDepartment.imagenes.length > 1 && (
+                      <div className="flex justify-center mt-2 space-x-1">
+                        {selectedDepartment.imagenes.map((_, index) => (
+                          <button
+                            key={index}
+                            className={`w-2 h-2 rounded-full ${
+                              index === currentImageIndex ? 'bg-orange-600' : 'bg-gray-300'
+                            }`}
+                            onClick={() => setCurrentImageIndex(index)}
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Información básica */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div>
+                  <Label className="text-sm font-medium text-gray-600">Piso</Label>
+                  <p className="text-lg">{selectedDepartment.piso}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-gray-600">Área</Label>
+                  <p className="text-lg">{selectedDepartment.area}m²</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-gray-600">Habitaciones</Label>
+                  <p className="text-lg">{selectedDepartment.cantidad_habitaciones}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-gray-600">Estado</Label>
+                  <Badge variant="outline">{selectedDepartment.estado.replace('_', ' ')}</Badge>
+                </div>
+              </div>
+
+              {/* Precios */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {selectedDepartment.valor_venta && selectedDepartment.valor_venta > 0 && (
+                  <div>
+                    <Label className="text-sm font-medium text-gray-600">Precio de Venta</Label>
+                    <p className="text-2xl font-bold text-green-600">${selectedDepartment.valor_venta.toLocaleString()}</p>
+                  </div>
+                )}
+                {selectedDepartment.valor_arriendo && selectedDepartment.valor_arriendo > 0 && (
+                  <div>
+                    <Label className="text-sm font-medium text-gray-600">Precio de Arriendo</Label>
+                    <p className="text-2xl font-bold text-blue-600">${selectedDepartment.valor_arriendo.toLocaleString()}/mes</p>
+                  </div>
+                )}
+              </div>
+
+              <Separator />
+
+              {/* Características */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Características</h3>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                  {selectedDepartment.amueblado && <Badge variant="secondary">Amoblado</Badge>}
+                  {selectedDepartment.tiene_living_comedor && <Badge variant="secondary">Sala comedor</Badge>}
+                  {selectedDepartment.tiene_cocina_separada && <Badge variant="secondary">Cocina separada</Badge>}
+                  {selectedDepartment.tiene_antebano && <Badge variant="secondary">Antebaño</Badge>}
+                  {selectedDepartment.tiene_bano_completo && <Badge variant="secondary">Baño completo</Badge>}
+                  {selectedDepartment.tiene_aire_acondicionado && <Badge variant="secondary">Aire acondicionado</Badge>}
+                  {selectedDepartment.tiene_placares && <Badge variant="secondary">Closets</Badge>}
+                  {selectedDepartment.tiene_cocina_con_horno_y_anafe && <Badge variant="secondary">Cocina equipada</Badge>}
+                  {selectedDepartment.tiene_muebles_bajo_mesada && <Badge variant="secondary">Muebles bajo mesada</Badge>}
+                  {selectedDepartment.tiene_desayunador_madera && <Badge variant="secondary">Desayunador de madera</Badge>}
+                </div>
+              </div>
+
+              <div className="flex justify-end">
+                <Button onClick={() => setShowViewDialog(false)}>
+                  Cerrar
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog para editar departamento */}
+      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Editar Departamento</DialogTitle>
+            <DialogDescription>
+              Modifica la información del departamento {editingDepartment?.numero} en {buildingName}
+            </DialogDescription>
+          </DialogHeader>
+
+          {editingDepartment && (
+            <form onSubmit={handleUpdateDepartment} className="space-y-6">
+              {/* Información básica */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Información Básica</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <Label htmlFor="edit-numero">Número *</Label>
+                    <Input
+                      id="edit-numero"
+                      value={editingDepartment.numero}
+                      onChange={(e) => setEditingDepartment(prev => prev ? { ...prev, numero: e.target.value } : null)}
+                      placeholder="Ej: 101"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="edit-piso">Piso *</Label>
+                    <Input
+                      id="edit-piso"
+                      type="number"
+                      value={editingDepartment.piso}
+                      onChange={(e) => setEditingDepartment(prev => prev ? { ...prev, piso: parseInt(e.target.value) || 1 } : null)}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="edit-area">Área (m²) *</Label>
+                    <Input
+                      id="edit-area"
+                      type="number"
+                      step="0.1"
+                      value={editingDepartment.area}
+                      onChange={(e) => setEditingDepartment(prev => prev ? { ...prev, area: parseFloat(e.target.value) || 0 } : null)}
+                      required
+                    />
+                  </div>
+                </div>
+                <div>
+                  <Label htmlFor="edit-nombre">Nombre del departamento *</Label>
+                  <Input
+                    id="edit-nombre"
+                    value={editingDepartment.nombre}
+                    onChange={(e) => setEditingDepartment(prev => prev ? { ...prev, nombre: e.target.value } : null)}
+                    placeholder="Ej: Departamento Ejecutivo"
+                    required
+                  />
+                </div>
+              </div>
+
+              <Separator />
+
+              {/* Características principales */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Características Principales</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div>
+                    <Label htmlFor="edit-habitaciones">Habitaciones *</Label>
+                    <Select
+                      value={editingDepartment.cantidad_habitaciones}
+                      onValueChange={(value) => setEditingDepartment(prev => prev ? { ...prev, cantidad_habitaciones: value } : null)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Seleccionar" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Loft">Loft</SelectItem>
+                        <SelectItem value="Suite">Suite</SelectItem>
+                        <SelectItem value="2">2 habitaciones</SelectItem>
+                        <SelectItem value="3">3 habitaciones</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="edit-tipo">Tipo de operación *</Label>
+                    <Select
+                      value={editingDepartment.tipo}
+                      onValueChange={(value) => setEditingDepartment(prev => prev ? { ...prev, tipo: value } : null)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Seleccionar" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="arriendo">Arriendo</SelectItem>
+                        <SelectItem value="venta">Venta</SelectItem>
+                        <SelectItem value="arriendo y venta">Arriendo y venta</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="edit-estado">Estado *</Label>
+                    <Select
+                      value={editingDepartment.estado}
+                      onValueChange={(value) => setEditingDepartment(prev => prev ? { ...prev, estado: value } : null)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Seleccionar" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="nuevo">Nuevo</SelectItem>
+                        <SelectItem value="poco_uso">Poco uso</SelectItem>
+                        <SelectItem value="un_ano">Un año</SelectItem>
+                        <SelectItem value="mas_de_un_ano">Más de un año</SelectItem>
+                        <SelectItem value="remodelar">Remodelar</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="edit-ideal_para">Ideal para *</Label>
+                    <Select
+                      value={editingDepartment.ideal_para}
+                      onValueChange={(value) => setEditingDepartment(prev => prev ? { ...prev, ideal_para: value } : null)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Seleccionar" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="persona_sola">Persona sola</SelectItem>
+                        <SelectItem value="pareja">Pareja</SelectItem>
+                        <SelectItem value="profesional">Profesional</SelectItem>
+                        <SelectItem value="familia">Familia</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </div>
+
+              <Separator />
+
+              {/* Precios */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Precios</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="edit-valor_venta">Valor de venta (USD)</Label>
+                    <Input
+                      id="edit-valor_venta"
+                      type="number"
+                      value={editingDepartment.valor_venta || 0}
+                      onChange={(e) => setEditingDepartment(prev => prev ? { ...prev, valor_venta: parseInt(e.target.value) || 0 } : null)}
+                      placeholder="0"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="edit-valor_arriendo">Valor de arriendo (USD/mes)</Label>
+                    <Input
+                      id="edit-valor_arriendo"
+                      type="number"
+                      value={editingDepartment.valor_arriendo || 0}
+                      onChange={(e) => setEditingDepartment(prev => prev ? { ...prev, valor_arriendo: parseInt(e.target.value) || 0 } : null)}
+                      placeholder="0"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <Separator />
+
+              {/* Ambientes */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Ambientes</h3>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="edit-amueblado"
+                      checked={editingDepartment.amueblado}
+                      onCheckedChange={(checked) =>
+                        setEditingDepartment(prev => prev ? { ...prev, amueblado: checked as boolean } : null)
+                      }
+                    />
+                    <Label htmlFor="edit-amueblado">Amoblado</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="edit-living_comedor"
+                      checked={editingDepartment.tiene_living_comedor}
+                      onCheckedChange={(checked) =>
+                        setEditingDepartment(prev => prev ? { ...prev, tiene_living_comedor: checked as boolean } : null)
+                      }
+                    />
+                    <Label htmlFor="edit-living_comedor">Sala comedor</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="edit-cocina_separada"
+                      checked={editingDepartment.tiene_cocina_separada}
+                      onCheckedChange={(checked) =>
+                        setEditingDepartment(prev => prev ? { ...prev, tiene_cocina_separada: checked as boolean } : null)
+                      }
+                    />
+                    <Label htmlFor="edit-cocina_separada">Cocina separada</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="edit-antebano"
+                      checked={editingDepartment.tiene_antebano}
+                      onCheckedChange={(checked) =>
+                        setEditingDepartment(prev => prev ? { ...prev, tiene_antebano: checked as boolean } : null)
+                      }
+                    />
+                    <Label htmlFor="edit-antebano">Antebaño</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="edit-bano_completo"
+                      checked={editingDepartment.tiene_bano_completo}
+                      onCheckedChange={(checked) =>
+                        setEditingDepartment(prev => prev ? { ...prev, tiene_bano_completo: checked as boolean } : null)
+                      }
+                    />
+                    <Label htmlFor="edit-bano_completo">Baño completo</Label>
+                  </div>
+                </div>
+              </div>
+
+              <Separator />
+
+              {/* Equipamiento */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Equipamiento</h3>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="edit-aire_acondicionado"
+                      checked={editingDepartment.tiene_aire_acondicionado}
+                      onCheckedChange={(checked) =>
+                        setEditingDepartment(prev => prev ? { ...prev, tiene_aire_acondicionado: checked as boolean } : null)
+                      }
+                    />
+                    <Label htmlFor="edit-aire_acondicionado">Aire acondicionado</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="edit-placares"
+                      checked={editingDepartment.tiene_placares}
+                      onCheckedChange={(checked) =>
+                        setEditingDepartment(prev => prev ? { ...prev, tiene_placares: checked as boolean } : null)
+                      }
+                    />
+                    <Label htmlFor="edit-placares">Closets</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="edit-cocina_horno_anafe"
+                      checked={editingDepartment.tiene_cocina_con_horno_y_anafe}
+                      onCheckedChange={(checked) =>
+                        setEditingDepartment(prev => prev ? { ...prev, tiene_cocina_con_horno_y_anafe: checked as boolean } : null)
+                      }
+                    />
+                    <Label htmlFor="edit-cocina_horno_anafe">Cocina con horno y anafe</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="edit-muebles_bajo_mesada"
+                      checked={editingDepartment.tiene_muebles_bajo_mesada}
+                      onCheckedChange={(checked) =>
+                        setEditingDepartment(prev => prev ? { ...prev, tiene_muebles_bajo_mesada: checked as boolean } : null)
+                      }
+                    />
+                    <Label htmlFor="edit-muebles_bajo_mesada">Muebles bajo mesada</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="edit-desayunador_madera"
+                      checked={editingDepartment.tiene_desayunador_madera}
+                      onCheckedChange={(checked) =>
+                        setEditingDepartment(prev => prev ? { ...prev, tiene_desayunador_madera: checked as boolean } : null)
+                      }
+                    />
+                    <Label htmlFor="edit-desayunador_madera">Desayunador de madera</Label>
+                  </div>
+                </div>
+              </div>
+
+              <Separator />
+
+              {/* Disponibilidad */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Disponibilidad</h3>
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="edit-disponible"
+                    checked={editingDepartment.disponible}
+                    onCheckedChange={(checked) =>
+                      setEditingDepartment(prev => prev ? { ...prev, disponible: checked as boolean } : null)
+                    }
+                  />
+                  <Label htmlFor="edit-disponible">Departamento disponible</Label>
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-2 pt-4">
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={() => {
+                    setShowEditDialog(false)
+                    setEditingDepartment(null)
+                  }}
+                >
+                  Cancelar
+                </Button>
+                <Button 
+                  type="submit" 
+                  className="bg-orange-600 hover:bg-orange-700"
+                  disabled={updating}
+                >
+                  {updating ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <Edit className="h-4 w-4 mr-2" />
+                  )}
+                  {updating ? "Actualizando..." : "Guardar Cambios"}
+                </Button>
+              </div>
+            </form>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Dialog para crear departamento */}
       <Dialog open={showCreateForm} onOpenChange={setShowCreateForm}>
