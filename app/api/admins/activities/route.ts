@@ -3,8 +3,8 @@ import { executeQuery } from '@/lib/database'
 
 export async function GET() {
   try {
-    // Obtener todas las actividades con información del administrador
-    const query = 
+    // Obtener todas las actividades con informaciÃ³n del administrador
+    const query = `
       SELECT 
         aa.id,
         aa.admin_firebase_uid,
@@ -18,7 +18,7 @@ export async function GET() {
       LEFT JOIN administradores a ON aa.admin_firebase_uid = a.firebase_uid
       ORDER BY aa.fecha DESC
       LIMIT 200
-    
+    `
     
     const result = await executeQuery(query)
     
