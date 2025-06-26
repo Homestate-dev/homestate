@@ -489,7 +489,8 @@ export async function getDepartmentById(id: number) {
     SELECT 
       d.*,
       e.nombre as edificio_nombre,
-      e.direccion as edificio_direccion
+      e.direccion as edificio_direccion,
+      e.permalink as edificio_permalink
     FROM departamentos d
     JOIN edificios e ON d.edificio_id = e.id
     WHERE d.id = $1

@@ -207,4 +207,43 @@ export async function deleteBuildingImages(building: {
     deletedFiles: results.filter(r => r.success).map(r => r.filePath),
     failedFiles: results.filter(r => !r.success).map(r => ({ path: r.filePath, error: r.error }))
   }
+}
+
+// Función para eliminar imágenes específicas de un departamento
+export async function deleteDepartmentImages(imageUrls: string[], buildingPermalink: string, departmentNumber: string) {
+  const filesToDelete: string[] = []
+  
+  // Extraer paths de las URLs de las imágenes
+  for (const imageUrl of imageUrls) {
+    const imagePath = getFilePathFromUrl(imageUrl)
+    if (imagePath) {
+      filesToDelete.push(imagePath)
+    } else {
+      // Si no podemos extraer el path de la URL, intentamos construirlo
+      // basado en la estructura que usamos: buildings/{permalink}/departments/{numero}/
+      const fileName = imageUrl.split('/').pop()?.split('?')[0]
+      if (fileName) {
+        const constructedPath = `buildings/${buildingPermalink}/departments/${departmentNumber}/${fileName}`
+        filesToDelete.push(constructedPath)
+      }
+    }
+  }
+  
+  if (filesToDelete.length === 0) {
+    return { success: true, message: 'No images to delete', deletedFiles: [] }
+  }
+  
+  // Eliminar los archivos
+  const results = await deleteFirebaseFiles(filesToDelete)
+  
+  const successfulDeletions = results.filter(r => r.success)
+  const failedDeletions = results.filter(r => !r.success)
+  
+  return {
+    success: failedDeletions.length === 0,
+    message: `Deleted ${successfulDeletions.length} images, ${failedDeletions.length} failed`,
+    deletedFiles: successfulDeletions.map(r => r.filePath),
+    failedFiles: failedDeletions.map(r => r.filePath),
+    details: results
+  }
 } 

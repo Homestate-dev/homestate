@@ -66,6 +66,7 @@ export function ApartmentManagement({ buildingId, buildingName, buildingPermalin
   const [uploadedImages, setUploadedImages] = useState<File[]>([])
   const [creating, setCreating] = useState(false)
   const [updating, setUpdating] = useState(false)
+  const [deletingImages, setDeletingImages] = useState<string[]>([])
   const isMobile = useIsMobile()
   const { user } = useAuth()
 
@@ -156,6 +157,7 @@ export function ApartmentManagement({ buildingId, buildingName, buildingPermalin
         toast.success(data.message || 'Departamento actualizado exitosamente')
         setShowEditDialog(false)
         setEditingDepartment(null)
+        setDeletingImages([])
         fetchDepartments()
       } else {
         toast.error(data.error || 'Error al actualizar departamento')
@@ -165,6 +167,55 @@ export function ApartmentManagement({ buildingId, buildingName, buildingPermalin
       toast.error('Error al actualizar departamento')
     } finally {
       setUpdating(false)
+    }
+  }
+
+  const handleDeleteImage = async (imageUrl: string) => {
+    if (!user || !editingDepartment) {
+      toast.error('Error en la eliminación')
+      return
+    }
+
+    // Confirmación antes de eliminar
+    if (!confirm('¿Estás seguro de que deseas eliminar esta imagen? Esta acción no se puede deshacer.')) {
+      return
+    }
+
+    // Agregar imagen a la lista de imágenes siendo eliminadas
+    setDeletingImages(prev => [...prev, imageUrl])
+
+    try {
+      const response = await fetch(`/api/departments/${editingDepartment.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          action: 'delete_images',
+          imageUrls: [imageUrl],
+          currentUserUid: user.uid
+        })
+      })
+
+      const data = await response.json()
+
+      if (data.success) {
+        // Actualizar el departamento en edición con las imágenes restantes
+        setEditingDepartment(prev => prev ? {
+          ...prev,
+          imagenes: data.data.imagenes
+        } : null)
+        
+        toast.success(data.message)
+      } else {
+        toast.error(data.error || 'Error al eliminar imagen')
+      }
+    } catch (error) {
+      console.error('Error al eliminar imagen:', error)
+      toast.error('Error al eliminar imagen')
+    } finally {
+      // Remover imagen de la lista de imágenes siendo eliminadas
+      setDeletingImages(prev => prev.filter(url => url !== imageUrl))
     }
   }
 
@@ -922,6 +973,84 @@ export function ApartmentManagement({ buildingId, buildingName, buildingPermalin
                 </div>
               </div>
 
+              <Separator />
+
+              {/* Gestión de imágenes existentes */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Imágenes del Departamento</h3>
+                
+                {editingDepartment.imagenes && editingDepartment.imagenes.length > 0 ? (
+                  <div className="space-y-4">
+                    <p className="text-sm text-gray-600">
+                      Imágenes actuales ({editingDepartment.imagenes.length})
+                    </p>
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                      {editingDepartment.imagenes.map((imageUrl, index) => (
+                        <div key={index} className="relative group">
+                          <div className="aspect-square relative bg-gray-100 rounded-lg overflow-hidden">
+                            <Image
+                              src={imageUrl}
+                              alt={`${editingDepartment.nombre} - Imagen ${index + 1}`}
+                              fill
+                              className="object-cover transition-transform group-hover:scale-105"
+                            />
+                            {/* Overlay con botón eliminar */}
+                            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                              <Button
+                                type="button"
+                                variant="destructive"
+                                size="sm"
+                                onClick={() => handleDeleteImage(imageUrl)}
+                                disabled={deletingImages.includes(imageUrl)}
+                                className="gap-2"
+                              >
+                                {deletingImages.includes(imageUrl) ? (
+                                  <Loader2 className="h-4 w-4 animate-spin" />
+                                ) : (
+                                  <X className="h-4 w-4" />
+                                )}
+                                {deletingImages.includes(imageUrl) ? 'Eliminando...' : 'Eliminar'}
+                              </Button>
+                            </div>
+                          </div>
+                          <p className="text-xs text-center text-gray-500 mt-1">
+                            Imagen {index + 1}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                    
+                    {editingDepartment.imagenes.length === 0 && (
+                      <div className="text-center py-8 bg-gray-50 rounded-lg">
+                        <Upload className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                        <p className="text-gray-600">No hay imágenes</p>
+                        <p className="text-sm text-gray-500">Las imágenes se pueden agregar al crear un nuevo departamento</p>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 bg-gray-50 rounded-lg">
+                    <Upload className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                    <p className="text-gray-600">No hay imágenes</p>
+                    <p className="text-sm text-gray-500">Las imágenes se pueden agregar al crear un nuevo departamento</p>
+                  </div>
+                )}
+
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <div className="flex items-start gap-2">
+                    <div className="text-blue-600 mt-0.5">ℹ️</div>
+                    <div className="text-sm text-blue-800">
+                      <p className="font-medium mb-1">Gestión de imágenes:</p>
+                      <ul className="space-y-1 text-sm">
+                        <li>• Haz clic en "Eliminar" sobre cualquier imagen para removerla permanentemente</li>
+                        <li>• Las imágenes se eliminan tanto de la base de datos como del almacenamiento</li>
+                        <li>• Para agregar nuevas imágenes, usa la opción "Nuevo Departamento"</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               <div className="flex justify-end gap-2 pt-4">
                 <Button 
                   type="button" 
@@ -929,6 +1058,7 @@ export function ApartmentManagement({ buildingId, buildingName, buildingPermalin
                   onClick={() => {
                     setShowEditDialog(false)
                     setEditingDepartment(null)
+                    setDeletingImages([])
                   }}
                 >
                   Cancelar
