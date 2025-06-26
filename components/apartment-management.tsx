@@ -2,8 +2,8 @@
 
 import type React from "react"
 
-import { useState } from "react"
-import { Plus, Eye, Edit, EyeOff, Home, Maximize, Upload, X } from "lucide-react"
+import { useState, useEffect } from "react"
+import { Plus, Eye, Edit, EyeOff, Home, Maximize, Upload, X, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -15,50 +15,53 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Separator } from "@/components/ui/separator"
 import { useIsMobile } from "@/hooks/use-mobile"
+import { toast } from "sonner"
+import { useAuth } from "@/contexts/auth-context"
 
-// Datos de ejemplo de departamentos
-const departamentosEjemplo = [
-  {
-    id: 1,
-    numero: "101",
-    nombre: "Departamento Ejecutivo",
-    piso: 1,
-    area: 85.5,
-    valor_arriendo: 1200,
-    valor_venta: 150000,
-    disponible: true,
-    cantidad_habitaciones: "2",
-    tipo: "arriendo y venta",
-    estado: "nuevo",
-    ideal_para: "familia",
-    imagenes: ["img1.jpg", "img2.jpg"],
-  },
-  {
-    id: 2,
-    numero: "102",
-    nombre: "Departamento Familiar",
-    piso: 1,
-    area: 120,
-    valor_venta: 180000,
-    disponible: true,
-    cantidad_habitaciones: "3",
-    tipo: "venta",
-    estado: "poco_uso",
-    ideal_para: "familia",
-    imagenes: ["img3.jpg"],
-  },
-]
+interface Department {
+  id: number
+  edificio_id: number
+  numero: string
+  nombre: string
+  piso: number
+  area: number
+  valor_arriendo?: number
+  valor_venta?: number
+  disponible: boolean
+  cantidad_habitaciones: string
+  tipo: string
+  estado: string
+  ideal_para: string
+  amueblado: boolean
+  tiene_living_comedor: boolean
+  tiene_cocina_separada: boolean
+  tiene_antebano: boolean
+  tiene_bano_completo: boolean
+  tiene_aire_acondicionado: boolean
+  tiene_placares: boolean
+  tiene_cocina_con_horno_y_anafe: boolean
+  tiene_muebles_bajo_mesada: boolean
+  tiene_desayunador_madera: boolean
+  imagenes: string[]
+  fecha_creacion: string
+  fecha_actualizacion: string
+}
 
 interface ApartmentManagementProps {
   buildingId: number
   buildingName: string
+  buildingPermalink: string
 }
 
-export function ApartmentManagement({ buildingId, buildingName }: ApartmentManagementProps) {
-  const [departamentos, setDepartamentos] = useState(departamentosEjemplo)
+export function ApartmentManagement({ buildingId, buildingName, buildingPermalink }: ApartmentManagementProps) {
+  const [departamentos, setDepartamentos] = useState<Department[]>([])
+  const [loading, setLoading] = useState(true)
   const [showCreateForm, setShowCreateForm] = useState(false)
-  const [uploadedImages, setUploadedImages] = useState<string[]>([])
+  const [uploadedImages, setUploadedImages] = useState<File[]>([])
+  const [creating, setCreating] = useState(false)
   const isMobile = useIsMobile()
+  const { user } = useAuth()
+
   const [newApartment, setNewApartment] = useState({
     numero: "",
     nombre: "",
@@ -82,11 +85,33 @@ export function ApartmentManagement({ buildingId, buildingName }: ApartmentManag
     tiene_desayunador_madera: false,
   })
 
+  useEffect(() => {
+    fetchDepartments()
+  }, [buildingId])
+
+  const fetchDepartments = async () => {
+    try {
+      setLoading(true)
+      const response = await fetch(`/api/departments?edificio_id=${buildingId}`)
+      const data = await response.json()
+      
+      if (data.success) {
+        setDepartamentos(data.data)
+      } else {
+        toast.error('Error al cargar departamentos')
+      }
+    } catch (error) {
+      console.error('Error al obtener departamentos:', error)
+      toast.error('Error al cargar departamentos')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files
     if (files) {
-      const newImages = Array.from(files).map((file) => URL.createObjectURL(file))
-      setUploadedImages((prev) => [...prev, ...newImages])
+      setUploadedImages(Array.from(files))
     }
   }
 
@@ -94,47 +119,137 @@ export function ApartmentManagement({ buildingId, buildingName }: ApartmentManag
     setUploadedImages((prev) => prev.filter((_, i) => i !== index))
   }
 
-  const toggleDisponibilidad = (id: number) => {
-    setDepartamentos((prev) => prev.map((dept) => (dept.id === id ? { ...dept, disponible: !dept.disponible } : dept)))
+  const toggleDisponibilidad = async (id: number) => {
+    try {
+      const response = await fetch(`/api/departments/${id}/toggle-availability`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          currentUserUid: user?.uid
+        })
+      })
+
+      const data = await response.json()
+
+      if (data.success) {
+        setDepartamentos((prev) => 
+          prev.map((dept) => 
+            dept.id === id ? { ...dept, disponible: data.data.disponible } : dept
+          )
+        )
+        toast.success(data.message)
+      } else {
+        toast.error(data.error || 'Error al cambiar disponibilidad')
+      }
+    } catch (error) {
+      console.error('Error al cambiar disponibilidad:', error)
+      toast.error('Error al cambiar disponibilidad')
+    }
   }
 
-  const handleCreateApartment = (e: React.FormEvent) => {
+  const handleCreateApartment = async (e: React.FormEvent) => {
     e.preventDefault()
-    const newId = Math.max(...departamentos.map((d) => d.id)) + 1
-    setDepartamentos((prev) => [
-      ...prev,
-      {
-        ...newApartment,
-        id: newId,
-        disponible: true,
-        imagenes: uploadedImages,
-      },
-    ])
-    setShowCreateForm(false)
-    setUploadedImages([])
-    // Reset form
-    setNewApartment({
-      numero: "",
-      nombre: "",
-      piso: 1,
-      area: 0,
-      valor_arriendo: 0,
-      valor_venta: 0,
-      cantidad_habitaciones: "",
-      tipo: "",
-      estado: "",
-      ideal_para: "",
-      amueblado: false,
-      tiene_living_comedor: false,
-      tiene_cocina_separada: false,
-      tiene_antebano: false,
-      tiene_bano_completo: false,
-      tiene_aire_acondicionado: false,
-      tiene_placares: false,
-      tiene_cocina_con_horno_y_anafe: false,
-      tiene_muebles_bajo_mesada: false,
-      tiene_desayunador_madera: false,
-    })
+    
+    if (!user) {
+      toast.error('No estás autenticado')
+      return
+    }
+
+    setCreating(true)
+
+    try {
+      const formData = new FormData()
+      
+      // Agregar datos del departamento
+      formData.append('edificio_id', buildingId.toString())
+      formData.append('numero', newApartment.numero)
+      formData.append('nombre', newApartment.nombre)
+      formData.append('piso', newApartment.piso.toString())
+      formData.append('area', newApartment.area.toString())
+      formData.append('valor_arriendo', newApartment.valor_arriendo.toString())
+      formData.append('valor_venta', newApartment.valor_venta.toString())
+      formData.append('cantidad_habitaciones', newApartment.cantidad_habitaciones)
+      formData.append('tipo', newApartment.tipo)
+      formData.append('estado', newApartment.estado)
+      formData.append('ideal_para', newApartment.ideal_para)
+      formData.append('currentUserUid', user.uid)
+      formData.append('buildingPermalink', buildingPermalink)
+
+      // Agregar características booleanas
+      formData.append('amueblado', newApartment.amueblado.toString())
+      formData.append('tiene_living_comedor', newApartment.tiene_living_comedor.toString())
+      formData.append('tiene_cocina_separada', newApartment.tiene_cocina_separada.toString())
+      formData.append('tiene_antebano', newApartment.tiene_antebano.toString())
+      formData.append('tiene_bano_completo', newApartment.tiene_bano_completo.toString())
+      formData.append('tiene_aire_acondicionado', newApartment.tiene_aire_acondicionado.toString())
+      formData.append('tiene_placares', newApartment.tiene_placares.toString())
+      formData.append('tiene_cocina_con_horno_y_anafe', newApartment.tiene_cocina_con_horno_y_anafe.toString())
+      formData.append('tiene_muebles_bajo_mesada', newApartment.tiene_muebles_bajo_mesada.toString())
+      formData.append('tiene_desayunador_madera', newApartment.tiene_desayunador_madera.toString())
+
+      // Agregar imágenes
+      uploadedImages.forEach((file) => {
+        formData.append('images', file)
+      })
+
+      const response = await fetch('/api/departments', {
+        method: 'POST',
+        body: formData
+      })
+
+      const data = await response.json()
+
+      if (data.success) {
+        toast.success(data.message)
+        setShowCreateForm(false)
+        setUploadedImages([])
+        
+        // Reset form
+        setNewApartment({
+          numero: "",
+          nombre: "",
+          piso: 1,
+          area: 0,
+          valor_arriendo: 0,
+          valor_venta: 0,
+          cantidad_habitaciones: "",
+          tipo: "",
+          estado: "",
+          ideal_para: "",
+          amueblado: false,
+          tiene_living_comedor: false,
+          tiene_cocina_separada: false,
+          tiene_antebano: false,
+          tiene_bano_completo: false,
+          tiene_aire_acondicionado: false,
+          tiene_placares: false,
+          tiene_cocina_con_horno_y_anafe: false,
+          tiene_muebles_bajo_mesada: false,
+          tiene_desayunador_madera: false,
+        })
+
+        // Recargar departamentos
+        fetchDepartments()
+      } else {
+        toast.error(data.error || 'Error al crear departamento')
+      }
+    } catch (error) {
+      console.error('Error al crear departamento:', error)
+      toast.error('Error al crear departamento')
+    } finally {
+      setCreating(false)
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-8">
+        <Loader2 className="h-8 w-8 animate-spin text-orange-600" />
+        <span className="ml-2">Cargando departamentos...</span>
+      </div>
+    )
   }
 
   return (
@@ -216,59 +331,77 @@ export function ApartmentManagement({ buildingId, buildingName }: ApartmentManag
           <CardTitle>Lista de Departamentos</CardTitle>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Número</TableHead>
-                <TableHead>Nombre</TableHead>
-                <TableHead>Piso</TableHead>
-                <TableHead>Área</TableHead>
-                <TableHead>Habitaciones</TableHead>
-                <TableHead>Tipo</TableHead>
-                <TableHead>Precio</TableHead>
-                <TableHead>Estado</TableHead>
-                <TableHead>Acciones</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {departamentos.map((dept) => (
-                <TableRow key={dept.id}>
-                  <TableCell className="font-medium">{dept.numero}</TableCell>
-                  <TableCell>{dept.nombre}</TableCell>
-                  <TableCell>{dept.piso}</TableCell>
-                  <TableCell>{dept.area}m²</TableCell>
-                  <TableCell>{dept.cantidad_habitaciones}</TableCell>
-                  <TableCell>
-                    <Badge variant="outline">{dept.tipo}</Badge>
-                  </TableCell>
-                  <TableCell>
-                    <div className="space-y-1">
-                      {dept.valor_venta && <div className="text-sm">${dept.valor_venta.toLocaleString()}</div>}
-                      {dept.valor_arriendo && <div className="text-sm text-gray-600">${dept.valor_arriendo}/mes</div>}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={dept.disponible ? "default" : "secondary"}>
-                      {dept.disponible ? "Disponible" : "No disponible"}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <Button size="sm" variant="outline">
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                      <Button size="sm" variant="outline">
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button size="sm" variant="outline" onClick={() => toggleDisponibilidad(dept.id)}>
-                        {dept.disponible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                      </Button>
-                    </div>
-                  </TableCell>
+          {departamentos.length === 0 ? (
+            <div className="text-center py-8">
+              <Home className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <p className="text-gray-600">No hay departamentos registrados</p>
+              <p className="text-sm text-gray-500 mt-2">
+                Crea el primer departamento para este edificio
+              </p>
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Número</TableHead>
+                  <TableHead>Nombre</TableHead>
+                  <TableHead>Piso</TableHead>
+                  <TableHead>Área</TableHead>
+                  <TableHead>Habitaciones</TableHead>
+                  <TableHead>Tipo</TableHead>
+                  <TableHead>Precio</TableHead>
+                  <TableHead>Estado</TableHead>
+                  <TableHead>Acciones</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {departamentos.map((dept) => (
+                  <TableRow key={dept.id}>
+                    <TableCell className="font-medium">{dept.numero}</TableCell>
+                    <TableCell>{dept.nombre}</TableCell>
+                    <TableCell>{dept.piso}</TableCell>
+                    <TableCell>{dept.area}m²</TableCell>
+                    <TableCell>{dept.cantidad_habitaciones}</TableCell>
+                    <TableCell>
+                      <Badge variant="outline">{dept.tipo}</Badge>
+                    </TableCell>
+                    <TableCell>
+                      <div className="space-y-1">
+                        {dept.valor_venta && dept.valor_venta > 0 && (
+                          <div className="text-sm">${dept.valor_venta.toLocaleString()}</div>
+                        )}
+                        {dept.valor_arriendo && dept.valor_arriendo > 0 && (
+                          <div className="text-sm text-gray-600">${dept.valor_arriendo}/mes</div>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={dept.disponible ? "default" : "secondary"}>
+                        {dept.disponible ? "Disponible" : "No disponible"}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <Button size="sm" variant="outline">
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button size="sm" variant="outline">
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          onClick={() => toggleDisponibilidad(dept.id)}
+                        >
+                          {dept.disponible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
         </CardContent>
       </Card>
 
@@ -586,10 +719,10 @@ export function ApartmentManagement({ buildingId, buildingName }: ApartmentManag
 
               {uploadedImages.length > 0 && (
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  {uploadedImages.map((image, index) => (
+                  {uploadedImages.map((file, index) => (
                     <div key={index} className="relative">
                       <img
-                        src={image || "/placeholder.svg"}
+                        src={URL.createObjectURL(file)}
                         alt={`Preview ${index + 1}`}
                         className="w-full h-24 object-cover rounded border"
                       />
@@ -612,8 +745,17 @@ export function ApartmentManagement({ buildingId, buildingName }: ApartmentManag
               <Button type="button" variant="outline" onClick={() => setShowCreateForm(false)}>
                 Cancelar
               </Button>
-              <Button type="submit" className="bg-orange-600 hover:bg-orange-700">
-                Crear Departamento
+              <Button 
+                type="submit" 
+                className="bg-orange-600 hover:bg-orange-700"
+                disabled={creating}
+              >
+                {creating ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <Plus className="h-4 w-4 mr-2" />
+                )}
+                {creating ? "Creando..." : "Crear Departamento"}
               </Button>
             </div>
           </form>

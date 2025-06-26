@@ -117,6 +117,41 @@ export function getFilePathFromUrl(url: string): string | null {
   }
 }
 
+// Función para subir una imagen a Firebase Storage
+export async function uploadImageToFirebase(file: File, path: string): Promise<string> {
+  try {
+    const bucket = getFirebaseBucket()
+    const firebaseFile = bucket.file(path)
+    
+    // Convertir File a Buffer
+    const arrayBuffer = await file.arrayBuffer()
+    const buffer = Buffer.from(arrayBuffer)
+    
+    // Subir el archivo
+    await firebaseFile.save(buffer, {
+      metadata: {
+        contentType: file.type,
+        metadata: {
+          originalName: file.name
+        }
+      }
+    })
+    
+    // Hacer el archivo público
+    await firebaseFile.makePublic()
+    
+    // Construir la URL pública
+    const publicUrl = `https://storage.googleapis.com/${bucket.name}/${path}`
+    
+    console.log(`Successfully uploaded image: ${path}`)
+    return publicUrl
+    
+  } catch (error) {
+    console.error(`Error uploading image ${path}:`, error)
+    throw error
+  }
+}
+
 // Función para eliminar todas las imágenes de un edificio
 export async function deleteBuildingImages(building: {
   nombre: string

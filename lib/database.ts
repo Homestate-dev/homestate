@@ -396,4 +396,209 @@ export async function deleteBuilding(id: number) {
   const query = 'DELETE FROM edificios WHERE id = $1 RETURNING *'
   const result = await executeQuery(query, [id])
   return result.rows[0]
+}
+
+// Funciones para departamentos
+export async function createDepartment(departmentData: {
+  edificio_id: number
+  numero: string
+  nombre: string
+  piso: number
+  area: number
+  valor_arriendo?: number
+  valor_venta?: number
+  cantidad_habitaciones: string
+  tipo: string
+  estado: string
+  ideal_para: string
+  amueblado?: boolean
+  tiene_living_comedor?: boolean
+  tiene_cocina_separada?: boolean
+  tiene_antebano?: boolean
+  tiene_bano_completo?: boolean
+  tiene_aire_acondicionado?: boolean
+  tiene_placares?: boolean
+  tiene_cocina_con_horno_y_anafe?: boolean
+  tiene_muebles_bajo_mesada?: boolean
+  tiene_desayunador_madera?: boolean
+  imagenes: string[]
+  creado_por: string
+}) {
+  const query = `
+    INSERT INTO departamentos (
+      edificio_id, numero, nombre, piso, area, valor_arriendo, valor_venta,
+      cantidad_habitaciones, tipo, estado, ideal_para, amueblado,
+      tiene_living_comedor, tiene_cocina_separada, tiene_antebano, tiene_bano_completo,
+      tiene_aire_acondicionado, tiene_placares, tiene_cocina_con_horno_y_anafe,
+      tiene_muebles_bajo_mesada, tiene_desayunador_madera, imagenes, creado_por
+    )
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23)
+    RETURNING *
+  `
+  const values = [
+    departmentData.edificio_id,
+    departmentData.numero,
+    departmentData.nombre,
+    departmentData.piso,
+    departmentData.area,
+    departmentData.valor_arriendo || 0,
+    departmentData.valor_venta || 0,
+    departmentData.cantidad_habitaciones,
+    departmentData.tipo,
+    departmentData.estado,
+    departmentData.ideal_para,
+    departmentData.amueblado || false,
+    departmentData.tiene_living_comedor || false,
+    departmentData.tiene_cocina_separada || false,
+    departmentData.tiene_antebano || false,
+    departmentData.tiene_bano_completo || false,
+    departmentData.tiene_aire_acondicionado || false,
+    departmentData.tiene_placares || false,
+    departmentData.tiene_cocina_con_horno_y_anafe || false,
+    departmentData.tiene_muebles_bajo_mesada || false,
+    departmentData.tiene_desayunador_madera || false,
+    JSON.stringify(departmentData.imagenes),
+    departmentData.creado_por
+  ]
+  const result = await executeQuery(query, values)
+  return result.rows[0]
+}
+
+export async function getDepartmentsByBuilding(edificio_id: number) {
+  const query = `
+    SELECT 
+      id, edificio_id, numero, nombre, piso, area, valor_arriendo, valor_venta,
+      disponible, cantidad_habitaciones, tipo, estado, ideal_para, amueblado,
+      tiene_living_comedor, tiene_cocina_separada, tiene_antebano, tiene_bano_completo,
+      tiene_aire_acondicionado, tiene_placares, tiene_cocina_con_horno_y_anafe,
+      tiene_muebles_bajo_mesada, tiene_desayunador_madera, imagenes,
+      fecha_creacion, fecha_actualizacion
+    FROM departamentos 
+    WHERE edificio_id = $1 
+    ORDER BY piso ASC, numero ASC
+  `
+  const result = await executeQuery(query, [edificio_id])
+  return result.rows.map(row => ({
+    ...row,
+    imagenes: safeJsonParse(row.imagenes, [])
+  }))
+}
+
+export async function getDepartmentById(id: number) {
+  const query = `
+    SELECT 
+      d.*,
+      e.nombre as edificio_nombre,
+      e.direccion as edificio_direccion
+    FROM departamentos d
+    JOIN edificios e ON d.edificio_id = e.id
+    WHERE d.id = $1
+  `
+  const result = await executeQuery(query, [id])
+  
+  if (result.rows.length === 0) return null
+  
+  const department = result.rows[0]
+  return {
+    ...department,
+    imagenes: safeJsonParse(department.imagenes, [])
+  }
+}
+
+export async function updateDepartment(id: number, updates: {
+  numero?: string
+  nombre?: string
+  piso?: number
+  area?: number
+  valor_arriendo?: number
+  valor_venta?: number
+  disponible?: boolean
+  cantidad_habitaciones?: string
+  tipo?: string
+  estado?: string
+  ideal_para?: string
+  amueblado?: boolean
+  tiene_living_comedor?: boolean
+  tiene_cocina_separada?: boolean
+  tiene_antebano?: boolean
+  tiene_bano_completo?: boolean
+  tiene_aire_acondicionado?: boolean
+  tiene_placares?: boolean
+  tiene_cocina_con_horno_y_anafe?: boolean
+  tiene_muebles_bajo_mesada?: boolean
+  tiene_desayunador_madera?: boolean
+  imagenes?: string[]
+}) {
+  const setClauses = []
+  const values = []
+  let paramIndex = 1
+
+  // Iterar sobre las actualizaciones y construir la query dinámicamente
+  Object.entries(updates).forEach(([key, value]) => {
+    if (value !== undefined) {
+      if (key === 'imagenes') {
+        setClauses.push(`${key} = $${paramIndex}`)
+        values.push(JSON.stringify(value))
+      } else {
+        setClauses.push(`${key} = $${paramIndex}`)
+        values.push(value)
+      }
+      paramIndex++
+    }
+  })
+
+  if (setClauses.length === 0) {
+    throw new Error('No hay campos para actualizar')
+  }
+
+  values.push(id)
+  const query = `
+    UPDATE departamentos 
+    SET ${setClauses.join(', ')}, fecha_actualizacion = CURRENT_TIMESTAMP
+    WHERE id = $${paramIndex}
+    RETURNING *
+  `
+
+  const result = await executeQuery(query, values)
+  const department = result.rows[0]
+  return {
+    ...department,
+    imagenes: safeJsonParse(department.imagenes, [])
+  }
+}
+
+export async function deleteDepartment(id: number) {
+  const query = 'DELETE FROM departamentos WHERE id = $1 RETURNING *'
+  const result = await executeQuery(query, [id])
+  return result.rows[0]
+}
+
+export async function toggleDepartmentAvailability(id: number) {
+  const query = `
+    UPDATE departamentos 
+    SET disponible = NOT disponible, fecha_actualizacion = CURRENT_TIMESTAMP
+    WHERE id = $1
+    RETURNING *
+  `
+  const result = await executeQuery(query, [id])
+  const department = result.rows[0]
+  return {
+    ...department,
+    imagenes: safeJsonParse(department.imagenes, [])
+  }
+}
+
+// Actualizar contadores de departamentos en edificios
+export async function updateBuildingCounters() {
+  const query = `
+    UPDATE edificios 
+    SET 
+      departamentos_count = (
+        SELECT COUNT(*) FROM departamentos WHERE edificio_id = edificios.id
+      ),
+      disponibles_count = (
+        SELECT COUNT(*) FROM departamentos WHERE edificio_id = edificios.id AND disponible = true
+      )
+  `
+  await executeQuery(query)
 } 

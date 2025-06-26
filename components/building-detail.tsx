@@ -38,7 +38,7 @@ export const BuildingDetail: React.FC<BuildingDetailProps> = ({ building, initia
         </TabsTrigger>
       </TabsList>
       <TabsContent value="apartments">
-        <ApartmentManagement buildingId={building.id} buildingName={building.nombre} />
+        <ApartmentManagement buildingId={building.id} buildingName={building.nombre} buildingPermalink={building.permalink} />
       </TabsContent>
       <TabsContent value="reports">
         <BuildingReports buildingId={building.id} buildingName={building.nombre} />
