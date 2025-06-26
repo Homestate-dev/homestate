@@ -11,9 +11,10 @@ import { useIsMobile } from "@/hooks/use-mobile"
 interface BuildingDetailProps {
   building: Building
   initialTab?: string
+  onBuildingDeleted?: () => void
 }
 
-export const BuildingDetail: React.FC<BuildingDetailProps> = ({ building, initialTab = "apartments" }) => {
+export const BuildingDetail: React.FC<BuildingDetailProps> = ({ building, initialTab = "apartments", onBuildingDeleted }) => {
   const isMobile = useIsMobile()
   
   return (
@@ -46,7 +47,7 @@ export const BuildingDetail: React.FC<BuildingDetailProps> = ({ building, initia
         <QRGenerator building={building} />
       </TabsContent>
       <TabsContent value="settings">
-        <BuildingSettings building={building} />
+        <BuildingSettings building={building} onBuildingDeleted={onBuildingDeleted} />
       </TabsContent>
     </Tabs>
   )

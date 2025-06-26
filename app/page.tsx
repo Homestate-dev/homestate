@@ -68,6 +68,7 @@ export default function BackOfficePage() {
   const handleBackToList = () => {
     setSelectedBuilding(null)
     setSelectedTab("apartments")
+    fetchBuildings() // Recargar la lista cuando se vuelve desde configuración
   }
 
   const selectedBuildingData = buildings.find((b) => b.id === selectedBuilding)
@@ -198,7 +199,7 @@ export default function BackOfficePage() {
             <p className="text-gray-600">Cargando edificios...</p>
           </div>
         ) : selectedBuilding ? (
-          <BuildingDetail building={selectedBuildingData!} initialTab={selectedTab} />
+          <BuildingDetail building={selectedBuildingData!} initialTab={selectedTab} onBuildingDeleted={handleBackToList} />
         ) : (
           <BuildingList 
             buildings={buildings} 
