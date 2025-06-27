@@ -98,7 +98,7 @@ export function MicrositeShareButton({ buildingName, buildingAddress }: Microsit
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="sm" className="border-orange-600 text-orange-600 hover:bg-orange-50">
+        <Button variant="outline" className="border-orange-600 text-orange-600 hover:bg-orange-50 w-full sm:w-auto px-4 py-2 text-sm sm:text-base">
           <Share2 className="h-4 w-4 mr-2" />
           Compartir
         </Button>
