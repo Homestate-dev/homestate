@@ -238,25 +238,7 @@ export function MicrositeContent({ building, departments }: MicrositeContentProp
             )}
           </div>
 
-          {/* Footer del micrositio */}
-          <div className="bg-white rounded-lg border border-gray-200 p-6 mt-12">
-            <div className="text-center">
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                ¿Interesado en algún departamento?
-              </h3>
-              <p className="text-gray-600 mb-4">
-                Contacta con nosotros para más información o para agendar una visita.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                <Button className="bg-orange-600 hover:bg-orange-700 text-white">
-                  Contactar por WhatsApp
-                </Button>
-                <Button variant="outline" className="border-orange-600 text-orange-600 hover:bg-orange-50">
-                  Solicitar información
-                </Button>
-              </div>
-            </div>
-          </div>
+
         </div>
       </div>
       <Footer />
