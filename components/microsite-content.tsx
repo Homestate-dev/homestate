@@ -142,50 +142,18 @@ export function MicrositeContent({ building, departments }: MicrositeContentProp
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header del micrositio */}
-      <div className="bg-white border-b border-gray-200 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 py-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="flex items-center gap-4 mb-2">
-                <Button variant="outline" size="sm" asChild>
-                  <Link href="/">
-                    <ArrowLeft className="h-4 w-4 mr-2" />
-                    Volver al inicio
-                  </Link>
-                </Button>
-                <Badge variant="outline" className="text-orange-600 border-orange-600">
-                  Micrositio
-                </Badge>
-              </div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-1">
-                {building.nombre}
-              </h1>
-              <div className="flex items-center text-gray-600 gap-4">
-                <div className="flex items-center">
-                  <MapPin className="h-4 w-4 mr-1" />
-                  {building.direccion}
-                </div>
-                {building.costo_expensas > 0 && (
-                  <div className="flex items-center">
-                    <DollarSign className="h-4 w-4 mr-1" />
-                    Expensas: ${building.costo_expensas.toLocaleString()}
-                  </div>
-                )}
-                <div className="flex items-center">
-                  <Users className="h-4 w-4 mr-1" />
-                  {departments.length} departamento{departments.length !== 1 ? 's' : ''}
-                </div>
-              </div>
-            </div>
-            <div>
-              <MicrositeShareButton 
-                buildingName={building.nombre} 
-                buildingAddress={building.direccion}
-              />
-            </div>
-          </div>
-        </div>
+      {/* Banner del micrositio */}
+      <div className="bg-orange-500 text-white text-center py-8 px-4">
+        <p className="text-lg mb-2">Bienvenido a</p>
+        <h1 className="text-4xl md:text-5xl font-bold mb-2">
+          Edificio {building.nombre}
+        </h1>
+        <p className="text-lg opacity-90 mb-1">
+          {building.direccion}
+        </p>
+        <p className="text-base opacity-80">
+          {departments.length} departamento{departments.length !== 1 ? 's' : ''} disponible{departments.length !== 1 ? 's' : ''}
+        </p>
       </div>
 
       {/* Contenido principal */}
@@ -202,6 +170,10 @@ export function MicrositeContent({ building, departments }: MicrositeContentProp
             <h2 className="text-2xl font-bold text-gray-900">
               Departamentos disponibles
             </h2>
+            <MicrositeShareButton 
+              buildingName={building.nombre} 
+              buildingAddress={building.direccion}
+            />
           </div>
 
           {/* Barra de filtros */}
