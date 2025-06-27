@@ -589,6 +589,42 @@ export async function toggleDepartmentAvailability(id: number) {
   }
 }
 
+// Obtener edificio con sus departamentos por permalink (para micrositio)
+export async function getBuildingWithDepartmentsByPermalink(permalink: string) {
+  try {
+    // Obtener el edificio
+    const buildingQuery = `
+      SELECT 
+        id, nombre, direccion, permalink, costo_expensas, areas_comunales, 
+        seguridad, aparcamiento, url_imagen_principal, imagenes_secundarias, fecha_creacion
+      FROM edificios 
+      WHERE permalink = $1
+    `
+    const buildingResult = await executeQuery(buildingQuery, [permalink])
+    
+    if (buildingResult.rows.length === 0) return null
+    
+    const building = buildingResult.rows[0]
+    
+    // Obtener los departamentos del edificio
+    const departments = await getDepartmentsByBuilding(building.id)
+    
+    return {
+      building: {
+        ...building,
+        areas_comunales: safeJsonParse(building.areas_comunales, []),
+        seguridad: safeJsonParse(building.seguridad, []),
+        aparcamiento: safeJsonParse(building.aparcamiento, []),
+        imagenes_secundarias: safeJsonParse(building.imagenes_secundarias, [])
+      },
+      departments: departments
+    }
+  } catch (error) {
+    console.error('Error fetching building with departments by permalink:', error)
+    return null
+  }
+}
+
 // Actualizar contadores de departamentos en edificios
 export async function updateBuildingCounters() {
   const query = `
