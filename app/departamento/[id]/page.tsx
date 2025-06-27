@@ -8,6 +8,7 @@ import { Separator } from "@/components/ui/separator"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import { ImageGallery } from "@/components/image-gallery"
+import { DepartmentShareButton } from "@/components/department-share-button"
 import { getDepartmentById } from "@/lib/database"
 
 interface PageProps {
@@ -262,41 +263,13 @@ export default async function DepartamentoPage({ params }: PageProps) {
             </Card>
           </div>
 
-          {/* Fechas */}
-          <div className="mt-8">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-xl">Información del registro</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-sm text-gray-600">Fecha de creación</p>
-                    <p className="font-medium">{new Date(departamento.fecha_creacion).toLocaleDateString('es-ES', {
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric'
-                    })}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-600">Última actualización</p>
-                    <p className="font-medium">{new Date(departamento.fecha_actualizacion).toLocaleDateString('es-ES', {
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric'
-                    })}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Botón de contacto */}
-          <div className="mt-8 text-center">
-            <Button size="lg" className="bg-orange-600 hover:bg-orange-700">
-              Contactar para más información
-            </Button>
-          </div>
+          {/* Botón de compartir */}
+          <DepartmentShareButton
+            departmentName={departamento.nombre}
+            departmentNumber={departamento.numero}
+            floor={departamento.piso}
+            area={departamento.area}
+          />
         </main>
         <Footer />
       </div>
