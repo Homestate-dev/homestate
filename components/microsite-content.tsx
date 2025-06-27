@@ -142,6 +142,29 @@ export function MicrositeContent({ building, departments }: MicrositeContentProp
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Header HomEstate */}
+      <div className="bg-white border-b border-gray-200 py-4 px-4">
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="text-2xl font-bold text-orange-600">🏠 HomEstate</div>
+            <span className="text-gray-600">|</span>
+            <span className="text-gray-700">Edificios donde se pueden ver los departamentos</span>
+          </div>
+          <div className="flex items-center gap-3">
+            <Button
+              className="bg-green-500 hover:bg-green-600 text-white"
+              onClick={() => window.open(`https://wa.me/593980644412?text=Hola, estoy interesado en ${building.nombre} ubicado en ${building.direccion}`, '_blank')}
+            >
+              📱 Respuesta inmediata
+            </Button>
+            <MicrositeShareButton 
+              buildingName={building.nombre} 
+              buildingAddress={building.direccion}
+            />
+          </div>
+        </div>
+      </div>
+
       {/* Banner del micrositio */}
       <div className="bg-orange-500 text-white text-center py-8 px-4">
         <p className="text-lg mb-2">Bienvenido a</p>
@@ -170,10 +193,6 @@ export function MicrositeContent({ building, departments }: MicrositeContentProp
             <h2 className="text-2xl font-bold text-gray-900">
               Departamentos disponibles
             </h2>
-            <MicrositeShareButton 
-              buildingName={building.nombre} 
-              buildingAddress={building.direccion}
-            />
           </div>
 
           {/* Barra de filtros */}
