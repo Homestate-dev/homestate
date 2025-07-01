@@ -10,9 +10,7 @@ import { Footer } from "@/components/footer"
 import { ImageGallery } from "@/components/image-gallery"
 import { DepartmentShareButton } from "@/components/department-share-button"
 import { getDepartmentById } from "@/lib/database"
-import { useState, useEffect } from "react"
-import TransactionDialog from '@/components/transaction-dialog'
-import { useRouter } from "next/navigation"
+import DepartmentClientWrapper from "@/components/department-client-wrapper"
 
 interface PageProps {
   params: Promise<{ id: string }>
@@ -21,7 +19,6 @@ interface PageProps {
 export default async function DepartamentoPage({ params }: PageProps) {
   const { id } = await params
   const departmentId = parseInt(id)
-  const router = useRouter()
 
   if (isNaN(departmentId)) {
     notFound()
@@ -62,24 +59,6 @@ export default async function DepartamentoPage({ params }: PageProps) {
       'persona_sola': "Persona sola",
       'profesional': "Profesional",
     }
-
-    const [isTransactionDialogOpen, setIsTransactionDialogOpen] = useState(false)
-    const [agents, setAgents] = useState([])
-
-    useEffect(() => {
-      const loadAgents = async () => {
-        try {
-          const response = await fetch('/api/agents')
-          const data = await response.json()
-          if (data.success) {
-            setAgents(data.data)
-          }
-        } catch (error) {
-          console.error('Error al cargar agentes:', error)
-        }
-      }
-      loadAgents()
-    }, [])
 
     return (
       <div className="min-h-screen flex flex-col bg-white">
@@ -293,87 +272,11 @@ export default async function DepartamentoPage({ params }: PageProps) {
             area={departamento.area}
           />
 
-          <div className="mt-6">
-            <h3 className="text-xl font-semibold mb-4">Estado de la Propiedad</h3>
-            <div className="flex flex-col gap-4">
-              {departamento.agente_venta_id && (
-                <div className="bg-green-50 p-4 rounded-lg">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Badge variant="success">Vendido</Badge>
-                    <span className="text-sm text-gray-600">
-                      {new Date(departamento.fecha_venta).toLocaleDateString()}
-                    </span>
-                  </div>
-                  <p className="text-sm text-gray-600">
-                    Precio final de venta: {formatCurrency(departamento.precio_venta_final)}
-                  </p>
-                  {departamento.agente_venta && (
-                    <div className="mt-2">
-                      <p className="text-sm font-medium">Agente de Venta:</p>
-                      <p className="text-sm text-gray-600">{departamento.agente_venta.nombre}</p>
-                      <p className="text-sm text-gray-600">{departamento.agente_venta.email}</p>
-                      <p className="text-sm text-gray-600">{departamento.agente_venta.telefono}</p>
-                    </div>
-                  )}
-                </div>
-              )}
-              
-              {departamento.agente_arriendo_id && (
-                <div className="bg-blue-50 p-4 rounded-lg">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Badge variant="info">Arrendado</Badge>
-                    <span className="text-sm text-gray-600">
-                      {new Date(departamento.fecha_arriendo).toLocaleDateString()}
-                    </span>
-                  </div>
-                  <p className="text-sm text-gray-600">
-                    Precio final de arriendo: {formatCurrency(departamento.precio_arriendo_final)}
-                  </p>
-                  {departamento.agente_arriendo && (
-                    <div className="mt-2">
-                      <p className="text-sm font-medium">Agente de Arriendo:</p>
-                      <p className="text-sm text-gray-600">{departamento.agente_arriendo.nombre}</p>
-                      <p className="text-sm text-gray-600">{departamento.agente_arriendo.email}</p>
-                      <p className="text-sm text-gray-600">{departamento.agente_arriendo.telefono}</p>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {!departamento.agente_venta_id && !departamento.agente_arriendo_id && (
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <p className="text-sm text-gray-600 mb-4">
-                    Esta propiedad está disponible para venta o arriendo.
-                  </p>
-                  {currentUser && (
-                    <Button
-                      variant="outline"
-                      onClick={() => setIsTransactionDialogOpen(true)}
-                    >
-                      Registrar Transacción
-                    </Button>
-                  )}
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Agregar el diálogo de transacciones */}
-          {currentUser && (
-            <TransactionDialog
-              open={isTransactionDialogOpen}
-              onOpenChange={setIsTransactionDialogOpen}
-              departamentoId={departamento.id}
-              departamentoNombre={departamento.nombre}
-              edificioNombre={edificio.nombre}
-              precioOriginal={departamento.valor_arriendo || departamento.valor_venta}
-              onTransactionComplete={() => {
-                router.refresh()
-                setIsTransactionDialogOpen(false)
-              }}
-              agents={agents}
-            />
-          )}
+          {/* Componente cliente para transacciones */}
+          <DepartmentClientWrapper 
+            departamento={departamento} 
+            edificio={departamento.edificio} 
+          />
         </main>
         <Footer />
       </div>

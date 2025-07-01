@@ -59,8 +59,6 @@ export default function AgentManagement() {
   const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null)
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
-  const [transactions, setTransactions] = useState<Transaction[]>([])
-  const [stats, setStats] = useState<AgentStats | null>(null)
   const [loading, setLoading] = useState(true)
 
   // Formulario para crear/editar agente
@@ -100,29 +98,7 @@ export default function AgentManagement() {
     }
   }
 
-  const loadAgentStats = async (agentId: number) => {
-    try {
-      const response = await fetch(`/api/agents/${agentId}/stats`)
-      const data = await response.json()
-      if (data.success) {
-        setStats(data.data)
-      }
-    } catch (error) {
-      console.error('Error al cargar estadísticas:', error)
-    }
-  }
 
-  const loadAgentTransactions = async (agentId: number) => {
-    try {
-      const response = await fetch(`/api/transactions?agentId=${agentId}`)
-      const data = await response.json()
-      if (data.success) {
-        setTransactions(data.data)
-      }
-    } catch (error) {
-      console.error('Error al cargar transacciones:', error)
-    }
-  }
 
   const handleCreateAgent = async () => {
     try {
@@ -449,73 +425,10 @@ export default function AgentManagement() {
                   )}
                 </TabsContent>
                 <TabsContent value="stats">
-                  {stats ? (
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                      <Card>
-                        <CardHeader>
-                          <CardTitle className="text-lg">Total Transacciones</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <p className="text-2xl font-bold">{stats.total_transacciones}</p>
-                          <div className="mt-2 text-sm">
-                            <p>Ventas: {stats.total_ventas}</p>
-                            <p>Arriendos: {stats.total_arriendos}</p>
-                          </div>
-                        </CardContent>
-                      </Card>
-                      <Card>
-                        <CardHeader>
-                          <CardTitle className="text-lg">Volumen Total</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <p className="text-2xl font-bold">{formatCurrency(stats.volumen_total)}</p>
-                          <p className="mt-2 text-sm">Promedio: {formatCurrency(stats.precio_promedio)}</p>
-                        </CardContent>
-                      </Card>
-                      <Card>
-                        <CardHeader>
-                          <CardTitle className="text-lg">Comisiones Totales</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <p className="text-2xl font-bold">{formatCurrency(stats.comisiones_totales)}</p>
-                        </CardContent>
-                      </Card>
-                    </div>
-                  ) : (
-                    <p className="text-center py-4">No hay estadísticas disponibles</p>
-                  )}
+                  <StatsTab agentId={agent.id} />
                 </TabsContent>
                 <TabsContent value="transactions">
-                  {transactions.length > 0 ? (
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Fecha</TableHead>
-                          <TableHead>Tipo</TableHead>
-                          <TableHead>Departamento</TableHead>
-                          <TableHead>Edificio</TableHead>
-                          <TableHead>Cliente</TableHead>
-                          <TableHead className="text-right">Precio</TableHead>
-                          <TableHead className="text-right">Comisión</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {transactions.map((transaction) => (
-                          <TableRow key={transaction.id}>
-                            <TableCell>{formatDate(transaction.fecha_transaccion)}</TableCell>
-                            <TableCell className="capitalize">{transaction.tipo_transaccion}</TableCell>
-                            <TableCell>{transaction.departamento_nombre} #{transaction.departamento_numero}</TableCell>
-                            <TableCell>{transaction.edificio_nombre}</TableCell>
-                            <TableCell>{transaction.cliente_nombre || 'No especificado'}</TableCell>
-                            <TableCell className="text-right">{formatCurrency(transaction.precio_final)}</TableCell>
-                            <TableCell className="text-right">{formatCurrency(transaction.comision_agente)}</TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  ) : (
-                    <p className="text-center py-4">No hay transacciones registradas</p>
-                  )}
+                  <TransactionsTab agentId={agent.id} />
                 </TabsContent>
               </Tabs>
             </CardContent>
@@ -625,5 +538,152 @@ export default function AgentManagement() {
         </DialogContent>
       </Dialog>
     </div>
+  )
+}
+
+// Componente para el tab de estadísticas
+function StatsTab({ agentId }: { agentId: number }) {
+  const [stats, setStats] = useState<AgentStats | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const loadStats = async () => {
+      try {
+        const response = await fetch(`/api/agents/${agentId}/stats`)
+        const data = await response.json()
+        if (data.success) {
+          setStats(data.data)
+        }
+      } catch (error) {
+        console.error('Error al cargar estadísticas:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+    loadStats()
+  }, [agentId])
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('es-EC', {
+      style: 'currency',
+      currency: 'USD'
+    }).format(amount)
+  }
+
+  if (loading) {
+    return <div className="text-center py-4">Cargando estadísticas...</div>
+  }
+
+  if (!stats) {
+    return <div className="text-center py-4">No hay estadísticas disponibles</div>
+  }
+
+  return (
+    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Total Transacciones</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-2xl font-bold">{stats.total_transacciones}</p>
+          <div className="mt-2 text-sm">
+            <p>Ventas: {stats.total_ventas}</p>
+            <p>Arriendos: {stats.total_arriendos}</p>
+          </div>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Volumen Total</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-2xl font-bold">{formatCurrency(Number(stats.volumen_total))}</p>
+          <p className="mt-2 text-sm">Promedio: {formatCurrency(Number(stats.precio_promedio))}</p>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Comisiones Totales</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-2xl font-bold">{formatCurrency(Number(stats.comisiones_totales))}</p>
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
+
+// Componente para el tab de transacciones
+function TransactionsTab({ agentId }: { agentId: number }) {
+  const [transactions, setTransactions] = useState<Transaction[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const loadTransactions = async () => {
+      try {
+        const response = await fetch(`/api/transactions?agentId=${agentId}`)
+        const data = await response.json()
+        if (data.success) {
+          setTransactions(data.data)
+        }
+      } catch (error) {
+        console.error('Error al cargar transacciones:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+    loadTransactions()
+  }, [agentId])
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('es-EC', {
+      style: 'currency',
+      currency: 'USD'
+    }).format(amount)
+  }
+
+  const formatDate = (date: string) => {
+    return new Date(date).toLocaleDateString('es-EC', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    })
+  }
+
+  if (loading) {
+    return <div className="text-center py-4">Cargando transacciones...</div>
+  }
+
+  if (transactions.length === 0) {
+    return <div className="text-center py-4">No hay transacciones registradas</div>
+  }
+
+  return (
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead>Fecha</TableHead>
+          <TableHead>Tipo</TableHead>
+          <TableHead>Departamento</TableHead>
+          <TableHead>Edificio</TableHead>
+          <TableHead>Cliente</TableHead>
+          <TableHead className="text-right">Precio</TableHead>
+          <TableHead className="text-right">Comisión</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {transactions.map((transaction) => (
+          <TableRow key={transaction.id}>
+            <TableCell>{formatDate(transaction.fecha_transaccion)}</TableCell>
+            <TableCell className="capitalize">{transaction.tipo_transaccion}</TableCell>
+            <TableCell>{transaction.departamento_nombre} #{transaction.departamento_numero}</TableCell>
+            <TableCell>{transaction.edificio_nombre}</TableCell>
+            <TableCell>{transaction.cliente_nombre || 'No especificado'}</TableCell>
+            <TableCell className="text-right">{formatCurrency(transaction.precio_final)}</TableCell>
+            <TableCell className="text-right">{formatCurrency(transaction.comision_agente)}</TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
   )
 } 
