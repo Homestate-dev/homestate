@@ -5,8 +5,18 @@ export async function GET() {
   try {
     const agents = await getAgents()
     return NextResponse.json({ success: true, data: agents })
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error al obtener agentes:', error)
+    
+    // Si la tabla no existe, devolver array vacío
+    if (error.message?.includes('relation "agentes_inmobiliarios" does not exist')) {
+      return NextResponse.json({ 
+        success: true, 
+        data: [],
+        message: 'Tabla de agentes no existe aún. Necesita ejecutar el script de creación.'
+      })
+    }
+    
     return NextResponse.json(
       { success: false, error: 'Error al obtener agentes inmobiliarios' },
       { status: 500 }
@@ -30,6 +40,8 @@ export async function POST(request: NextRequest) {
       fecha_ingreso,
       currentUserUid 
     } = body
+
+    console.log('Datos recibidos para crear agente:', { nombre, email, especialidad })
 
     if (!nombre || !email || !especialidad) {
       return NextResponse.json(
@@ -59,15 +71,24 @@ export async function POST(request: NextRequest) {
       creado_por: currentUserUid
     }
 
+    console.log('Intentando crear agente con datos:', agentData)
+
     const newAgent = await createAgent(agentData)
 
-    // Registrar acción del administrador
-    await logAdminAction(
-      currentUserUid,
-      `Creó nuevo agente inmobiliario: ${nombre}`,
-      'creación',
-      { agent_created: newAgent.id, agent_name: nombre, especialidad }
-    )
+    console.log('Agente creado exitosamente:', newAgent)
+
+    // Comentar temporalmente el logAdminAction hasta que las tablas estén configuradas
+    try {
+      await logAdminAction(
+        currentUserUid,
+        `Creó nuevo agente inmobiliario: ${nombre}`,
+        'creación',
+        { agent_created: newAgent.id, agent_name: nombre, especialidad }
+      )
+    } catch (logError) {
+      console.warn('Error al registrar acción de admin (tabla puede no existir):', logError)
+      // No fallar por esto, es opcional
+    }
 
     return NextResponse.json({ 
       success: true, 
@@ -76,9 +97,24 @@ export async function POST(request: NextRequest) {
     })
 
   } catch (error: any) {
-    console.error('Error al crear agente:', error)
+    console.error('Error detallado al crear agente:', error)
+    console.error('Error code:', error.code)
+    console.error('Error message:', error.message)
+    console.error('Error detail:', error.detail)
     
     let errorMessage = 'Error al crear agente inmobiliario'
+    
+    if (error.message?.includes('relation "agentes_inmobiliarios" does not exist')) {
+      errorMessage = 'La tabla de agentes inmobiliarios no existe. Contacte al administrador para configurar la base de datos.'
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: errorMessage,
+          needsSetup: true 
+        },
+        { status: 500 }
+      )
+    }
     
     if (error.code === '23505') { // Unique violation
       if (error.constraint?.includes('email')) {
@@ -89,7 +125,7 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json(
-      { success: false, error: errorMessage },
+      { success: false, error: errorMessage, details: error.message },
       { status: 500 }
     )
   }
