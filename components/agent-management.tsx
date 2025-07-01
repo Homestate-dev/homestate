@@ -55,7 +55,7 @@ interface AgentStats {
 
 export default function AgentManagement() {
   const { toast } = useToast()
-  const { currentUser } = useAuth()
+  const { user } = useAuth()
   const [agents, setAgents] = useState<Agent[]>([])
   const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null)
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
@@ -108,7 +108,7 @@ export default function AgentManagement() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...formData,
-          currentUserUid: currentUser?.uid
+          currentUserUid: user?.uid
         })
       })
 
@@ -152,7 +152,7 @@ export default function AgentManagement() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...formData,
-          currentUserUid: currentUser?.uid
+          currentUserUid: user?.uid
         })
       })
 
@@ -186,7 +186,7 @@ export default function AgentManagement() {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          currentUserUid: currentUser?.uid,
+          currentUserUid: user?.uid,
           agentName
         })
       })

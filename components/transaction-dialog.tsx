@@ -36,7 +36,7 @@ export default function TransactionDialog({
   agents
 }: TransactionDialogProps) {
   const { toast } = useToast()
-  const { currentUser } = useAuth()
+  const { user } = useAuth()
 
   const [formData, setFormData] = useState({
     tipo_transaccion: '',
@@ -66,7 +66,7 @@ export default function TransactionDialog({
           ...formData,
           departamento_id: departamentoId,
           precio_original: precioOriginal,
-          currentUserUid: currentUser?.uid
+          currentUserUid: user?.uid
         })
       })
 

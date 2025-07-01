@@ -48,7 +48,7 @@ export default function DepartmentClientWrapper({
   edificio 
 }: DepartmentClientWrapperProps) {
   const router = useRouter()
-  const { currentUser } = useAuth()
+  const { user } = useAuth()
   const [isTransactionDialogOpen, setIsTransactionDialogOpen] = useState(false)
   const [agents, setAgents] = useState<Agent[]>([])
 
@@ -128,7 +128,7 @@ export default function DepartmentClientWrapper({
               <p className="text-sm text-gray-600 mb-4">
                 Esta propiedad está disponible para venta o arriendo.
               </p>
-              {currentUser && (
+              {user && (
                 <Button
                   variant="outline"
                   onClick={() => setIsTransactionDialogOpen(true)}
@@ -142,7 +142,7 @@ export default function DepartmentClientWrapper({
       </div>
 
       {/* Diálogo de transacciones */}
-      {currentUser && (
+      {user && (
         <TransactionDialog
           open={isTransactionDialogOpen}
           onOpenChange={setIsTransactionDialogOpen}
