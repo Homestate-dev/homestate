@@ -9,6 +9,8 @@ import { useAuth } from "@/contexts/auth-context"
 import { DatabaseStatus } from "@/components/database-status"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { toast } from "sonner"
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
+import AgentManagement from '@/components/agent-management'
 
 interface Building {
   id: number
@@ -201,11 +203,30 @@ export default function BackOfficePage() {
         ) : selectedBuilding ? (
           <BuildingDetail building={selectedBuildingData!} initialTab={selectedTab} onBuildingDeleted={handleBackToList} />
         ) : (
-          <BuildingList 
-            buildings={buildings} 
-            onSelectBuilding={handleBuildingSelect}
-            onBuildingCreated={fetchBuildings}
-          />
+          <Tabs defaultValue="edificios" className="w-full">
+            <TabsList>
+              <TabsTrigger value="edificios">Edificios</TabsTrigger>
+              <TabsTrigger value="administradores">Administradores</TabsTrigger>
+              <TabsTrigger value="agentes">Agentes Inmobiliarios</TabsTrigger>
+              <TabsTrigger value="actividades">Mis Actividades</TabsTrigger>
+            </TabsList>
+            <TabsContent value="edificios">
+              <BuildingList 
+                buildings={buildings} 
+                onSelectBuilding={handleBuildingSelect}
+                onBuildingCreated={fetchBuildings}
+              />
+            </TabsContent>
+            <TabsContent value="administradores">
+              {/* Contenido del tab de administradores */}
+            </TabsContent>
+            <TabsContent value="agentes">
+              <AgentManagement />
+            </TabsContent>
+            <TabsContent value="actividades">
+              {/* Contenido del tab de actividades */}
+            </TabsContent>
+          </Tabs>
         )}
       </div>
     </div>

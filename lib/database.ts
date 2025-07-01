@@ -673,4 +673,255 @@ export async function refreshBuildingStats(buildingId: number) {
     WHERE id = $1
   `
   await executeQuery(query, [buildingId])
+}
+
+// =================== FUNCIONES PARA AGENTES INMOBILIARIOS ===================
+
+// Crear un nuevo agente inmobiliario
+export async function createAgent(agentData: {
+  nombre: string
+  email: string
+  telefono?: string
+  cedula?: string
+  especialidad: string
+  comision_ventas?: number
+  comision_arriendos?: number
+  foto_perfil?: string
+  biografia?: string
+  fecha_ingreso?: string
+  creado_por: string
+}) {
+  const query = `
+    INSERT INTO agentes_inmobiliarios (
+      nombre, email, telefono, cedula, especialidad, comision_ventas, 
+      comision_arriendos, foto_perfil, biografia, fecha_ingreso, creado_por
+    )
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+    RETURNING *
+  `
+  const values = [
+    agentData.nombre,
+    agentData.email,
+    agentData.telefono || null,
+    agentData.cedula || null,
+    agentData.especialidad,
+    agentData.comision_ventas || 3.00,
+    agentData.comision_arriendos || 10.00,
+    agentData.foto_perfil || null,
+    agentData.biografia || null,
+    agentData.fecha_ingreso || new Date().toISOString().split('T')[0],
+    agentData.creado_por
+  ]
+  const result = await executeQuery(query, values)
+  return result.rows[0]
+}
+
+// Obtener todos los agentes inmobiliarios
+export async function getAgents() {
+  const query = `
+    SELECT 
+      id, nombre, email, telefono, cedula, especialidad, 
+      comision_ventas, comision_arriendos, activo, foto_perfil, 
+      biografia, fecha_ingreso, fecha_creacion, fecha_actualizacion
+    FROM agentes_inmobiliarios 
+    ORDER BY fecha_creacion DESC
+  `
+  const result = await executeQuery(query)
+  return result.rows
+}
+
+// Obtener agente por ID
+export async function getAgentById(id: number) {
+  const query = `
+    SELECT * FROM agentes_inmobiliarios WHERE id = $1
+  `
+  const result = await executeQuery(query, [id])
+  return result.rows.length > 0 ? result.rows[0] : null
+}
+
+// Actualizar agente inmobiliario
+export async function updateAgent(id: number, updates: {
+  nombre?: string
+  email?: string
+  telefono?: string
+  cedula?: string
+  especialidad?: string
+  comision_ventas?: number
+  comision_arriendos?: number
+  activo?: boolean
+  foto_perfil?: string
+  biografia?: string
+  fecha_ingreso?: string
+}) {
+  const setClauses: string[] = []
+  const values: any[] = []
+  let paramIndex = 1
+
+  Object.entries(updates).forEach(([key, value]) => {
+    if (value !== undefined) {
+      setClauses.push(`${key} = $${paramIndex}`)
+      values.push(value)
+      paramIndex++
+    }
+  })
+
+  if (setClauses.length === 0) {
+    throw new Error('No hay campos para actualizar')
+  }
+
+  values.push(id)
+  const query = `
+    UPDATE agentes_inmobiliarios 
+    SET ${setClauses.join(', ')}, fecha_actualizacion = CURRENT_TIMESTAMP
+    WHERE id = $${paramIndex}
+    RETURNING *
+  `
+
+  const result = await executeQuery(query, values)
+  return result.rows[0]
+}
+
+// Eliminar agente inmobiliario
+export async function deleteAgent(id: number) {
+  const query = 'DELETE FROM agentes_inmobiliarios WHERE id = $1 RETURNING *'
+  const result = await executeQuery(query, [id])
+  return result.rows[0]
+}
+
+// Crear transacción de departamento
+export async function createTransaction(transactionData: {
+  departamento_id: number
+  agente_id: number
+  tipo_transaccion: string
+  precio_final: number
+  precio_original?: number
+  cliente_nombre?: string
+  cliente_email?: string
+  cliente_telefono?: string
+  notas?: string
+  creado_por: string
+}) {
+  // Obtener información del agente para calcular comisión
+  const agent = await getAgentById(transactionData.agente_id)
+  if (!agent) {
+    throw new Error('Agente no encontrado')
+  }
+
+  const comisionPorcentaje = transactionData.tipo_transaccion === 'venta' 
+    ? agent.comision_ventas 
+    : agent.comision_arriendos
+  
+  const comision_agente = (transactionData.precio_final * comisionPorcentaje) / 100
+
+  const query = `
+    INSERT INTO transacciones_departamentos (
+      departamento_id, agente_id, tipo_transaccion, precio_final, precio_original,
+      comision_agente, cliente_nombre, cliente_email, cliente_telefono, notas, creado_por
+    )
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+    RETURNING *
+  `
+  const values = [
+    transactionData.departamento_id,
+    transactionData.agente_id,
+    transactionData.tipo_transaccion,
+    transactionData.precio_final,
+    transactionData.precio_original || null,
+    comision_agente,
+    transactionData.cliente_nombre || null,
+    transactionData.cliente_email || null,
+    transactionData.cliente_telefono || null,
+    transactionData.notas || null,
+    transactionData.creado_por
+  ]
+
+  const result = await executeQuery(query, values)
+  const transaction = result.rows[0]
+
+  // Actualizar el departamento con la información de la transacción
+  const updateDeptQuery = `
+    UPDATE departamentos 
+    SET 
+      ${transactionData.tipo_transaccion === 'venta' ? 'agente_venta_id' : 'agente_arriendo_id'} = $1,
+      ${transactionData.tipo_transaccion === 'venta' ? 'fecha_venta' : 'fecha_arriendo'} = CURRENT_TIMESTAMP,
+      ${transactionData.tipo_transaccion === 'venta' ? 'precio_venta_final' : 'precio_arriendo_final'} = $2,
+      disponible = false,
+      fecha_actualizacion = CURRENT_TIMESTAMP
+    WHERE id = $3
+  `
+  await executeQuery(updateDeptQuery, [transactionData.agente_id, transactionData.precio_final, transactionData.departamento_id])
+
+  return transaction
+}
+
+// Obtener transacciones por agente
+export async function getTransactionsByAgent(agentId: number) {
+  const query = `
+    SELECT 
+      t.*,
+      d.nombre as departamento_nombre,
+      d.numero as departamento_numero,
+      e.nombre as edificio_nombre
+    FROM transacciones_departamentos t
+    JOIN departamentos d ON t.departamento_id = d.id
+    JOIN edificios e ON d.edificio_id = e.id
+    WHERE t.agente_id = $1
+    ORDER BY t.fecha_transaccion DESC
+  `
+  const result = await executeQuery(query, [agentId])
+  return result.rows
+}
+
+// Obtener estadísticas de ventas por agente
+export async function getAgentStats(agentId?: number) {
+  const whereClause = agentId ? 'WHERE t.agente_id = $1' : ''
+  const params = agentId ? [agentId] : []
+  
+  const query = `
+    SELECT 
+      a.id,
+      a.nombre,
+      a.email,
+      a.especialidad,
+      COUNT(t.id) as total_transacciones,
+      COUNT(CASE WHEN t.tipo_transaccion = 'venta' THEN 1 END) as total_ventas,
+      COUNT(CASE WHEN t.tipo_transaccion = 'arriendo' THEN 1 END) as total_arriendos,
+      COALESCE(SUM(t.precio_final), 0) as volumen_total,
+      COALESCE(SUM(t.comision_agente), 0) as comisiones_totales,
+      COALESCE(AVG(t.precio_final), 0) as precio_promedio
+    FROM agentes_inmobiliarios a
+    LEFT JOIN transacciones_departamentos t ON a.id = t.agente_id ${whereClause}
+    WHERE a.activo = true
+    GROUP BY a.id, a.nombre, a.email, a.especialidad
+    ORDER BY total_transacciones DESC, comisiones_totales DESC
+  `
+  
+  const result = await executeQuery(query, params)
+  return result.rows
+}
+
+// Obtener reporte de ventas/arriendos por período
+export async function getSalesReport(startDate: string, endDate: string, agentId?: number) {
+  const agentFilter = agentId ? 'AND t.agente_id = $3' : ''
+  const params = agentId ? [startDate, endDate, agentId] : [startDate, endDate]
+  
+  const query = `
+    SELECT 
+      t.*,
+      a.nombre as agente_nombre,
+      d.nombre as departamento_nombre,
+      d.numero as departamento_numero,
+      e.nombre as edificio_nombre,
+      e.direccion as edificio_direccion
+    FROM transacciones_departamentos t
+    JOIN agentes_inmobiliarios a ON t.agente_id = a.id
+    JOIN departamentos d ON t.departamento_id = d.id
+    JOIN edificios e ON d.edificio_id = e.id
+    WHERE t.fecha_transaccion BETWEEN $1 AND $2
+    ${agentFilter}
+    ORDER BY t.fecha_transaccion DESC
+  `
+  
+  const result = await executeQuery(query, params)
+  return result.rows
 } 

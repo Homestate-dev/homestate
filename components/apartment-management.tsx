@@ -18,6 +18,7 @@ import { useIsMobile } from "@/hooks/use-mobile"
 import { toast } from "sonner"
 import { useAuth } from "@/contexts/auth-context"
 import Image from "next/image"
+import TransactionDialog from './transaction-dialog'
 
 interface Department {
   id: number
@@ -46,6 +47,12 @@ interface Department {
   imagenes: string[]
   fecha_creacion: string
   fecha_actualizacion: string
+  agente_venta_id?: number
+  agente_arriendo_id?: number
+  fecha_venta?: string
+  fecha_arriendo?: string
+  precio_venta_final?: number
+  precio_arriendo_final?: number
 }
 
 interface ApartmentManagementProps {
@@ -71,6 +78,8 @@ export function ApartmentManagement({ buildingId, buildingName, buildingPermalin
   const [uploadingNewImages, setUploadingNewImages] = useState(false)
   const isMobile = useIsMobile()
   const { user } = useAuth()
+  const [isTransactionDialogOpen, setIsTransactionDialogOpen] = useState(false)
+  const [agents, setAgents] = useState([])
 
   const [newApartment, setNewApartment] = useState({
     numero: "",
@@ -97,6 +106,7 @@ export function ApartmentManagement({ buildingId, buildingName, buildingPermalin
 
   useEffect(() => {
     fetchDepartments()
+    loadAgents()
   }, [buildingId])
 
   const fetchDepartments = async () => {
@@ -115,6 +125,18 @@ export function ApartmentManagement({ buildingId, buildingName, buildingPermalin
       toast.error('Error al cargar departamentos')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const loadAgents = async () => {
+    try {
+      const response = await fetch('/api/agents')
+      const data = await response.json()
+      if (data.success) {
+        setAgents(data.data)
+      }
+    } catch (error) {
+      console.error('Error al cargar agentes:', error)
     }
   }
 
@@ -726,6 +748,27 @@ export function ApartmentManagement({ buildingId, buildingName, buildingPermalin
                   {selectedDepartment.tiene_muebles_bajo_mesada && <Badge variant="secondary">Muebles bajo mesada</Badge>}
                   {selectedDepartment.tiene_desayunador_madera && <Badge variant="secondary">Desayunador de madera</Badge>}
                 </div>
+              </div>
+
+              <div className="flex items-center gap-2 mt-4">
+                {selectedDepartment.agente_venta_id && (
+                  <Badge variant="success">
+                    Vendido el {new Date(selectedDepartment.fecha_venta).toLocaleDateString()}
+                  </Badge>
+                )}
+                {selectedDepartment.agente_arriendo_id && (
+                  <Badge variant="info">
+                    Arrendado el {new Date(selectedDepartment.fecha_arriendo).toLocaleDateString()}
+                  </Badge>
+                )}
+                {!selectedDepartment.agente_venta_id && !selectedDepartment.agente_arriendo_id && (
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsTransactionDialogOpen(true)}
+                  >
+                    Registrar Transacción
+                  </Button>
+                )}
               </div>
 
               <div className="flex justify-end">
@@ -1577,6 +1620,21 @@ export function ApartmentManagement({ buildingId, buildingName, buildingPermalin
           </form>
         </DialogContent>
       </Dialog>
+
+      {/* Dialog para transacciones */}
+      <TransactionDialog
+        open={isTransactionDialogOpen}
+        onOpenChange={setIsTransactionDialogOpen}
+        departamentoId={selectedDepartment?.id}
+        departamentoNombre={selectedDepartment?.nombre}
+        edificioNombre={buildingName}
+        precioOriginal={selectedDepartment?.valor_arriendo || selectedDepartment?.valor_venta}
+        onTransactionComplete={() => {
+          fetchDepartments()
+          setIsTransactionDialogOpen(false)
+        }}
+        agents={agents}
+      />
     </div>
   )
 }
