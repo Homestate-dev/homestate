@@ -119,7 +119,7 @@ export function BuildingSettings({ building, onBuildingDeleted }: BuildingSettin
     setIsSaving(true)
 
     try {
-      const response = await fetch(`/api/buildings/${building.id}`, {
+      const response = await fetch(`/api/buildings/by-id/${building.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getBuildingById, deleteBuilding, logAdminAction, executeQuery } from '@/lib/database'
+import { getBuildingById, deleteBuilding, updateBuilding, logAdminAction, executeQuery } from '@/lib/database'
 import { deleteBuildingImages } from '@/lib/firebase-admin'
 
 function safeJsonParse(jsonString: string | any[] | null, defaultValue: any = null) {
@@ -197,6 +197,100 @@ export async function DELETE(
     
     return NextResponse.json(
       { success: false, error: 'Error interno del servidor al eliminar edificio' },
+      { status: 500 }
+    )
+  }
+}
+
+// PUT method para actualizar edificio
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const buildingId = parseInt(params.id)
+    if (isNaN(buildingId)) {
+      return NextResponse.json(
+        { success: false, error: 'ID de edificio inválido' },
+        { status: 400 }
+      )
+    }
+
+    const body = await request.json()
+    const { 
+      nombre,
+      direccion,
+      costo_expensas,
+      areas_comunales,
+      seguridad,
+      aparcamiento,
+      url_imagen_principal,
+      imagenes_secundarias,
+      politica_mascotas,
+      descripcion,
+      currentUserUid 
+    } = body
+
+    if (!currentUserUid) {
+      return NextResponse.json(
+        { success: false, error: 'Usuario no autenticado' },
+        { status: 401 }
+      )
+    }
+
+    // Verificar que el edificio existe
+    const existingBuilding = await getBuildingById(buildingId)
+    if (!existingBuilding) {
+      return NextResponse.json(
+        { success: false, error: 'Edificio no encontrado' },
+        { status: 404 }
+      )
+    }
+
+    // Preparar los datos de actualización
+    const updateData: any = {}
+    
+    if (nombre !== undefined) updateData.nombre = nombre
+    if (direccion !== undefined) updateData.direccion = direccion
+    if (costo_expensas !== undefined) updateData.costo_expensas = costo_expensas
+    if (areas_comunales !== undefined) updateData.areas_comunales = areas_comunales
+    if (seguridad !== undefined) updateData.seguridad = seguridad
+    if (aparcamiento !== undefined) updateData.aparcamiento = aparcamiento
+    if (url_imagen_principal !== undefined) updateData.url_imagen_principal = url_imagen_principal
+    if (imagenes_secundarias !== undefined) updateData.imagenes_secundarias = imagenes_secundarias
+
+    // Actualizar el edificio
+    const updatedBuilding = await updateBuilding(buildingId, updateData)
+
+    // Registrar la acción del administrador
+    await logAdminAction(
+      currentUserUid,
+      `Actualizó edificio: ${updatedBuilding.nombre}`,
+      'actualización',
+      { 
+        building_updated: buildingId, 
+        building_name: updatedBuilding.nombre,
+        fields_updated: Object.keys(updateData)
+      }
+    )
+
+    return NextResponse.json({ 
+      success: true, 
+      data: {
+        ...updatedBuilding,
+        areas_comunales: safeJsonParse(updatedBuilding.areas_comunales, []),
+        seguridad: safeJsonParse(updatedBuilding.seguridad, []),
+        aparcamiento: safeJsonParse(updatedBuilding.aparcamiento, []),
+        imagenes_secundarias: safeJsonParse(updatedBuilding.imagenes_secundarias, [])
+      },
+      message: 'Edificio actualizado exitosamente' 
+    })
+
+  } catch (error: any) {
+    console.error('Error al actualizar edificio:', error)
+    
+    return NextResponse.json(
+      { success: false, error: 'Error interno del servidor al actualizar edificio' },
       { status: 500 }
     )
   }
