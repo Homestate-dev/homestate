@@ -158,7 +158,7 @@ export function BuildingList({ buildings, onSelectBuilding, onBuildingCreated, o
               <Users className={`${isMobile ? 'h-4 w-4' : 'h-5 w-5'} text-blue-600`} />
               <div>
                 <p className={`${isMobile ? 'text-xs' : 'text-sm'} text-gray-600`}>Total Depto.</p>
-                <p className={`${isMobile ? 'text-lg' : 'text-2xl'} font-bold`}>{filteredBuildings.reduce((acc, b) => acc + b.departamentos_count, 0)}</p>
+                <p className={`${isMobile ? 'text-lg' : 'text-2xl'} font-bold`}>{filteredBuildings.reduce((acc, b) => acc + Number(b.departamentos_count || 0), 0)}</p>
               </div>
             </div>
           </CardContent>
@@ -169,7 +169,7 @@ export function BuildingList({ buildings, onSelectBuilding, onBuildingCreated, o
               <Eye className={`${isMobile ? 'h-4 w-4' : 'h-5 w-5'} text-green-600`} />
               <div>
                 <p className={`${isMobile ? 'text-xs' : 'text-sm'} text-gray-600`}>Disponibles</p>
-                <p className={`${isMobile ? 'text-lg' : 'text-2xl'} font-bold`}>{filteredBuildings.reduce((acc, b) => acc + b.disponibles_count, 0)}</p>
+                <p className={`${isMobile ? 'text-lg' : 'text-2xl'} font-bold`}>{filteredBuildings.reduce((acc, b) => acc + Number(b.disponibles_count || 0), 0)}</p>
               </div>
             </div>
           </CardContent>
@@ -182,8 +182,8 @@ export function BuildingList({ buildings, onSelectBuilding, onBuildingCreated, o
                 <p className={`${isMobile ? 'text-xs' : 'text-sm'} text-gray-600`}>Tasa Ocup.</p>
                 <p className={`${isMobile ? 'text-lg' : 'text-2xl'} font-bold`}>
                   {(() => {
-                    const totalDepartamentos = filteredBuildings.reduce((acc, b) => acc + b.departamentos_count, 0)
-                    const ocupados = filteredBuildings.reduce((acc, b) => acc + (b.departamentos_count - b.disponibles_count), 0)
+                    const totalDepartamentos = filteredBuildings.reduce((acc, b) => acc + Number(b.departamentos_count || 0), 0)
+                    const ocupados = filteredBuildings.reduce((acc, b) => acc + (Number(b.departamentos_count || 0) - Number(b.disponibles_count || 0)), 0)
                     return totalDepartamentos > 0 ? Math.round((ocupados / totalDepartamentos) * 100) : 0
                   })()}
                   %
@@ -217,7 +217,7 @@ export function BuildingList({ buildings, onSelectBuilding, onBuildingCreated, o
                       className="object-cover"
                     />
                     <div className="absolute top-2 right-2">
-                      <Badge className={`bg-orange-600 hover:bg-orange-700 text-white ${isMobile ? 'text-xs' : ''}`}>{building.disponibles_count} disponibles</Badge>
+                      <Badge className={`bg-orange-600 hover:bg-orange-700 text-white ${isMobile ? 'text-xs' : ''}`}>{Number(building.disponibles_count || 0)} disponibles</Badge>
                     </div>
                   </div>
 
@@ -232,7 +232,7 @@ export function BuildingList({ buildings, onSelectBuilding, onBuildingCreated, o
                   <CardContent className={`space-y-3 ${isMobile ? 'p-3 pt-0' : ''}`}>
                     <div className={`flex items-center justify-between ${isMobile ? 'text-xs' : 'text-sm'}`}>
                       <span className="text-gray-600">Departamentos:</span>
-                      <Badge variant="outline">{building.departamentos_count}</Badge>
+                      <Badge variant="outline">{Number(building.departamentos_count || 0)}</Badge>
                     </div>
 
                     {building.costo_expensas > 0 && (
@@ -289,7 +289,13 @@ export function BuildingList({ buildings, onSelectBuilding, onBuildingCreated, o
                       <Button size="sm" variant="outline" onClick={() => generateQR(building)}>
                         <QrCode className="h-4 w-4" />
                       </Button>
-                      <Button size="sm" variant="outline">
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => onSelectBuilding(building.id, 'configuracion')}
+                        className="hover:bg-orange-50 hover:text-orange-600 hover:border-orange-200"
+                        title="Configurar edificio"
+                      >
                         <Edit className="h-4 w-4" />
                       </Button>
                       <Button 
