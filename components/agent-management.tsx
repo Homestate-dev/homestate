@@ -13,6 +13,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
 import { useAuth } from '@/contexts/auth-context'
+import { Plus, Briefcase } from 'lucide-react'
 
 interface Agent {
   id: number
@@ -230,104 +231,168 @@ export default function AgentManagement() {
         <h2 className="text-3xl font-bold">Agentes Inmobiliarios</h2>
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
-            <Button>Agregar Agente</Button>
+            <Button className="bg-orange-600 hover:bg-orange-700 text-white">
+              <Plus className="h-4 w-4 mr-2" />
+              Agregar Agente
+            </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[500px]">
+          <DialogContent className="sm:max-w-[600px] max-h-[85vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Crear Nuevo Agente</DialogTitle>
+              <DialogTitle className="text-xl font-bold flex items-center gap-2">
+                <Briefcase className="h-5 w-5 text-orange-600" />
+                Crear Nuevo Agente Inmobiliario
+              </DialogTitle>
             </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid gap-2">
-                <Label htmlFor="nombre">Nombre Completo</Label>
-                <Input
-                  id="nombre"
-                  value={formData.nombre}
-                  onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
-                />
+            <div className="grid gap-6 py-4">
+              {/* Información básica */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-gray-900 border-b pb-2">Información Personal</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="nombre" className="text-sm font-medium">Nombre Completo *</Label>
+                    <Input
+                      id="nombre"
+                      placeholder="Ej: María González"
+                      value={formData.nombre}
+                      onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
+                      className="h-10"
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="email" className="text-sm font-medium">Email *</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      placeholder="maria@ejemplo.com"
+                      value={formData.email}
+                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                      className="h-10"
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="telefono" className="text-sm font-medium">Teléfono</Label>
+                    <Input
+                      id="telefono"
+                      placeholder="+593 999 999 999"
+                      value={formData.telefono}
+                      onChange={(e) => setFormData({ ...formData, telefono: e.target.value })}
+                      className="h-10"
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="cedula" className="text-sm font-medium">Cédula</Label>
+                    <Input
+                      id="cedula"
+                      placeholder="1234567890"
+                      value={formData.cedula}
+                      onChange={(e) => setFormData({ ...formData, cedula: e.target.value })}
+                      className="h-10"
+                    />
+                  </div>
+                </div>
               </div>
-              <div className="grid gap-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                />
+
+              {/* Información profesional */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-gray-900 border-b pb-2">Información Profesional</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="especialidad" className="text-sm font-medium">Especialidad *</Label>
+                    <Select
+                      value={formData.especialidad}
+                      onValueChange={(value) => setFormData({ ...formData, especialidad: value })}
+                    >
+                      <SelectTrigger className="h-10">
+                        <SelectValue placeholder="Seleccione especialidad" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="ventas">
+                          <div className="flex items-center gap-2">
+                            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                            Ventas
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="arriendos">
+                          <div className="flex items-center gap-2">
+                            <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                            Arriendos
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="ambas">
+                          <div className="flex items-center gap-2">
+                            <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                            Ambas
+                          </div>
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="comision_ventas" className="text-sm font-medium">Comisión Ventas (%)</Label>
+                    <Input
+                      id="comision_ventas"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      max="100"
+                      placeholder="3.00"
+                      value={formData.comision_ventas}
+                      onChange={(e) => setFormData({ ...formData, comision_ventas: parseFloat(e.target.value) || 0 })}
+                      className="h-10"
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="comision_arriendos" className="text-sm font-medium">Comisión Arriendos (%)</Label>
+                    <Input
+                      id="comision_arriendos"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      max="100"
+                      placeholder="10.00"
+                      value={formData.comision_arriendos}
+                      onChange={(e) => setFormData({ ...formData, comision_arriendos: parseFloat(e.target.value) || 0 })}
+                      className="h-10"
+                    />
+                  </div>
+                </div>
               </div>
-              <div className="grid gap-2">
-                <Label htmlFor="telefono">Teléfono</Label>
-                <Input
-                  id="telefono"
-                  value={formData.telefono}
-                  onChange={(e) => setFormData({ ...formData, telefono: e.target.value })}
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="cedula">Cédula</Label>
-                <Input
-                  id="cedula"
-                  value={formData.cedula}
-                  onChange={(e) => setFormData({ ...formData, cedula: e.target.value })}
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="especialidad">Especialidad</Label>
-                <Select
-                  value={formData.especialidad}
-                  onValueChange={(value) => setFormData({ ...formData, especialidad: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Seleccione especialidad" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="ventas">Ventas</SelectItem>
-                    <SelectItem value="arriendos">Arriendos</SelectItem>
-                    <SelectItem value="ambas">Ambas</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="comision_ventas">Comisión Ventas (%)</Label>
-                <Input
-                  id="comision_ventas"
-                  type="number"
-                  step="0.01"
-                  value={formData.comision_ventas}
-                  onChange={(e) => setFormData({ ...formData, comision_ventas: parseFloat(e.target.value) })}
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="comision_arriendos">Comisión Arriendos (%)</Label>
-                <Input
-                  id="comision_arriendos"
-                  type="number"
-                  step="0.01"
-                  value={formData.comision_arriendos}
-                  onChange={(e) => setFormData({ ...formData, comision_arriendos: parseFloat(e.target.value) })}
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="foto_perfil">URL Foto de Perfil</Label>
-                <Input
-                  id="foto_perfil"
-                  value={formData.foto_perfil}
-                  onChange={(e) => setFormData({ ...formData, foto_perfil: e.target.value })}
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="biografia">Biografía</Label>
-                <Textarea
-                  id="biografia"
-                  value={formData.biografia}
-                  onChange={(e) => setFormData({ ...formData, biografia: e.target.value })}
-                />
+
+              {/* Perfil */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-gray-900 border-b pb-2">Perfil</h3>
+                <div className="grid gap-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="foto_perfil" className="text-sm font-medium">URL Foto de Perfil</Label>
+                    <Input
+                      id="foto_perfil"
+                      placeholder="https://ejemplo.com/foto.jpg"
+                      value={formData.foto_perfil}
+                      onChange={(e) => setFormData({ ...formData, foto_perfil: e.target.value })}
+                      className="h-10"
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="biografia" className="text-sm font-medium">Biografía</Label>
+                    <Textarea
+                      id="biografia"
+                      placeholder="Descripción profesional del agente, experiencia, especialidades..."
+                      value={formData.biografia}
+                      onChange={(e) => setFormData({ ...formData, biografia: e.target.value })}
+                      className="min-h-[80px] resize-none"
+                      rows={3}
+                    />
+                  </div>
+                </div>
               </div>
             </div>
-            <div className="flex justify-end gap-4">
-              <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
+            <div className="flex justify-end gap-3 pt-4 border-t">
+              <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)} className="px-6">
                 Cancelar
               </Button>
-              <Button onClick={handleCreateAgent}>Crear Agente</Button>
+              <Button onClick={handleCreateAgent} className="bg-orange-600 hover:bg-orange-700 text-white px-6">
+                Crear Agente
+              </Button>
             </div>
           </DialogContent>
         </Dialog>
@@ -438,102 +503,163 @@ export default function AgentManagement() {
 
       {/* Dialog para editar agente */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="sm:max-w-[500px]">
+        <DialogContent className="sm:max-w-[600px] max-h-[85vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Editar Agente</DialogTitle>
+            <DialogTitle className="text-xl font-bold flex items-center gap-2">
+              <Briefcase className="h-5 w-5 text-orange-600" />
+              Editar Agente Inmobiliario
+            </DialogTitle>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label htmlFor="edit-nombre">Nombre Completo</Label>
-              <Input
-                id="edit-nombre"
-                value={formData.nombre}
-                onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
-              />
+          <div className="grid gap-6 py-4">
+            {/* Información básica */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold text-gray-900 border-b pb-2">Información Personal</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="edit-nombre" className="text-sm font-medium">Nombre Completo *</Label>
+                  <Input
+                    id="edit-nombre"
+                    placeholder="Ej: María González"
+                    value={formData.nombre}
+                    onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
+                    className="h-10"
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="edit-email" className="text-sm font-medium">Email *</Label>
+                  <Input
+                    id="edit-email"
+                    type="email"
+                    placeholder="maria@ejemplo.com"
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    className="h-10"
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="edit-telefono" className="text-sm font-medium">Teléfono</Label>
+                  <Input
+                    id="edit-telefono"
+                    placeholder="+593 999 999 999"
+                    value={formData.telefono}
+                    onChange={(e) => setFormData({ ...formData, telefono: e.target.value })}
+                    className="h-10"
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="edit-cedula" className="text-sm font-medium">Cédula</Label>
+                  <Input
+                    id="edit-cedula"
+                    placeholder="1234567890"
+                    value={formData.cedula}
+                    onChange={(e) => setFormData({ ...formData, cedula: e.target.value })}
+                    className="h-10"
+                  />
+                </div>
+              </div>
             </div>
-            <div className="grid gap-2">
-              <Label htmlFor="edit-email">Email</Label>
-              <Input
-                id="edit-email"
-                type="email"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              />
+
+            {/* Información profesional */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold text-gray-900 border-b pb-2">Información Profesional</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="edit-especialidad" className="text-sm font-medium">Especialidad *</Label>
+                  <Select
+                    value={formData.especialidad}
+                    onValueChange={(value) => setFormData({ ...formData, especialidad: value })}
+                  >
+                    <SelectTrigger className="h-10">
+                      <SelectValue placeholder="Seleccione especialidad" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="ventas">
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                          Ventas
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="arriendos">
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                          Arriendos
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="ambas">
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                          Ambas
+                        </div>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="edit-comision_ventas" className="text-sm font-medium">Comisión Ventas (%)</Label>
+                  <Input
+                    id="edit-comision_ventas"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    max="100"
+                    placeholder="3.00"
+                    value={formData.comision_ventas}
+                    onChange={(e) => setFormData({ ...formData, comision_ventas: parseFloat(e.target.value) || 0 })}
+                    className="h-10"
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="edit-comision_arriendos" className="text-sm font-medium">Comisión Arriendos (%)</Label>
+                  <Input
+                    id="edit-comision_arriendos"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    max="100"
+                    placeholder="10.00"
+                    value={formData.comision_arriendos}
+                    onChange={(e) => setFormData({ ...formData, comision_arriendos: parseFloat(e.target.value) || 0 })}
+                    className="h-10"
+                  />
+                </div>
+              </div>
             </div>
-            <div className="grid gap-2">
-              <Label htmlFor="edit-telefono">Teléfono</Label>
-              <Input
-                id="edit-telefono"
-                value={formData.telefono}
-                onChange={(e) => setFormData({ ...formData, telefono: e.target.value })}
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="edit-cedula">Cédula</Label>
-              <Input
-                id="edit-cedula"
-                value={formData.cedula}
-                onChange={(e) => setFormData({ ...formData, cedula: e.target.value })}
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="edit-especialidad">Especialidad</Label>
-              <Select
-                value={formData.especialidad}
-                onValueChange={(value) => setFormData({ ...formData, especialidad: value })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Seleccione especialidad" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="ventas">Ventas</SelectItem>
-                  <SelectItem value="arriendos">Arriendos</SelectItem>
-                  <SelectItem value="ambas">Ambas</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="edit-comision_ventas">Comisión Ventas (%)</Label>
-              <Input
-                id="edit-comision_ventas"
-                type="number"
-                step="0.01"
-                value={formData.comision_ventas}
-                onChange={(e) => setFormData({ ...formData, comision_ventas: parseFloat(e.target.value) })}
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="edit-comision_arriendos">Comisión Arriendos (%)</Label>
-              <Input
-                id="edit-comision_arriendos"
-                type="number"
-                step="0.01"
-                value={formData.comision_arriendos}
-                onChange={(e) => setFormData({ ...formData, comision_arriendos: parseFloat(e.target.value) })}
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="edit-foto_perfil">URL Foto de Perfil</Label>
-              <Input
-                id="edit-foto_perfil"
-                value={formData.foto_perfil}
-                onChange={(e) => setFormData({ ...formData, foto_perfil: e.target.value })}
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="edit-biografia">Biografía</Label>
-              <Textarea
-                id="edit-biografia"
-                value={formData.biografia}
-                onChange={(e) => setFormData({ ...formData, biografia: e.target.value })}
-              />
+
+            {/* Perfil */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold text-gray-900 border-b pb-2">Perfil</h3>
+              <div className="grid gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="edit-foto_perfil" className="text-sm font-medium">URL Foto de Perfil</Label>
+                  <Input
+                    id="edit-foto_perfil"
+                    placeholder="https://ejemplo.com/foto.jpg"
+                    value={formData.foto_perfil}
+                    onChange={(e) => setFormData({ ...formData, foto_perfil: e.target.value })}
+                    className="h-10"
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="edit-biografia" className="text-sm font-medium">Biografía</Label>
+                  <Textarea
+                    id="edit-biografia"
+                    placeholder="Descripción profesional del agente, experiencia, especialidades..."
+                    value={formData.biografia}
+                    onChange={(e) => setFormData({ ...formData, biografia: e.target.value })}
+                    className="min-h-[80px] resize-none"
+                    rows={3}
+                  />
+                </div>
+              </div>
             </div>
           </div>
-          <div className="flex justify-end gap-4">
-            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+          <div className="flex justify-end gap-3 pt-4 border-t">
+            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)} className="px-6">
               Cancelar
             </Button>
-            <Button onClick={handleUpdateAgent}>Guardar Cambios</Button>
+            <Button onClick={handleUpdateAgent} className="bg-orange-600 hover:bg-orange-700 text-white px-6">
+              Guardar Cambios
+            </Button>
           </div>
         </DialogContent>
       </Dialog>

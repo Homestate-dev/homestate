@@ -203,30 +203,11 @@ export default function BackOfficePage() {
         ) : selectedBuilding ? (
           <BuildingDetail building={selectedBuildingData!} initialTab={selectedTab} onBuildingDeleted={handleBackToList} />
         ) : (
-          <Tabs defaultValue="edificios" className="w-full">
-            <TabsList>
-              <TabsTrigger value="edificios">Edificios</TabsTrigger>
-              <TabsTrigger value="administradores">Administradores</TabsTrigger>
-              <TabsTrigger value="agentes">Agentes Inmobiliarios</TabsTrigger>
-              <TabsTrigger value="actividades">Mis Actividades</TabsTrigger>
-            </TabsList>
-            <TabsContent value="edificios">
-              <BuildingList 
-                buildings={buildings} 
-                onSelectBuilding={handleBuildingSelect}
-                onBuildingCreated={fetchBuildings}
-              />
-            </TabsContent>
-            <TabsContent value="administradores">
-              {/* Contenido del tab de administradores */}
-            </TabsContent>
-            <TabsContent value="agentes">
-              <AgentManagement />
-            </TabsContent>
-            <TabsContent value="actividades">
-              {/* Contenido del tab de actividades */}
-            </TabsContent>
-          </Tabs>
+                      <BuildingList 
+              buildings={buildings} 
+              onSelectBuilding={handleBuildingSelect}
+              onBuildingCreated={fetchBuildings}
+            />
         )}
       </div>
     </div>

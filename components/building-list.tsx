@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Plus, Building2, MapPin, Car, Users, Eye, Edit, QrCode, Trash2, UserCog, Activity, ExternalLink, Search } from "lucide-react"
+import { Plus, Building2, MapPin, Car, Users, Eye, Edit, QrCode, Trash2, UserCog, Activity, ExternalLink, Search, Briefcase } from "lucide-react"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -11,6 +11,7 @@ import { CreateBuildingDialog } from "@/components/create-building-dialog"
 import { DeleteBuildingDialog } from "@/components/delete-building-dialog"
 import { AdminManagement } from "@/components/admin-management"
 import { MyActivities } from "@/components/my-activities"
+import AgentManagement from "@/components/agent-management"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { toast } from "sonner"
 import { useAuth } from "@/contexts/auth-context"
@@ -103,7 +104,7 @@ export function BuildingList({ buildings, onSelectBuilding, onBuildingCreated, o
       </div>
 
       <Tabs defaultValue="buildings" className="w-full">
-        <TabsList className={`${isMobile ? 'grid w-full' : 'grid w-full lg:w-[600px]'} ${isMainAdmin ? 'grid-cols-3' : 'grid-cols-2'}`}>
+        <TabsList className={`${isMobile ? 'grid w-full' : 'grid w-full lg:w-[800px]'} ${isMainAdmin ? 'grid-cols-4' : 'grid-cols-2'}`}>
           <TabsTrigger value="buildings" className={`flex items-center gap-2 ${isMobile ? 'text-xs' : ''}`}>
             <Building2 className="h-4 w-4" />
             {isMobile ? 'Edificios' : 'Edificios'}
@@ -112,6 +113,12 @@ export function BuildingList({ buildings, onSelectBuilding, onBuildingCreated, o
             <UserCog className="h-4 w-4" />
             {isMobile ? 'Admins' : 'Administradores'}
           </TabsTrigger>
+          {isMainAdmin && (
+            <TabsTrigger value="agents" className={`flex items-center gap-2 ${isMobile ? 'text-xs' : ''}`}>
+              <Briefcase className="h-4 w-4" />
+              {isMobile ? 'Agentes' : 'Agentes Inmob.'}
+            </TabsTrigger>
+          )}
           {isMainAdmin && (
             <TabsTrigger value="my-activities" className={`flex items-center gap-2 ${isMobile ? 'text-xs' : ''}`}>
               <Activity className="h-4 w-4" />
@@ -317,6 +324,12 @@ export function BuildingList({ buildings, onSelectBuilding, onBuildingCreated, o
         <TabsContent value="admins">
           <AdminManagement buildingId={0} />
         </TabsContent>
+
+        {isMainAdmin && (
+          <TabsContent value="agents">
+            <AgentManagement />
+          </TabsContent>
+        )}
 
         {isMainAdmin && (
           <TabsContent value="my-activities">
