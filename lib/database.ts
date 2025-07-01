@@ -174,22 +174,30 @@ export async function createBuilding(buildingData: {
 export async function getBuildings() {
   const query = `
     SELECT 
-      id,
-      nombre,
-      direccion,
-      permalink,
-      costo_expensas,
-      areas_comunales,
-      seguridad,
-      aparcamiento,
-      url_imagen_principal,
-      imagenes_secundarias,
-      fecha_creacion,
-      fecha_actualizacion,
-      0 as departamentos_count,
-      0 as disponibles_count
-    FROM edificios 
-    ORDER BY fecha_creacion DESC
+      e.id,
+      e.nombre,
+      e.direccion,
+      e.permalink,
+      e.costo_expensas,
+      e.areas_comunales,
+      e.seguridad,
+      e.aparcamiento,
+      e.url_imagen_principal,
+      e.imagenes_secundarias,
+      e.fecha_creacion,
+      e.fecha_actualizacion,
+      COALESCE(dept_stats.departamentos_count, 0) as departamentos_count,
+      COALESCE(dept_stats.disponibles_count, 0) as disponibles_count
+    FROM edificios e
+    LEFT JOIN (
+      SELECT 
+        edificio_id,
+        COUNT(*) as departamentos_count,
+        COUNT(CASE WHEN disponible = true THEN 1 END) as disponibles_count
+      FROM departamentos 
+      GROUP BY edificio_id
+    ) dept_stats ON e.id = dept_stats.edificio_id
+    ORDER BY e.fecha_creacion DESC
   `
   const result = await executeQuery(query)
   return result.rows.map(row => {
@@ -268,22 +276,31 @@ function safeJsonStringify(data: any): string {
 export async function getBuildingById(id: number) {
   const query = `
     SELECT 
-      id,
-      nombre,
-      direccion,
-      permalink,
-      costo_expensas,
-      areas_comunales,
-      seguridad,
-      aparcamiento,
-      url_imagen_principal,
-      imagenes_secundarias,
-      fecha_creacion,
-      fecha_actualizacion,
-      0 as departamentos_count,
-      0 as disponibles_count
-    FROM edificios 
-    WHERE id = $1
+      e.id,
+      e.nombre,
+      e.direccion,
+      e.permalink,
+      e.costo_expensas,
+      e.areas_comunales,
+      e.seguridad,
+      e.aparcamiento,
+      e.url_imagen_principal,
+      e.imagenes_secundarias,
+      e.fecha_creacion,
+      e.fecha_actualizacion,
+      COALESCE(dept_stats.departamentos_count, 0) as departamentos_count,
+      COALESCE(dept_stats.disponibles_count, 0) as disponibles_count
+    FROM edificios e
+    LEFT JOIN (
+      SELECT 
+        edificio_id,
+        COUNT(*) as departamentos_count,
+        COUNT(CASE WHEN disponible = true THEN 1 END) as disponibles_count
+      FROM departamentos 
+      WHERE edificio_id = $1
+      GROUP BY edificio_id
+    ) dept_stats ON e.id = dept_stats.edificio_id
+    WHERE e.id = $1
   `
   const result = await executeQuery(query, [id])
   
@@ -631,11 +648,29 @@ export async function updateBuildingCounters() {
     UPDATE edificios 
     SET 
       departamentos_count = (
-        SELECT COUNT(*) FROM departamentos WHERE edificio_id = edificios.id
+        SELECT COALESCE(COUNT(*), 0) FROM departamentos WHERE edificio_id = edificios.id
       ),
       disponibles_count = (
-        SELECT COUNT(*) FROM departamentos WHERE edificio_id = edificios.id AND disponible = true
-      )
+        SELECT COALESCE(COUNT(*), 0) FROM departamentos WHERE edificio_id = edificios.id AND disponible = true
+      ),
+      fecha_actualizacion = CURRENT_TIMESTAMP
   `
   await executeQuery(query)
+}
+
+// Función para refrescar estadísticas de un edificio específico (opcional)
+export async function refreshBuildingStats(buildingId: number) {
+  const query = `
+    UPDATE edificios 
+    SET 
+      departamentos_count = (
+        SELECT COALESCE(COUNT(*), 0) FROM departamentos WHERE edificio_id = $1
+      ),
+      disponibles_count = (
+        SELECT COALESCE(COUNT(*), 0) FROM departamentos WHERE edificio_id = $1 AND disponible = true
+      ),
+      fecha_actualizacion = CURRENT_TIMESTAMP
+    WHERE id = $1
+  `
+  await executeQuery(query, [buildingId])
 } 
