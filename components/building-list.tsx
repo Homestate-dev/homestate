@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Plus, Building2, MapPin, Car, Users, Eye, Edit, QrCode, Trash2, UserCog, Activity, ExternalLink, Search, Briefcase } from "lucide-react"
+import { Plus, Building2, MapPin, Car, Users, Eye, Edit, QrCode, Trash2, UserCog, Activity, ExternalLink, Search, Briefcase, DollarSign } from "lucide-react"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -12,6 +12,7 @@ import { DeleteBuildingDialog } from "@/components/delete-building-dialog"
 import { AdminManagement } from "@/components/admin-management"
 import { MyActivities } from "@/components/my-activities"
 import AgentManagement from "@/components/agent-management"
+import { SalesRentalsManagement } from "@/components/sales-rentals-management"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { toast } from "sonner"
 import { useAuth } from "@/contexts/auth-context"
@@ -104,7 +105,7 @@ export function BuildingList({ buildings, onSelectBuilding, onBuildingCreated, o
       </div>
 
       <Tabs defaultValue="buildings" className="w-full">
-        <TabsList className={`${isMobile ? 'grid w-full' : 'grid w-full lg:w-[800px]'} ${isMainAdmin ? 'grid-cols-4' : 'grid-cols-2'}`}>
+        <TabsList className={`${isMobile ? 'grid w-full' : 'grid w-full lg:w-[1000px]'} ${isMainAdmin ? 'grid-cols-5' : 'grid-cols-2'}`}>
           <TabsTrigger value="buildings" className={`flex items-center gap-2 ${isMobile ? 'text-xs' : ''}`}>
             <Building2 className="h-4 w-4" />
             {isMobile ? 'Edificios' : 'Edificios'}
@@ -117,6 +118,12 @@ export function BuildingList({ buildings, onSelectBuilding, onBuildingCreated, o
             <TabsTrigger value="agents" className={`flex items-center gap-2 ${isMobile ? 'text-xs' : ''}`}>
               <Briefcase className="h-4 w-4" />
               {isMobile ? 'Agentes' : 'Agentes Inmob.'}
+            </TabsTrigger>
+          )}
+          {isMainAdmin && (
+            <TabsTrigger value="sales-rentals" className={`flex items-center gap-2 ${isMobile ? 'text-xs' : ''}`}>
+              <DollarSign className="h-4 w-4" />
+              {isMobile ? 'Ventas' : 'Ventas y Arriendos'}
             </TabsTrigger>
           )}
           {isMainAdmin && (
@@ -328,6 +335,12 @@ export function BuildingList({ buildings, onSelectBuilding, onBuildingCreated, o
         {isMainAdmin && (
           <TabsContent value="agents">
             <AgentManagement />
+          </TabsContent>
+        )}
+
+        {isMainAdmin && (
+          <TabsContent value="sales-rentals">
+            <SalesRentalsManagement />
           </TabsContent>
         )}
 
