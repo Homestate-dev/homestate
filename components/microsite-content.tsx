@@ -65,7 +65,7 @@ export function MicrositeContent({ building, departments }: MicrositeContentProp
   useEffect(() => {
     setMounted(true)
     // Inicializar departamentos filtrados
-    if (departments && departments.length > 0) {
+    if (Array.isArray(departments) && departments.length > 0) {
       setFilteredDepartments(departments)
     }
   }, [departments])
@@ -82,14 +82,15 @@ export function MicrositeContent({ building, departments }: MicrositeContentProp
     )
   }
 
-  // Validar datos después del montaje
-  if (!building || !building.nombre || !departments) {
+  // Validar datos después del montaje con verificaciones más defensivas
+  if (!building || typeof building !== 'object' || !building.nombre || typeof building.nombre !== 'string') {
+    console.error('Building data validation failed:', { building, departments })
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center max-w-md mx-auto p-6">
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
             <h1 className="text-xl font-bold mb-2">Error al cargar el edificio</h1>
-            <p>Los datos del edificio no están disponibles</p>
+            <p>Los datos del edificio no están disponibles o son inválidos</p>
           </div>
           <Link href="/">
             <Button variant="outline" className="mt-4">
@@ -102,21 +103,29 @@ export function MicrositeContent({ building, departments }: MicrositeContentProp
     )
   }
 
+  // Validar departments es un array
+  const validDepartments = Array.isArray(departments) ? departments : []
+
   // Preparar todas las imágenes del edificio
   const buildingImages = useMemo(() => {
+    // Validar que building existe antes de acceder a sus propiedades
+    if (!building || typeof building !== 'object') {
+      return []
+    }
+    
     const images = []
-    if (building.url_imagen_principal) {
+    if (building.url_imagen_principal && typeof building.url_imagen_principal === 'string') {
       images.push(building.url_imagen_principal)
     }
-    if (building.imagenes_secundarias && building.imagenes_secundarias.length > 0) {
-      images.push(...building.imagenes_secundarias)
+    if (Array.isArray(building.imagenes_secundarias) && building.imagenes_secundarias.length > 0) {
+      images.push(...building.imagenes_secundarias.filter(img => typeof img === 'string'))
     }
     return images
-  }, [building])
+  }, [building?.url_imagen_principal, building?.imagenes_secundarias])
 
   // Función para aplicar filtros
   const applyFilters = (filters: FilterState) => {
-    let filtered = [...departments]
+    let filtered = [...validDepartments]
 
     // Filtrar por tipo de operación
     if (filters.tipo !== "todos") {

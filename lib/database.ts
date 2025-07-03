@@ -612,6 +612,12 @@ export async function toggleDepartmentAvailability(id: number) {
 // Obtener edificio con sus departamentos por permalink (para micrositio)
 export async function getBuildingWithDepartmentsByPermalink(permalink: string) {
   try {
+    // Validar el permalink
+    if (!permalink || typeof permalink !== 'string' || permalink.trim() === '') {
+      console.error('Invalid permalink provided:', permalink)
+      return null
+    }
+
     // Obtener el edificio
     const buildingQuery = `
       SELECT 
@@ -620,27 +626,45 @@ export async function getBuildingWithDepartmentsByPermalink(permalink: string) {
       FROM edificios 
       WHERE permalink = $1
     `
-    const buildingResult = await executeQuery(buildingQuery, [permalink])
+    const buildingResult = await executeQuery(buildingQuery, [permalink.trim()])
     
-    if (buildingResult.rows.length === 0) return null
+    if (buildingResult.rows.length === 0) {
+      console.warn('No building found with permalink:', permalink)
+      return null
+    }
     
     const building = buildingResult.rows[0]
+    
+    // Validar que el edificio tiene datos esenciales
+    if (!building.nombre || !building.id) {
+      console.error('Building data is incomplete:', building)
+      return null
+    }
     
     // Obtener los departamentos del edificio
     const departments = await getDepartmentsByBuilding(building.id)
     
+    // Asegurar que departments sea siempre un array
+    const validDepartments = Array.isArray(departments) ? departments : []
+    
     return {
       building: {
         ...building,
+        // Asegurar valores por defecto seguros
+        nombre: building.nombre || '',
+        direccion: building.direccion || '',
+        permalink: building.permalink || '',
+        costo_expensas: building.costo_expensas || 0,
         areas_comunales: safeJsonParse(building.areas_comunales, []),
         seguridad: safeJsonParse(building.seguridad, []),
         aparcamiento: safeJsonParse(building.aparcamiento, []),
+        url_imagen_principal: building.url_imagen_principal || '',
         imagenes_secundarias: safeJsonParse(building.imagenes_secundarias, [])
       },
-      departments: departments
+      departments: validDepartments
     }
   } catch (error) {
-    console.error('Error fetching building with departments by permalink:', error)
+    console.error('Error fetching building with departments by permalink:', error, { permalink })
     return null
   }
 }
