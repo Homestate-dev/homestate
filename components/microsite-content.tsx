@@ -288,7 +288,7 @@ export function MicrositeContent({ building, departments }: MicrositeContentProp
                 <MapPin className="h-6 w-6 mr-2" />
                 {building.direccion}
               </p>
-              <MicrositeShareButton building={building} />
+                             <MicrositeShareButton buildingName={building.nombre} buildingAddress={building.direccion} />
             </div>
           </div>
         </section>
