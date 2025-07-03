@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { query } from '@/lib/database'
+import { query, logAdminAction } from '@/lib/database'
 
 export async function GET(request: Request) {
   try {
@@ -111,6 +111,14 @@ export async function POST(request: Request) {
       )
     }
 
+    // Validar autenticación
+    if (!data.currentUserUid) {
+      return NextResponse.json(
+        { success: false, error: 'Usuario no autenticado' },
+        { status: 401 }
+      )
+    }
+
     // Verificar que el departamento no tenga una transacción activa del mismo tipo
     const existingTransaction = await query(
       'SELECT id FROM transacciones_ventas_arriendos WHERE departamento_id = $1 AND tipo_transaccion = $2 AND estado IN ($3, $4)',
@@ -171,6 +179,51 @@ export async function POST(request: Request) {
         'UPDATE departamentos SET estado = $1 WHERE id = $2',
         [newStatus, data.departamento_id]
       )
+    }
+
+    // Obtener información para registrar la actividad
+    try {
+      const transactionInfo = await query(`
+        SELECT 
+          d.numero as departamento_numero,
+          d.nombre as departamento_nombre,
+          e.nombre as edificio_nombre,
+          a.nombre as agente_nombre
+        FROM departamentos d
+        JOIN edificios e ON d.edificio_id = e.id
+        JOIN agentes_inmobiliarios a ON a.id = $2
+        WHERE d.id = $1
+      `, [data.departamento_id, data.agente_id])
+
+      if (transactionInfo.rows.length > 0) {
+        const info = transactionInfo.rows[0]
+        const tipoDisplay = data.tipo_transaccion === 'venta' ? 'venta' : 'arriendo'
+        const valorFormatted = new Intl.NumberFormat('es-CO', {
+          style: 'currency',
+          currency: 'COP',
+          minimumFractionDigits: 0
+        }).format(data.valor_transaccion)
+
+        await logAdminAction(
+          data.currentUserUid,
+          `Creó nueva transacción de ${tipoDisplay}: Depto ${info.departamento_numero} en ${info.edificio_nombre} por ${valorFormatted} con agente ${info.agente_nombre}`,
+          'creación',
+          { 
+            transaccion_id: result.rows[0].id,
+            tipo_transaccion: data.tipo_transaccion,
+            departamento_id: data.departamento_id,
+            agente_id: data.agente_id,
+            valor_transaccion: data.valor_transaccion,
+            cliente_nombre: data.cliente_nombre,
+            edificio_nombre: info.edificio_nombre,
+            departamento_numero: info.departamento_numero,
+            agente_nombre: info.agente_nombre
+          }
+        )
+      }
+    } catch (logError) {
+      console.warn('Error al registrar actividad de transacción:', logError)
+      // No fallar por esto, es opcional
     }
 
     return NextResponse.json({

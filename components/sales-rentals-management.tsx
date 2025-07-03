@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useAuth } from "@/contexts/auth-context"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -99,6 +100,7 @@ interface SalesRentalsStats {
 }
 
 export function SalesRentalsManagement() {
+  const { user } = useAuth()
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [agents, setAgents] = useState<Agent[]>([])
   const [buildings, setBuildings] = useState<Building[]>([])
@@ -223,10 +225,19 @@ export function SalesRentalsManagement() {
 
   const handleCreateTransaction = async () => {
     try {
+      // Verificar que el usuario esté autenticado
+      if (!user?.uid) {
+        toast.error('Debes estar autenticado para crear transacciones')
+        return
+      }
+
       const response = await fetch('/api/sales-rentals/transactions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
+        body: JSON.stringify({
+          ...formData,
+          currentUserUid: user.uid
+        })
       })
 
       const data = await response.json()
