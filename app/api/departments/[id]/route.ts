@@ -2,39 +2,54 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getDepartmentById, updateDepartment, deleteDepartment, toggleDepartmentAvailability, logAdminAction } from '@/lib/database'
 import { deleteDepartmentImages } from '@/lib/firebase-admin'
 
+interface RouteParams {
+  params: {
+    id: string
+  }
+}
+
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: RouteParams
 ) {
   try {
-    const { id } = await params
-    const departmentId = parseInt(id)
+    const departmentId = parseInt(params.id)
 
     if (isNaN(departmentId)) {
-      return NextResponse.json({ 
-        success: false, 
-        error: 'ID de departamento inválido' 
-      }, { status: 400 })
+      return NextResponse.json(
+        { error: 'ID de departamento inválido' },
+        { status: 400 }
+      )
     }
 
     const department = await getDepartmentById(departmentId)
 
     if (!department) {
-      return NextResponse.json({ 
-        success: false, 
-        error: 'Departamento no encontrado' 
-      }, { status: 404 })
+      return NextResponse.json(
+        { error: 'Departamento no encontrado' },
+        { status: 404 }
+      )
     }
 
-    return NextResponse.json({ 
-      success: true, 
-      data: department 
-    })
+    // Asegurar que los datos estén completos antes de enviarlos
+    const safeDepartment = {
+      ...department,
+      nombre: department.nombre || '',
+      numero: department.numero || '',
+      piso: department.piso || 0,
+      area: department.area || 0,
+      cantidad_habitaciones: department.cantidad_habitaciones || 'No especificado',
+      tipo: department.tipo || '',
+      estado: department.estado || '',
+      ideal_para: department.ideal_para || '',
+      imagenes: Array.isArray(department.imagenes) ? department.imagenes : []
+    }
 
+    return NextResponse.json(safeDepartment)
   } catch (error) {
     console.error('Error al obtener departamento:', error)
     return NextResponse.json(
-      { success: false, error: 'Error interno del servidor' },
+      { error: 'Error interno del servidor' },
       { status: 500 }
     )
   }

@@ -11,6 +11,12 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import Link from 'next/link'
 import { ArrowLeft, MapPin, DollarSign, Users } from 'lucide-react'
+import Image from 'next/image'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Building } from 'lucide-react'
+import { DebugRerenderDetector } from '@/components/debug-rerender-detector'
+import { ProductionErrorBoundary } from '@/components/production-error-boundary'
+import { Header } from '@/components/header'
 
 interface Department {
   id: number
@@ -254,161 +260,176 @@ export function MicrositeContent({ building, departments }: MicrositeContentProp
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <Link href="/">
-              <Button variant="ghost" size="sm">
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Volver al listado
-              </Button>
-            </Link>
-            <MicrositeShareButton 
-              buildingName={building.nombre}
-              permalink={building.permalink}
+    <ProductionErrorBoundary>
+      <DebugRerenderDetector componentName="MicrositeContent" />
+      <div className="min-h-screen flex flex-col bg-gray-50">
+        <Header />
+        
+        {/* Hero Section con imagen principal */}
+        <section className="relative h-96 bg-gray-900 overflow-hidden">
+          {building.url_imagen_principal ? (
+            <Image
+              src={building.url_imagen_principal}
+              alt={building.nombre}
+              fill
+              className="object-cover"
+              priority
             />
-          </div>
-        </div>
-      </div>
-
-      {/* Contenido principal */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Información del edificio */}
-        <div className="bg-white rounded-lg shadow-sm mb-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 p-6">
-            {/* Carrusel de imágenes */}
-            <div>
-              <BuildingImagesCarousel images={buildingImages} buildingName={building.nombre} />
-            </div>
-            
-            {/* Información del edificio */}
-            <div>
-              <BuildingInfoDisplay building={building} />
-            </div>
-          </div>
-        </div>
-
-        {/* Estadísticas rápidas */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-          <div className="bg-white rounded-lg p-6 shadow-sm">
-            <div className="flex items-center">
-              <div className="p-3 rounded-full bg-blue-100">
-                <Users className="h-6 w-6 text-blue-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Total Departamentos</p>
-                <p className="text-2xl font-bold text-gray-900">{departments.length}</p>
-              </div>
-            </div>
-          </div>
-          
-          <div className="bg-white rounded-lg p-6 shadow-sm">
-            <div className="flex items-center">
-              <div className="p-3 rounded-full bg-green-100">
-                <Badge className="h-6 w-6 text-green-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Disponibles</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {departments.filter(d => d.disponible).length}
-                </p>
-              </div>
-            </div>
-          </div>
-          
-          <div className="bg-white rounded-lg p-6 shadow-sm">
-            <div className="flex items-center">
-              <div className="p-3 rounded-full bg-orange-100">
-                <DollarSign className="h-6 w-6 text-orange-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Expensas</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  ${building.costo_expensas?.toLocaleString() || 'N/A'}
-                </p>
-              </div>
-            </div>
-          </div>
-          
-          <div className="bg-white rounded-lg p-6 shadow-sm">
-            <div className="flex items-center">
-              <div className="p-3 rounded-full bg-purple-100">
-                <MapPin className="h-6 w-6 text-purple-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Ubicación</p>
-                <p className="text-lg font-bold text-gray-900 truncate">
-                  {building.direccion}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Filtros */}
-        <div className="bg-white rounded-lg shadow-sm mb-8 p-6">
-          <MicrositeFilterBar 
-            departments={departments}
-            onFiltersChange={applyFilters}
-          />
-        </div>
-
-        {/* Listado de departamentos */}
-        <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-bold text-gray-900">
-              Departamentos Disponibles
-            </h2>
-            <Badge variant="secondary">
-              {filteredDepartments.length} de {departments.length} departamentos
-            </Badge>
-          </div>
-          
-          {filteredDepartments.length === 0 ? (
-            <div className="bg-white rounded-lg shadow-sm p-12 text-center">
-              <p className="text-gray-500 text-lg">
-                No se encontraron departamentos que coincidan con los filtros seleccionados.
-              </p>
-              <Button 
-                variant="outline" 
-                className="mt-4"
-                onClick={() => applyFilters({
-                  tipo: "todos",
-                  habitaciones: "todas",
-                  estado: "todos",
-                  idealPara: "todos",
-                  priceRange: [0, 10000000],
-                  areaRange: [0, 500],
-                  characteristics: {
-                    amueblado: false,
-                    livingComedor: false,
-                    cocinaSeparada: false,
-                    banoCompleto: false,
-                    aireAcondicionado: false,
-                    placares: false
-                  }
-                })}
-              >
-                Limpiar filtros
-              </Button>
-            </div>
           ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-              {filteredDepartments.map((department) => (
-                <DepartmentCard
-                  key={department.id}
-                  department={department}
-                  buildingName={building.nombre}
-                />
-              ))}
+            <div className="w-full h-full bg-gradient-to-r from-orange-500 to-orange-600 flex items-center justify-center">
+              <Building className="h-24 w-24 text-white opacity-50" />
             </div>
           )}
-        </div>
-      </div>
+          <div className="absolute inset-0 bg-black bg-opacity-40" />
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="text-center text-white">
+              <h1 className="text-4xl md:text-6xl font-bold mb-4">{building.nombre}</h1>
+              <p className="text-xl md:text-2xl mb-6 flex items-center justify-center">
+                <MapPin className="h-6 w-6 mr-2" />
+                {building.direccion}
+              </p>
+              <MicrositeShareButton building={building} />
+            </div>
+          </div>
+        </section>
 
-      <Footer />
-    </div>
+        {/* Contenido principal */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {/* Información del edificio */}
+          <div className="bg-white rounded-lg shadow-sm mb-8">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 p-6">
+              {/* Carrusel de imágenes */}
+              <div>
+                <BuildingImagesCarousel images={buildingImages} buildingName={building.nombre} />
+              </div>
+              
+              {/* Información del edificio */}
+              <div>
+                <BuildingInfoDisplay building={building} />
+              </div>
+            </div>
+          </div>
+
+          {/* Estadísticas rápidas */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+            <div className="bg-white rounded-lg p-6 shadow-sm">
+              <div className="flex items-center">
+                <div className="p-3 rounded-full bg-blue-100">
+                  <Users className="h-6 w-6 text-blue-600" />
+                </div>
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-600">Total Departamentos</p>
+                  <p className="text-2xl font-bold text-gray-900">{departments.length}</p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="bg-white rounded-lg p-6 shadow-sm">
+              <div className="flex items-center">
+                <div className="p-3 rounded-full bg-green-100">
+                  <Badge className="h-6 w-6 text-green-600" />
+                </div>
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-600">Disponibles</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {departments.filter(d => d.disponible).length}
+                  </p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="bg-white rounded-lg p-6 shadow-sm">
+              <div className="flex items-center">
+                <div className="p-3 rounded-full bg-orange-100">
+                  <DollarSign className="h-6 w-6 text-orange-600" />
+                </div>
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-600">Expensas</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    ${building.costo_expensas?.toLocaleString() || 'N/A'}
+                  </p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="bg-white rounded-lg p-6 shadow-sm">
+              <div className="flex items-center">
+                <div className="p-3 rounded-full bg-purple-100">
+                  <MapPin className="h-6 w-6 text-purple-600" />
+                </div>
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-600">Ubicación</p>
+                  <p className="text-lg font-bold text-gray-900 truncate">
+                    {building.direccion}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Filtros */}
+          <div className="bg-white rounded-lg shadow-sm mb-8 p-6">
+            <MicrositeFilterBar 
+              departments={departments}
+              onFiltersChange={applyFilters}
+            />
+          </div>
+
+          {/* Listado de departamentos */}
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-bold text-gray-900">
+                Departamentos Disponibles
+              </h2>
+              <Badge variant="secondary">
+                {filteredDepartments.length} de {departments.length} departamentos
+              </Badge>
+            </div>
+            
+            {filteredDepartments.length === 0 ? (
+              <div className="bg-white rounded-lg shadow-sm p-12 text-center">
+                <p className="text-gray-500 text-lg">
+                  No se encontraron departamentos que coincidan con los filtros seleccionados.
+                </p>
+                <Button 
+                  variant="outline" 
+                  className="mt-4"
+                  onClick={() => applyFilters({
+                    tipo: "todos",
+                    habitaciones: "todas",
+                    estado: "todos",
+                    idealPara: "todos",
+                    priceRange: [0, 10000000],
+                    areaRange: [0, 500],
+                    characteristics: {
+                      amueblado: false,
+                      livingComedor: false,
+                      cocinaSeparada: false,
+                      banoCompleto: false,
+                      aireAcondicionado: false,
+                      placares: false
+                    }
+                  })}
+                >
+                  Limpiar filtros
+                </Button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+                {filteredDepartments.map((department) => (
+                  <DepartmentCard
+                    key={department.id}
+                    department={department}
+                    buildingName={building.nombre}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        <Footer />
+      </div>
+    </ProductionErrorBoundary>
   )
 }

@@ -31,6 +31,26 @@ export default async function DepartamentoPage({ params }: PageProps) {
       notFound()
     }
 
+    // Validaciones defensivas para evitar errores de propiedades undefined
+    if (!departamento.nombre || typeof departamento.nombre !== 'string') {
+      console.error('Department data is incomplete - missing nombre:', departamento)
+      notFound()
+    }
+
+    // Asegurar que todas las propiedades críticas existan
+    const safeDepartamento = {
+      ...departamento,
+      nombre: departamento.nombre || '',
+      numero: departamento.numero || '',
+      piso: departamento.piso || 0,
+      area: departamento.area || 0,
+      cantidad_habitaciones: departamento.cantidad_habitaciones || 'No especificado',
+      tipo: departamento.tipo || '',
+      estado: departamento.estado || '',
+      ideal_para: departamento.ideal_para || '',
+      imagenes: Array.isArray(departamento.imagenes) ? departamento.imagenes : []
+    }
+
     // Mapeos para traducir valores
     const habitacionesMap: Record<string, string> = {
       'Loft': "Loft",
@@ -76,22 +96,22 @@ export default async function DepartamentoPage({ params }: PageProps) {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Galería de imágenes */}
             <div className="lg:col-span-2">
-              <ImageGallery images={departamento.imagenes} altText={departamento.nombre} />
+              <ImageGallery images={safeDepartamento.imagenes} altText={safeDepartamento.nombre} />
             </div>
 
             {/* Información principal */}
             <div className="space-y-6">
               <div>
                 <div className="flex items-center gap-2 mb-2">
-                  <Badge variant={departamento.disponible ? "default" : "secondary"}>
-                    {departamento.disponible ? "Disponible" : "No disponible"}
+                  <Badge variant={safeDepartamento.disponible ? "default" : "secondary"}>
+                    {safeDepartamento.disponible ? "Disponible" : "No disponible"}
                   </Badge>
-                  <Badge variant="outline">{tipoMap[departamento.tipo]}</Badge>
+                  <Badge variant="outline">{tipoMap[safeDepartamento.tipo] || safeDepartamento.tipo}</Badge>
                 </div>
-                <h1 className="text-3xl font-bold text-gray-900 mb-2">{departamento.nombre}</h1>
+                <h1 className="text-3xl font-bold text-gray-900 mb-2">{safeDepartamento.nombre}</h1>
                 <p className="text-gray-600 flex items-center">
                   <MapPin className="h-4 w-4 mr-1" />
-                  Piso {departamento.piso} · Depto {departamento.numero}
+                  Piso {safeDepartamento.piso} · Depto {safeDepartamento.numero}
                 </p>
               </div>
 
@@ -101,16 +121,16 @@ export default async function DepartamentoPage({ params }: PageProps) {
                   <CardTitle className="text-xl">Precios</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  {departamento.valor_venta && departamento.valor_venta > 0 && (
+                  {safeDepartamento.valor_venta && safeDepartamento.valor_venta > 0 && (
                     <div>
                       <p className="text-sm text-gray-600">Precio de venta</p>
-                      <p className="text-2xl font-bold text-green-600">${departamento.valor_venta.toLocaleString()}</p>
+                      <p className="text-2xl font-bold text-green-600">${safeDepartamento.valor_venta.toLocaleString()}</p>
                     </div>
                   )}
-                  {departamento.valor_arriendo && departamento.valor_arriendo > 0 && (
+                  {safeDepartamento.valor_arriendo && safeDepartamento.valor_arriendo > 0 && (
                     <div>
                       <p className="text-sm text-gray-600">Precio de arriendo</p>
-                      <p className="text-2xl font-bold text-blue-600">${departamento.valor_arriendo.toLocaleString()}/mes</p>
+                      <p className="text-2xl font-bold text-blue-600">${safeDepartamento.valor_arriendo.toLocaleString()}/mes</p>
                     </div>
                   )}
                 </CardContent>
@@ -125,15 +145,15 @@ export default async function DepartamentoPage({ params }: PageProps) {
                   <div className="grid grid-cols-3 gap-4 text-center">
                     <div className="flex flex-col items-center">
                       <Bed className="h-6 w-6 text-orange-600 mb-2" />
-                      <span className="text-sm font-medium">{habitacionesMap[departamento.cantidad_habitaciones] || departamento.cantidad_habitaciones}</span>
+                      <span className="text-sm font-medium">{habitacionesMap[safeDepartamento.cantidad_habitaciones] || safeDepartamento.cantidad_habitaciones}</span>
                     </div>
                     <div className="flex flex-col items-center">
                       <Bath className="h-6 w-6 text-orange-600 mb-2" />
-                      <span className="text-sm font-medium">{departamento.tiene_bano_completo ? "1 Baño" : "Sin baño"}</span>
+                      <span className="text-sm font-medium">{safeDepartamento.tiene_bano_completo ? "1 Baño" : "Sin baño"}</span>
                     </div>
                     <div className="flex flex-col items-center">
                       <Maximize className="h-6 w-6 text-orange-600 mb-2" />
-                      <span className="text-sm font-medium">{departamento.area} m²</span>
+                      <span className="text-sm font-medium">{safeDepartamento.area} m²</span>
                     </div>
                   </div>
                 </CardContent>
@@ -147,13 +167,13 @@ export default async function DepartamentoPage({ params }: PageProps) {
                 <CardContent className="space-y-3">
                   <div className="flex justify-between">
                     <span className="text-gray-600">Estado:</span>
-                    <Badge variant="outline">{estadoMap[departamento.estado]}</Badge>
+                    <Badge variant="outline">{estadoMap[safeDepartamento.estado] || safeDepartamento.estado}</Badge>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Ideal para:</span>
-                    <Badge variant="outline">{idealParaMap[departamento.ideal_para]}</Badge>
+                    <Badge variant="outline">{idealParaMap[safeDepartamento.ideal_para] || safeDepartamento.ideal_para}</Badge>
                   </div>
-                  {departamento.amueblado && (
+                  {safeDepartamento.amueblado && (
                     <div className="flex justify-between">
                       <span className="text-gray-600">Amoblado:</span>
                       <Badge variant="secondary">Sí</Badge>
@@ -178,7 +198,7 @@ export default async function DepartamentoPage({ params }: PageProps) {
                 <div className="grid grid-cols-1 gap-3">
                   <div className="flex items-center justify-between">
                     <span>Sala comedor</span>
-                    {departamento.tiene_living_comedor ? (
+                    {safeDepartamento.tiene_living_comedor ? (
                       <Check className="h-5 w-5 text-green-600" />
                     ) : (
                       <X className="h-5 w-5 text-red-500" />
@@ -186,7 +206,7 @@ export default async function DepartamentoPage({ params }: PageProps) {
                   </div>
                   <div className="flex items-center justify-between">
                     <span>Cocina separada</span>
-                    {departamento.tiene_cocina_separada ? (
+                    {safeDepartamento.tiene_cocina_separada ? (
                       <Check className="h-5 w-5 text-green-600" />
                     ) : (
                       <X className="h-5 w-5 text-red-500" />
@@ -194,7 +214,7 @@ export default async function DepartamentoPage({ params }: PageProps) {
                   </div>
                   <div className="flex items-center justify-between">
                     <span>Antebaño</span>
-                    {departamento.tiene_antebano ? (
+                    {safeDepartamento.tiene_antebano ? (
                       <Check className="h-5 w-5 text-green-600" />
                     ) : (
                       <X className="h-5 w-5 text-red-500" />
@@ -202,7 +222,7 @@ export default async function DepartamentoPage({ params }: PageProps) {
                   </div>
                   <div className="flex items-center justify-between">
                     <span>Baño completo</span>
-                    {departamento.tiene_bano_completo ? (
+                    {safeDepartamento.tiene_bano_completo ? (
                       <Check className="h-5 w-5 text-green-600" />
                     ) : (
                       <X className="h-5 w-5 text-red-500" />
@@ -221,7 +241,7 @@ export default async function DepartamentoPage({ params }: PageProps) {
                 <div className="grid grid-cols-1 gap-3">
                   <div className="flex items-center justify-between">
                     <span>Aire acondicionado</span>
-                    {departamento.tiene_aire_acondicionado ? (
+                    {safeDepartamento.tiene_aire_acondicionado ? (
                       <Check className="h-5 w-5 text-green-600" />
                     ) : (
                       <X className="h-5 w-5 text-red-500" />
@@ -229,7 +249,7 @@ export default async function DepartamentoPage({ params }: PageProps) {
                   </div>
                   <div className="flex items-center justify-between">
                     <span>Closets</span>
-                    {departamento.tiene_placares ? (
+                    {safeDepartamento.tiene_placares ? (
                       <Check className="h-5 w-5 text-green-600" />
                     ) : (
                       <X className="h-5 w-5 text-red-500" />
@@ -237,7 +257,7 @@ export default async function DepartamentoPage({ params }: PageProps) {
                   </div>
                   <div className="flex items-center justify-between">
                     <span>Cocina con horno y anafe</span>
-                    {departamento.tiene_cocina_con_horno_y_anafe ? (
+                    {safeDepartamento.tiene_cocina_con_horno_y_anafe ? (
                       <Check className="h-5 w-5 text-green-600" />
                     ) : (
                       <X className="h-5 w-5 text-red-500" />
@@ -245,7 +265,7 @@ export default async function DepartamentoPage({ params }: PageProps) {
                   </div>
                   <div className="flex items-center justify-between">
                     <span>Muebles bajo mesada</span>
-                    {departamento.tiene_muebles_bajo_mesada ? (
+                    {safeDepartamento.tiene_muebles_bajo_mesada ? (
                       <Check className="h-5 w-5 text-green-600" />
                     ) : (
                       <X className="h-5 w-5 text-red-500" />
@@ -253,7 +273,7 @@ export default async function DepartamentoPage({ params }: PageProps) {
                   </div>
                   <div className="flex items-center justify-between">
                     <span>Desayunador de madera</span>
-                    {departamento.tiene_desayunador_madera ? (
+                    {safeDepartamento.tiene_desayunador_madera ? (
                       <Check className="h-5 w-5 text-green-600" />
                     ) : (
                       <X className="h-5 w-5 text-red-500" />
@@ -266,16 +286,16 @@ export default async function DepartamentoPage({ params }: PageProps) {
 
           {/* Botón de compartir */}
           <DepartmentShareButton
-            departmentName={departamento.nombre}
-            departmentNumber={departamento.numero}
-            floor={departamento.piso}
-            area={departamento.area}
+            departmentName={safeDepartamento.nombre}
+            departmentNumber={safeDepartamento.numero}
+            floor={safeDepartamento.piso}
+            area={safeDepartamento.area}
           />
 
           {/* Componente cliente para transacciones */}
           <DepartmentClientWrapper 
-            departamento={departamento} 
-            edificio={departamento.edificio} 
+            departamento={safeDepartamento} 
+            edificio={safeDepartamento.edificio} 
           />
         </main>
         <Footer />
