@@ -13,7 +13,7 @@ import Link from 'next/link'
 import { ArrowLeft, MapPin, DollarSign, Users } from 'lucide-react'
 import Image from 'next/image'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Building } from 'lucide-react'
+import { Building2 } from 'lucide-react'
 import { DebugRerenderDetector } from '@/components/debug-rerender-detector'
 import { ProductionErrorBoundary } from '@/components/production-error-boundary'
 import { Header } from '@/components/header'
@@ -276,9 +276,9 @@ export function MicrositeContent({ building, departments }: MicrositeContentProp
               priority
             />
           ) : (
-            <div className="w-full h-full bg-gradient-to-r from-orange-500 to-orange-600 flex items-center justify-center">
-              <Building className="h-24 w-24 text-white opacity-50" />
-            </div>
+                         <div className="w-full h-full bg-gradient-to-r from-orange-500 to-orange-600 flex items-center justify-center">
+               <Building2 className="h-24 w-24 text-white opacity-50" />
+             </div>
           )}
           <div className="absolute inset-0 bg-black bg-opacity-40" />
           <div className="absolute inset-0 flex items-center justify-center">
