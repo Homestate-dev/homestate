@@ -58,7 +58,21 @@ interface MicrositeContentProps {
 }
 
 export function MicrositeContent({ building, departments }: MicrositeContentProps) {
-  const [filteredDepartments, setFilteredDepartments] = useState(departments)
+  // Agregar defensas contra datos undefined
+  if (!building || !building.nombre) {
+    console.error('MicrositeContent: building or building.nombre is undefined', { building })
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">Error al cargar el edificio</h1>
+          <p className="text-gray-600">Los datos del edificio no están disponibles. Por favor, intenta recargar la página.</p>
+        </div>
+      </div>
+    )
+  }
+
+  const safeDepartments = departments || []
+  const [filteredDepartments, setFilteredDepartments] = useState(safeDepartments)
 
   // Preparar todas las imágenes del edificio
   const buildingImages = useMemo(() => {
@@ -74,7 +88,7 @@ export function MicrositeContent({ building, departments }: MicrositeContentProp
 
   // Función para aplicar filtros
   const applyFilters = (filters: FilterState) => {
-    let filtered = [...departments]
+    let filtered = [...safeDepartments]
 
     // Filtrar por tipo de operación
     if (filters.tipo !== "todos") {
@@ -182,7 +196,7 @@ export function MicrositeContent({ building, departments }: MicrositeContentProp
             {building.direccion}
           </p>
           <p className="text-base opacity-80">
-            {departments.length} departamento{departments.length !== 1 ? 's' : ''} disponible{departments.length !== 1 ? 's' : ''}
+            {safeDepartments.length} departamento{safeDepartments.length !== 1 ? 's' : ''} disponible{safeDepartments.length !== 1 ? 's' : ''}
           </p>
         </div>
 
