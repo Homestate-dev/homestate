@@ -24,6 +24,9 @@ export async function executeQuery(query: string, params: any[] = []) {
   }
 }
 
+// Alias para compatibilidad con endpoints existentes
+export const query = executeQuery
+
 export async function getAdmins() {
   const query = `
     SELECT 
