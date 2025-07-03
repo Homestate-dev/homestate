@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { BuildingImagesCarousel } from '@/components/building-images-carousel'
 import { BuildingInfoDisplay } from '@/components/building-info-display'
 import { DepartmentCard } from '@/components/department-card'
@@ -60,6 +60,52 @@ interface MicrositeContentProps {
 export function MicrositeContent({ building, departments }: MicrositeContentProps) {
   const [mounted, setMounted] = useState(false)
   const [filteredDepartments, setFilteredDepartments] = useState<Department[]>([])
+  
+  // Detectar re-renders infinitos
+  const renderCountRef = useRef(0)
+  const lastResetRef = useRef(Date.now())
+  const buildingImagesRef = useRef<string[]>([])
+  
+  renderCountRef.current += 1
+  
+  // Resetear contador cada 2 segundos
+  const now = Date.now()
+  if (now - lastResetRef.current > 2000) {
+    renderCountRef.current = 1
+    lastResetRef.current = now
+  }
+  
+  // Detectar posible ciclo infinito
+  if (renderCountRef.current > 50) {
+    console.error(`⚠️ INFINITE RENDER DETECTED: MicrositeContent rendered ${renderCountRef.current} times`)
+    console.error('Building:', building?.nombre)
+    console.error('Departments count:', departments?.length)
+    
+    // En desarrollo, mostrar alerta
+    if (process.env.NODE_ENV === 'development') {
+      console.trace('Render trace:')
+    }
+    
+    // Prevenir más renders devolviendo un estado estático
+    if (renderCountRef.current > 100) {
+      return (
+        <div className="min-h-screen flex items-center justify-center bg-gray-50">
+          <div className="text-center max-w-md mx-auto p-6">
+            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+              <h1 className="text-xl font-bold mb-2">Error de renderizado detectado</h1>
+              <p>El componente está en un ciclo infinito de re-renders. Recarga la página para intentar de nuevo.</p>
+            </div>
+            <button 
+              onClick={() => window.location.reload()} 
+              className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+            >
+              Recargar página
+            </button>
+          </div>
+        </div>
+      )
+    }
+  }
 
   // Manejar hidratación
   useEffect(() => {
@@ -106,8 +152,9 @@ export function MicrositeContent({ building, departments }: MicrositeContentProp
   // Validar departments es un array
   const validDepartments = Array.isArray(departments) ? departments : []
 
-  // Preparar todas las imágenes del edificio
-  const buildingImages = useMemo(() => {
+  // Preparar todas las imágenes del edificio con approach más estable
+  // Usar ref para mantener referencia estable y evitar ciclos infinitos
+  const getBuildingImages = () => {
     // Validar que building existe antes de acceder a sus propiedades
     if (!building || typeof building !== 'object') {
       return []
@@ -121,7 +168,21 @@ export function MicrositeContent({ building, departments }: MicrositeContentProp
       images.push(...building.imagenes_secundarias.filter(img => typeof img === 'string'))
     }
     return images
-  }, [building?.url_imagen_principal, building?.imagenes_secundarias])
+  }
+  
+  // Usar técnica más estable para las imágenes
+  const currentImages = getBuildingImages()
+  const buildingImages = (() => {
+    // Solo actualizar la ref si las imágenes han cambiado realmente
+    const newImagesStr = JSON.stringify(currentImages)
+    const oldImagesStr = JSON.stringify(buildingImagesRef.current)
+    
+    if (newImagesStr !== oldImagesStr) {
+      buildingImagesRef.current = currentImages
+    }
+    
+    return buildingImagesRef.current
+  })()
 
   // Función para aplicar filtros
   const applyFilters = (filters: FilterState) => {
