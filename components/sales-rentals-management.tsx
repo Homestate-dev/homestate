@@ -74,11 +74,18 @@ interface Building {
 interface Department {
   id: number
   numero: string
+  nombre: string
+  piso: number
+  area: number
   edificio_id: number
   edificio_nombre: string
-  precio_venta?: number
-  precio_arriendo?: number
+  edificio_direccion: string
+  valor_venta?: number
+  valor_arriendo?: number
   estado: string
+  disponible: boolean
+  tipo: string
+  cantidad_habitaciones: string
 }
 
 interface SalesRentalsStats {
@@ -113,6 +120,7 @@ export function SalesRentalsManagement() {
 
   // Nuevo estado para el formulario
   const [formData, setFormData] = useState({
+    edificio_id: "",
     departamento_id: "",
     agente_id: "",
     tipo_transaccion: "venta" as "venta" | "arriendo",
@@ -139,6 +147,16 @@ export function SalesRentalsManagement() {
     fecha_primer_contacto: "",
     observaciones: ""
   })
+
+  // Departamentos filtrados por edificio seleccionado
+  const filteredDepartmentsByBuilding = departments.filter(dept => 
+    !formData.edificio_id || dept.edificio_id.toString() === formData.edificio_id
+  )
+
+  // Información del departamento seleccionado
+  const selectedDepartment = departments.find(dept => 
+    dept.id.toString() === formData.departamento_id
+  )
 
   useEffect(() => {
     fetchInitialData()
@@ -253,6 +271,7 @@ export function SalesRentalsManagement() {
 
   const resetForm = () => {
     setFormData({
+      edificio_id: "",
       departamento_id: "",
       agente_id: "",
       tipo_transaccion: "venta",
@@ -279,6 +298,36 @@ export function SalesRentalsManagement() {
       fecha_primer_contacto: "",
       observaciones: ""
     })
+  }
+
+  // Función para manejar cambio de edificio
+  const handleBuildingChange = (buildingId: string) => {
+    setFormData(prev => ({ 
+      ...prev, 
+      edificio_id: buildingId,
+      departamento_id: "", // Reset department selection
+      valor_transaccion: "" // Reset transaction value
+    }))
+  }
+
+  // Función para manejar cambio de departamento y pre-llenar valor
+  const handleDepartmentChange = (departmentId: string) => {
+    const department = departments.find(d => d.id.toString() === departmentId)
+    let suggestedValue = ""
+    
+    if (department) {
+      if (formData.tipo_transaccion === "venta" && department.valor_venta) {
+        suggestedValue = department.valor_venta.toString()
+      } else if (formData.tipo_transaccion === "arriendo" && department.valor_arriendo) {
+        suggestedValue = department.valor_arriendo.toString()
+      }
+    }
+    
+    setFormData(prev => ({ 
+      ...prev, 
+      departamento_id: departmentId,
+      valor_transaccion: suggestedValue
+    }))
   }
 
   const filteredTransactions = transactions.filter(transaction => {
@@ -602,18 +651,18 @@ export function SalesRentalsManagement() {
                   </div>
                   
                   <div>
-                    <Label htmlFor="departamento_id">Departamento</Label>
+                    <Label htmlFor="edificio_id">Edificio</Label>
                     <Select 
-                      value={formData.departamento_id} 
-                      onValueChange={(value) => setFormData(prev => ({ ...prev, departamento_id: value }))}
+                      value={formData.edificio_id} 
+                      onValueChange={(value) => handleBuildingChange(value)}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Seleccionar departamento" />
+                        <SelectValue placeholder="Seleccionar edificio" />
                       </SelectTrigger>
                       <SelectContent>
-                        {departments.map((dept) => (
-                          <SelectItem key={dept.id} value={dept.id.toString()}>
-                            {dept.edificio_nombre} - Depto. {dept.numero}
+                        {buildings.map((building) => (
+                          <SelectItem key={building.id} value={building.id.toString()}>
+                            {building.nombre}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -622,6 +671,31 @@ export function SalesRentalsManagement() {
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="departamento_id">Departamento</Label>
+                    <Select 
+                      value={formData.departamento_id} 
+                      onValueChange={(value) => handleDepartmentChange(value)}
+                      disabled={!formData.edificio_id}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder={!formData.edificio_id ? "Primero selecciona un edificio" : "Seleccionar departamento"} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {filteredDepartmentsByBuilding.map((dept) => (
+                          <SelectItem key={dept.id} value={dept.id.toString()}>
+                            <div className="flex flex-col">
+                              <span className="font-medium">Depto. {dept.numero} - {dept.nombre}</span>
+                              <span className="text-sm text-gray-500">
+                                Piso {dept.piso} • {dept.area}m² • {dept.cantidad_habitaciones}
+                              </span>
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
                   <div>
                     <Label htmlFor="agente_id">Agente Inmobiliario</Label>
                     <Select 
@@ -640,7 +714,52 @@ export function SalesRentalsManagement() {
                       </SelectContent>
                     </Select>
                   </div>
-                  
+                </div>
+
+                {/* Información detallada del departamento seleccionado */}
+                {selectedDepartment && (
+                  <div className="bg-gray-50 p-4 rounded-lg border">
+                    <h4 className="font-medium mb-2 text-sm">Información del Departamento</h4>
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <span className="font-medium">Edificio:</span> {selectedDepartment.edificio_nombre}
+                      </div>
+                      <div>
+                        <span className="font-medium">Número:</span> {selectedDepartment.numero}
+                      </div>
+                      <div>
+                        <span className="font-medium">Nombre:</span> {selectedDepartment.nombre}
+                      </div>
+                      <div>
+                        <span className="font-medium">Piso:</span> {selectedDepartment.piso}
+                      </div>
+                      <div>
+                        <span className="font-medium">Área:</span> {selectedDepartment.area} m²
+                      </div>
+                      <div>
+                        <span className="font-medium">Habitaciones:</span> {selectedDepartment.cantidad_habitaciones}
+                      </div>
+                      <div>
+                        <span className="font-medium">Tipo:</span> {selectedDepartment.tipo}
+                      </div>
+                      <div>
+                        <span className="font-medium">Estado:</span> {selectedDepartment.estado}
+                      </div>
+                      {selectedDepartment.valor_venta && (
+                        <div>
+                          <span className="font-medium">Precio Venta:</span> ${selectedDepartment.valor_venta.toLocaleString('es-CO')}
+                        </div>
+                      )}
+                      {selectedDepartment.valor_arriendo && (
+                        <div>
+                          <span className="font-medium">Precio Arriendo:</span> ${selectedDepartment.valor_arriendo.toLocaleString('es-CO')}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="valor_transaccion">Valor de la Transacción</Label>
                     <Input
@@ -651,9 +770,6 @@ export function SalesRentalsManagement() {
                       onChange={(e) => setFormData(prev => ({ ...prev, valor_transaccion: e.target.value }))}
                     />
                   </div>
-                </div>
-
-                <div className="grid grid-cols-3 gap-4">
                   <div>
                     <Label htmlFor="comision_porcentaje">Comisión (%)</Label>
                     <Input
@@ -665,7 +781,9 @@ export function SalesRentalsManagement() {
                       onChange={(e) => setFormData(prev => ({ ...prev, comision_porcentaje: e.target.value }))}
                     />
                   </div>
-                  
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="fecha_transaccion">Fecha de Transacción</Label>
                     <Input
@@ -675,7 +793,6 @@ export function SalesRentalsManagement() {
                       onChange={(e) => setFormData(prev => ({ ...prev, fecha_transaccion: e.target.value }))}
                     />
                   </div>
-
                   <div>
                     <Label htmlFor="estado">Estado</Label>
                     <Select 

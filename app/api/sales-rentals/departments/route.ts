@@ -7,22 +7,29 @@ export async function GET() {
       SELECT 
         d.id,
         d.numero,
+        d.nombre,
+        d.piso,
+        d.area,
         d.edificio_id,
-        d.precio_venta,
-        d.precio_arriendo,
+        d.valor_venta,
+        d.valor_arriendo,
         d.estado,
+        d.disponible,
+        d.tipo,
+        d.cantidad_habitaciones,
         e.nombre as edificio_nombre,
         e.direccion as edificio_direccion
       FROM departamentos d
       JOIN edificios e ON d.edificio_id = e.id
-      ORDER BY e.nombre, d.numero
+      WHERE d.disponible = true
+      ORDER BY e.nombre, d.piso, d.numero
     `
 
     const result = await query(sql)
 
     return NextResponse.json({
       success: true,
-      data: result.rows
+      data: result.rows || []
     })
 
   } catch (error) {
