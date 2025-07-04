@@ -130,13 +130,27 @@ export default async function DepartamentoPage({ params }: PageProps) {
                   {safeDepartamento.valor_venta && safeDepartamento.valor_venta > 0 && (
                     <div>
                       <p className="text-sm text-gray-600">Precio de venta</p>
-                      <p className="text-2xl font-bold text-green-600">${safeDepartamento.valor_venta.toLocaleString()}</p>
+                      <div className="flex items-center gap-2">
+                        <p className="text-2xl font-bold text-green-600">
+                          ${safeDepartamento.valor_venta.toLocaleString()}
+                        </p>
+                        <p className="text-lg text-gray-500 line-through">
+                          ${(safeDepartamento.valor_venta * 1.25).toLocaleString()}
+                        </p>
+                      </div>
                     </div>
                   )}
                   {safeDepartamento.valor_arriendo && safeDepartamento.valor_arriendo > 0 && (
                     <div>
                       <p className="text-sm text-gray-600">Precio de arriendo</p>
-                      <p className="text-2xl font-bold text-blue-600">${safeDepartamento.valor_arriendo.toLocaleString()}/mes</p>
+                      <div className="flex items-center gap-2">
+                        <p className="text-2xl font-bold text-blue-600">
+                          ${safeDepartamento.valor_arriendo.toLocaleString()}/mes
+                        </p>
+                        <p className="text-lg text-gray-500 line-through">
+                          ${(safeDepartamento.valor_arriendo * 1.25).toLocaleString()}/mes
+                        </p>
+                      </div>
                     </div>
                   )}
                 </CardContent>
@@ -202,38 +216,30 @@ export default async function DepartamentoPage({ params }: PageProps) {
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 gap-3">
-                  <div className="flex items-center justify-between">
-                    <span>Sala comedor</span>
-                    {safeDepartamento.tiene_living_comedor ? (
+                  {safeDepartamento.tiene_living_comedor && (
+                    <div className="flex items-center justify-between">
+                      <span>Sala comedor</span>
                       <Check className="h-5 w-5 text-green-600" />
-                    ) : (
-                      <X className="h-5 w-5 text-red-500" />
-                    )}
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span>Cocina separada</span>
-                    {safeDepartamento.tiene_cocina_separada ? (
+                    </div>
+                  )}
+                  {safeDepartamento.tiene_cocina_separada && (
+                    <div className="flex items-center justify-between">
+                      <span>Cocina separada</span>
                       <Check className="h-5 w-5 text-green-600" />
-                    ) : (
-                      <X className="h-5 w-5 text-red-500" />
-                    )}
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span>Antebaño</span>
-                    {safeDepartamento.tiene_antebano ? (
+                    </div>
+                  )}
+                  {safeDepartamento.tiene_antebano && (
+                    <div className="flex items-center justify-between">
+                      <span>Antebaño</span>
                       <Check className="h-5 w-5 text-green-600" />
-                    ) : (
-                      <X className="h-5 w-5 text-red-500" />
-                    )}
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span>Baño completo</span>
-                    {safeDepartamento.tiene_bano_completo ? (
+                    </div>
+                  )}
+                  {safeDepartamento.tiene_bano_completo && (
+                    <div className="flex items-center justify-between">
+                      <span>Baño completo</span>
                       <Check className="h-5 w-5 text-green-600" />
-                    ) : (
-                      <X className="h-5 w-5 text-red-500" />
-                    )}
-                  </div>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -245,46 +251,36 @@ export default async function DepartamentoPage({ params }: PageProps) {
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 gap-3">
-                  <div className="flex items-center justify-between">
-                    <span>Aire acondicionado</span>
-                    {safeDepartamento.tiene_aire_acondicionado ? (
+                  {safeDepartamento.tiene_aire_acondicionado && (
+                    <div className="flex items-center justify-between">
+                      <span>Aire acondicionado</span>
                       <Check className="h-5 w-5 text-green-600" />
-                    ) : (
-                      <X className="h-5 w-5 text-red-500" />
-                    )}
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span>Closets</span>
-                    {safeDepartamento.tiene_placares ? (
+                    </div>
+                  )}
+                  {safeDepartamento.tiene_placares && (
+                    <div className="flex items-center justify-between">
+                      <span>Closets</span>
                       <Check className="h-5 w-5 text-green-600" />
-                    ) : (
-                      <X className="h-5 w-5 text-red-500" />
-                    )}
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span>Cocina con horno y anafe</span>
-                    {safeDepartamento.tiene_cocina_con_horno_y_anafe ? (
+                    </div>
+                  )}
+                  {safeDepartamento.tiene_cocina_con_horno_y_anafe && (
+                    <div className="flex items-center justify-between">
+                      <span>Cocina con horno y anafe</span>
                       <Check className="h-5 w-5 text-green-600" />
-                    ) : (
-                      <X className="h-5 w-5 text-red-500" />
-                    )}
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span>Muebles bajo mesada</span>
-                    {safeDepartamento.tiene_muebles_bajo_mesada ? (
+                    </div>
+                  )}
+                  {safeDepartamento.tiene_muebles_bajo_mesada && (
+                    <div className="flex items-center justify-between">
+                      <span>Muebles bajo mesada</span>
                       <Check className="h-5 w-5 text-green-600" />
-                    ) : (
-                      <X className="h-5 w-5 text-red-500" />
-                    )}
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span>Desayunador de madera</span>
-                    {safeDepartamento.tiene_desayunador_madera ? (
+                    </div>
+                  )}
+                  {safeDepartamento.tiene_desayunador_madera && (
+                    <div className="flex items-center justify-between">
+                      <span>Desayunador de madera</span>
                       <Check className="h-5 w-5 text-green-600" />
-                    ) : (
-                      <X className="h-5 w-5 text-red-500" />
-                    )}
-                  </div>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
