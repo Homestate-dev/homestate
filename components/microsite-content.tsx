@@ -10,7 +10,7 @@ import { Footer } from '@/components/footer'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import Link from 'next/link'
-import { ArrowLeft, MapPin, DollarSign, Users } from 'lucide-react'
+import { ArrowLeft, MapPin, Users, Eye } from 'lucide-react'
 import Image from 'next/image'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Building2 } from 'lucide-react'
@@ -326,26 +326,12 @@ export function MicrositeContent({ building, departments }: MicrositeContentProp
             <div className="bg-white rounded-lg p-6 shadow-sm">
               <div className="flex items-center">
                 <div className="p-3 rounded-full bg-green-100">
-                  <Badge className="h-6 w-6 text-green-600" />
+                  <Eye className="h-6 w-6 text-green-600" />
                 </div>
                 <div className="ml-4">
                   <p className="text-sm font-medium text-gray-600">Disponibles</p>
                   <p className="text-2xl font-bold text-gray-900">
                     {departments.filter(d => d.disponible).length}
-                  </p>
-                </div>
-              </div>
-            </div>
-            
-            <div className="bg-white rounded-lg p-6 shadow-sm">
-              <div className="flex items-center">
-                <div className="p-3 rounded-full bg-orange-100">
-                  <DollarSign className="h-6 w-6 text-orange-600" />
-                </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Expensas</p>
-                  <p className="text-2xl font-bold text-gray-900">
-                    ${building.costo_expensas?.toLocaleString() || 'N/A'}
                   </p>
                 </div>
               </div>

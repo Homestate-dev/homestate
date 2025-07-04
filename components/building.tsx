@@ -208,7 +208,7 @@ export function Building({ edificio }: BuildingProps) {
 
       <div className="mt-8">
         <h3 className="text-xl font-semibold text-gray-900 mb-4">
-          Departamentos disponibles ({edificio.departamentos.filter((d) => d.disponible).length})
+          Departamentos ({edificio.departamentos.filter((d) => d.disponible).length})
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {edificio.departamentos.map((departamento) => (
