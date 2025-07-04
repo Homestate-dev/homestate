@@ -14,8 +14,9 @@ import { ArrowLeft, MapPin, DollarSign, Users } from 'lucide-react'
 import Image from 'next/image'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Building2 } from 'lucide-react'
-import { DebugRerenderDetector } from '@/components/debug-rerender-detector'
-import { ProductionErrorBoundary } from '@/components/production-error-boundary'
+// Componentes temporalmente comentados para debug
+// import { DebugRerenderDetector } from '@/components/debug-rerender-detector'
+// import { ProductionErrorBoundary } from '@/components/production-error-boundary'
 import { Header } from '@/components/header'
 
 interface Department {
@@ -260,9 +261,7 @@ export function MicrositeContent({ building, departments }: MicrositeContentProp
   }
 
   return (
-    <ProductionErrorBoundary>
-      <DebugRerenderDetector componentName="MicrositeContent" />
-      <div className="min-h-screen flex flex-col bg-gray-50">
+    <div className="min-h-screen flex flex-col bg-gray-50">
         <Header />
         
         {/* Hero Section con imagen principal */}
@@ -430,6 +429,5 @@ export function MicrositeContent({ building, departments }: MicrositeContentProp
 
         <Footer />
       </div>
-    </ProductionErrorBoundary>
-  )
+    )
 }
