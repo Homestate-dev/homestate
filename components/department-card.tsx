@@ -152,17 +152,28 @@ export function DepartmentCard({ department }: DepartmentCardProps) {
 
         <CardContent className="flex-grow">
           {/* Precios */}
-          <div className="mb-4">
-            {department.valor_venta && department.valor_venta > 0 && (
-              <div className="text-lg font-bold text-green-600">
-                ${department.valor_venta.toLocaleString()}
+          <div className="mb-4 space-y-1">
+            {department.valor_venta && department.valor_venta > 0 ? (
+              <div className="flex items-center gap-2">
+                <span className="text-lg font-bold text-green-600">
+                  ${department.valor_venta.toLocaleString()}
+                </span>
+                <span className="text-sm text-gray-500 line-through">
+                  ${(department.valor_venta * 1.25).toLocaleString()}
+                </span>
               </div>
-            )}
-            {department.valor_arriendo && department.valor_arriendo > 0 && (
-              <div className="text-sm text-blue-600">
-                ${department.valor_arriendo.toLocaleString()}/mes
+            ) : null}
+
+            {department.valor_arriendo && department.valor_arriendo > 0 ? (
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-blue-600">
+                  ${department.valor_arriendo.toLocaleString()}/mes
+                </span>
+                <span className="text-xs text-gray-500 line-through">
+                  ${(department.valor_arriendo * 1.25).toLocaleString()}/mes
+                </span>
               </div>
-            )}
+            ) : null}
           </div>
 
           {/* Características principales */}

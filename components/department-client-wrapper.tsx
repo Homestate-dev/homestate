@@ -90,11 +90,7 @@ export default function DepartmentClientWrapper({
           )}
 
           {!departamento.agente_venta_id && !departamento.agente_arriendo_id && (
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <p className="text-sm text-gray-600 mb-4">
-                Esta propiedad está disponible para venta o arriendo.
-              </p>
-            </div>
+            <></>
           )}
         </div>
       </div>

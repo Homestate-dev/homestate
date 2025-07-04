@@ -157,17 +157,33 @@ export function ApartmentCard({ departamento }: ApartmentCardProps) {
           </div>
         </div>
 
-        <div className="space-y-1">
-          {departamento.valor_venta && (
-            <p className="font-semibold text-gray-900">Venta: ${departamento.valor_venta.toLocaleString()}</p>
-          )}
-          {departamento.valor_arriendo && (
-            <p className="font-semibold text-gray-900">Arriendo: ${departamento.valor_arriendo.toLocaleString()}/mes</p>
-          )}
-          {departamento.precio_area && (
-            <p className="text-sm text-gray-600">${departamento.precio_area.toLocaleString()}/m²</p>
-          )}
+        <div className="mb-4 space-y-1">
+          {departamento.valor_venta && departamento.valor_venta > 0 ? (
+            <div className="flex items-center gap-2">
+              <span className="text-lg font-bold text-green-600">
+                ${departamento.valor_venta.toLocaleString()}
+              </span>
+              <span className="text-sm text-gray-500 line-through">
+                ${(departamento.valor_venta * 1.25).toLocaleString()}
+              </span>
+            </div>
+          ) : null}
+
+          {departamento.valor_arriendo && departamento.valor_arriendo > 0 ? (
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-blue-600">
+                ${departamento.valor_arriendo.toLocaleString()}/mes
+              </span>
+              <span className="text-xs text-gray-500 line-through">
+                ${(departamento.valor_arriendo * 1.25).toLocaleString()}/mes
+              </span>
+            </div>
+          ) : null}
         </div>
+
+        {departamento.precio_area && (
+          <p className="text-sm text-gray-600">${departamento.precio_area.toLocaleString()}/m²</p>
+        )}
 
         <div className="flex flex-wrap gap-1 mt-3">
           {departamento.amueblado && (
