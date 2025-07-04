@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Activity, Calendar, User, FileText, Trash2, UserPlus, Edit, Eye, Download, Search } from "lucide-react"
+import { Activity, Calendar, User, FileText, Trash2, UserPlus, Edit, Eye, Download, Search, ChevronLeft, ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { useAuth } from "@/contexts/auth-context"
 import { toast } from "sonner"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 interface AdminAction {
   id: number
@@ -31,6 +32,22 @@ export function MyActivities() {
   const { user, adminData } = useAuth()
 
   const isMainAdmin = user?.email === 'homestate.dev@gmail.com'
+
+  // Paginación
+  const [rowsPerPage, setRowsPerPage] = useState<number>(10)
+  const [currentPage, setCurrentPage] = useState<number>(1)
+
+  // Reiniciar página cuando cambian filtros o tamaño de página
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [searchTerm, rowsPerPage])
+
+  const totalPages = Math.max(1, Math.ceil(filteredActivities.length / rowsPerPage))
+
+  const paginatedActivities = filteredActivities.slice(
+    (currentPage - 1) * rowsPerPage,
+    currentPage * rowsPerPage
+  )
 
   useEffect(() => {
     if (user && adminData) {
@@ -320,7 +337,7 @@ export function MyActivities() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredActivities.slice(0, 50).map((activity) => (
+                  {paginatedActivities.map((activity) => (
                     <TableRow key={activity.id}>
                       <TableCell>
                         <div>
@@ -355,12 +372,49 @@ export function MyActivities() {
                 </TableBody>
               </Table>
 
-              {filteredActivities.length > 50 && (
-                <div className="text-center py-4 text-sm text-gray-600">
-                  Mostrando las primeras 50 actividades de {filteredActivities.length} total.
-                  Usa el buscador para filtrar resultados específicos.
+              {/* Controles de paginación */}
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mt-6">
+                {/* Selector de filas por página */}
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-gray-600">Filas por página:</span>
+                  <Select
+                    value={rowsPerPage.toString()}
+                    onValueChange={(value) => setRowsPerPage(Number(value))}
+                  >
+                    <SelectTrigger className="w-24 h-8 text-sm" >
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {[5,10,25,50,100].map((size) => (
+                        <SelectItem key={size} value={size.toString()}>{size}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
-              )}
+
+                {/* Navegación de páginas */}
+                <div className="flex items-center gap-2 self-end md:self-auto">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    disabled={currentPage === 1}
+                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                  <span className="text-sm text-gray-600">
+                    Página {currentPage} de {totalPages}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    disabled={currentPage === totalPages}
+                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
             </div>
           )}
         </CardContent>
