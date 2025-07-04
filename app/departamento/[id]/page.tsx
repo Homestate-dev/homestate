@@ -48,7 +48,13 @@ export default async function DepartamentoPage({ params }: PageProps) {
       tipo: departamento.tipo || '',
       estado: departamento.estado || '',
       ideal_para: departamento.ideal_para || '',
-      imagenes: Array.isArray(departamento.imagenes) ? departamento.imagenes : []
+      imagenes: Array.isArray(departamento.imagenes) ? departamento.imagenes : [],
+      // Construir objeto edificio desde los campos de la base de datos
+      edificio: {
+        nombre: departamento.edificio_nombre || '',
+        direccion: departamento.edificio_direccion || '',
+        permalink: departamento.edificio_permalink || ''
+      }
     }
 
     // Mapeos para traducir valores
