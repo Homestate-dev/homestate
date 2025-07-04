@@ -1,19 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import TransactionDialog from './transaction-dialog'
-import { useAuth } from "@/contexts/auth-context"
-
-interface Agent {
-  id: number
-  nombre: string
-  especialidad: string
-  comision_ventas: number
-  comision_arriendos: number
-}
 
 interface DepartmentClientWrapperProps {
   departamento: {
@@ -44,29 +31,8 @@ interface DepartmentClientWrapperProps {
 }
 
 export default function DepartmentClientWrapper({ 
-  departamento, 
-  edificio 
+  departamento
 }: DepartmentClientWrapperProps) {
-  const router = useRouter()
-  const { user } = useAuth()
-  const [isTransactionDialogOpen, setIsTransactionDialogOpen] = useState(false)
-  const [agents, setAgents] = useState<Agent[]>([])
-
-  useEffect(() => {
-    const loadAgents = async () => {
-      try {
-        const response = await fetch('/api/agents')
-        const data = await response.json()
-        if (data.success) {
-          setAgents(data.data)
-        }
-      } catch (error) {
-        console.error('Error al cargar agentes:', error)
-      }
-    }
-    loadAgents()
-  }, [])
-
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('es-EC', {
       style: 'currency',
@@ -128,35 +94,10 @@ export default function DepartmentClientWrapper({
               <p className="text-sm text-gray-600 mb-4">
                 Esta propiedad está disponible para venta o arriendo.
               </p>
-              {user && (
-                <Button
-                  variant="outline"
-                  onClick={() => setIsTransactionDialogOpen(true)}
-                >
-                  Registrar Transacción
-                </Button>
-              )}
             </div>
           )}
         </div>
       </div>
-
-      {/* Diálogo de transacciones */}
-      {user && (
-        <TransactionDialog
-          open={isTransactionDialogOpen}
-          onOpenChange={setIsTransactionDialogOpen}
-          departamentoId={departamento.id}
-          departamentoNombre={departamento.nombre}
-          edificioNombre={edificio.nombre}
-          precioOriginal={departamento.valor_arriendo || departamento.valor_venta || 0}
-          onTransactionComplete={() => {
-            router.refresh()
-            setIsTransactionDialogOpen(false)
-          }}
-          agents={agents}
-        />
-      )}
     </>
   )
 } 
