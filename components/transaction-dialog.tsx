@@ -131,13 +131,13 @@ export default function TransactionDialog({
             </Select>
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="agente">Agente Inmobiliario</Label>
+            <Label htmlFor="agente">Administrador</Label>
             <Select
               value={formData.agente_id}
               onValueChange={(value) => setFormData({ ...formData, agente_id: value })}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Seleccione agente" />
+                <SelectValue placeholder="Seleccione administrador" />
               </SelectTrigger>
               <SelectContent>
                 {agents.map((agent) => (

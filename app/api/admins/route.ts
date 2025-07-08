@@ -19,7 +19,21 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { nombre, email, password, currentUserUid } = body
+    const { 
+      nombre, 
+      email, 
+      password, 
+      currentUserUid,
+      // Campos de agente inmobiliario
+      telefono,
+      cedula,
+      especialidad,
+      comision_ventas,
+      comision_arriendos,
+      foto_perfil,
+      biografia,
+      es_agente
+    } = body
 
     if (!nombre || !email || !password) {
       return NextResponse.json(
@@ -38,7 +52,16 @@ export async function POST(request: NextRequest) {
         firebase_uid: firebaseUser.uid,
         nombre,
         email,
-        creado_por: currentUserUid
+        creado_por: currentUserUid,
+        // Campos de agente inmobiliario
+        telefono,
+        cedula,
+        especialidad,
+        comision_ventas,
+        comision_arriendos,
+        foto_perfil,
+        biografia,
+        es_agente
       }
 
       const newAdmin = await createAdmin(adminData)

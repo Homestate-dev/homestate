@@ -58,7 +58,7 @@ interface Transaction {
   fecha_registro: string
 }
 
-interface Agent {
+interface AdminAgent {
   id: number
   nombre: string
   email: string
@@ -102,7 +102,7 @@ interface SalesRentalsStats {
 export function SalesRentalsManagement() {
   const { user } = useAuth()
   const [transactions, setTransactions] = useState<Transaction[]>([])
-  const [agents, setAgents] = useState<Agent[]>([])
+  const [agents, setAgents] = useState<AdminAgent[]>([])
   const [buildings, setBuildings] = useState<Building[]>([])
   const [departments, setDepartments] = useState<Department[]>([])
   const [stats, setStats] = useState<SalesRentalsStats | null>(null)
@@ -172,7 +172,7 @@ export function SalesRentalsManagement() {
     try {
       const [transactionsRes, agentsRes, buildingsRes, departmentsRes, statsRes] = await Promise.all([
         fetch('/api/sales-rentals/transactions'),
-        fetch('/api/agents'),
+        fetch('/api/admins'),
         fetch('/api/buildings'),
         fetch('/api/sales-rentals/departments'),
         fetch('/api/sales-rentals/stats')
@@ -187,7 +187,11 @@ export function SalesRentalsManagement() {
       ])
 
       if (transactionsData.success) setTransactions(transactionsData.data || [])
-      if (agentsData.success) setAgents(agentsData.data || [])
+      if (agentsData.success) {
+        // Filtrar solo administradores que son agentes inmobiliarios
+        const agentAdmins = (agentsData.data || []).filter((admin: any) => admin.es_agente)
+        setAgents(agentAdmins)
+      }
       if (buildingsData.success) setBuildings(buildingsData.data || [])
       if (departmentsData.success) setDepartments(departmentsData.data || [])
       if (statsData.success) setStats(statsData.data)
@@ -522,7 +526,7 @@ export function SalesRentalsManagement() {
                 <SelectValue placeholder="Agente" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Todos los agentes</SelectItem>
+                <SelectItem value="all">Todos los administradores</SelectItem>
                 {agents.map((agent) => (
                   <SelectItem key={agent.id} value={agent.id.toString()}>
                     {agent.nombre}
@@ -708,7 +712,7 @@ export function SalesRentalsManagement() {
                   </div>
                   
                   <div>
-                    <Label htmlFor="agente_id">Agente Inmobiliario</Label>
+                    <Label htmlFor="agente_id">Administrador</Label>
                     <Select 
                       value={formData.agente_id} 
                       onValueChange={(value) => setFormData(prev => ({ ...prev, agente_id: value }))}

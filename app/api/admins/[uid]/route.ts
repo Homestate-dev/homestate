@@ -7,7 +7,22 @@ export async function PUT(
 ) {
   try {
     const body = await request.json()
-    const { nombre, email, activo, currentUserEmail, currentUserUid } = body
+    const { 
+      nombre, 
+      email, 
+      activo, 
+      currentUserEmail, 
+      currentUserUid,
+      // Campos de agente inmobiliario
+      telefono,
+      cedula,
+      especialidad,
+      comision_ventas,
+      comision_arriendos,
+      foto_perfil,
+      biografia,
+      es_agente
+    } = body
     const targetUid = params.uid
 
     // No permitir que el administrador se modifique a sí mismo
@@ -30,6 +45,16 @@ export async function PUT(
     if (nombre !== undefined) updates.nombre = nombre
     if (email !== undefined) updates.email = email
     if (activo !== undefined) updates.activo = activo
+    
+    // Campos de agente inmobiliario
+    if (telefono !== undefined) updates.telefono = telefono
+    if (cedula !== undefined) updates.cedula = cedula
+    if (especialidad !== undefined) updates.especialidad = especialidad
+    if (comision_ventas !== undefined) updates.comision_ventas = comision_ventas
+    if (comision_arriendos !== undefined) updates.comision_arriendos = comision_arriendos
+    if (foto_perfil !== undefined) updates.foto_perfil = foto_perfil
+    if (biografia !== undefined) updates.biografia = biografia
+    if (es_agente !== undefined) updates.es_agente = es_agente
 
     const updatedAdmin = await updateAdmin(targetUid, updates)
 

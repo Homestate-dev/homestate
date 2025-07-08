@@ -130,10 +130,12 @@ export function ApartmentManagement({ buildingId, buildingName, buildingPermalin
 
   const loadAgents = async () => {
     try {
-      const response = await fetch('/api/agents')
+      const response = await fetch('/api/admins')
       const data = await response.json()
       if (data.success) {
-        setAgents(data.data)
+        // Filtrar solo administradores que son agentes inmobiliarios
+        const agentAdmins = (data.data || []).filter((admin: any) => admin.es_agente)
+        setAgents(agentAdmins)
       }
     } catch (error) {
       console.error('Error al cargar agentes:', error)
