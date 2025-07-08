@@ -16,6 +16,43 @@ async function checkColumnExists(): Promise<boolean> {
   }
 }
 
+// Helper: verifica si una tabla existe en la BD
+async function tableExists(tableName: string): Promise<boolean> {
+  const res = await query(
+    `SELECT EXISTS (
+       SELECT 1
+       FROM   information_schema.tables
+       WHERE  table_name = $1
+     ) AS exists`,
+    [tableName]
+  )
+  return res.rows[0]?.exists === true
+}
+
+// Helper: inserta registro mínimo en agentes_inmobiliarios si falta (compatibilidad pre-migración)
+async function ensureLegacyAgentRow(agentId: number) {
+  // Continuar solo si la tabla existe
+  if (!(await tableExists('agentes_inmobiliarios'))) return
+
+  // ¿Ya existe el agente en la tabla antigua?
+  const check = await query('SELECT 1 FROM agentes_inmobiliarios WHERE id = $1 LIMIT 1', [agentId])
+  if (check.rows.length > 0) return // ya existe, nada que hacer
+
+  // Obtener datos básicos del administrador
+  const adminRes = await query('SELECT nombre, email FROM administradores WHERE id = $1', [agentId])
+  if (adminRes.rows.length === 0) return // no existe admin; no podemos crear
+
+  const admin = adminRes.rows[0]
+
+  // Insertar fila mínima. Usamos ON CONFLICT DO NOTHING por si otro proceso la crea primero
+  await query(
+    `INSERT INTO agentes_inmobiliarios (id, nombre, email, activo)
+     VALUES ($1, $2, $3, true)
+     ON CONFLICT (id) DO NOTHING`,
+    [agentId, admin.nombre, admin.email]
+  )
+}
+
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
@@ -136,6 +173,9 @@ export async function POST(request: Request) {
         { status: 401 }
       )
     }
+
+    // Garantizar compatibilidad con FKs antiguos antes de cualquier inserción
+    await ensureLegacyAgentRow(parseInt(data.agente_id))
 
     // Verificar que el departamento no tenga una transacción activa del mismo tipo
     const existingTransaction = await query(
