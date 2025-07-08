@@ -862,6 +862,7 @@ export function ApartmentManagement({ buildingId, buildingName, buildingPermalin
                         <SelectItem value="Suite">Suite</SelectItem>
                         <SelectItem value="2">2 habitaciones</SelectItem>
                         <SelectItem value="3">3 habitaciones</SelectItem>
+                        <SelectItem value="4">4 o más habitaciones</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -1346,6 +1347,7 @@ export function ApartmentManagement({ buildingId, buildingName, buildingPermalin
                       <SelectItem value="Suite">Suite</SelectItem>
                       <SelectItem value="2">2 habitaciones</SelectItem>
                       <SelectItem value="3">3 habitaciones</SelectItem>
+                      <SelectItem value="4">4 o más habitaciones</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
