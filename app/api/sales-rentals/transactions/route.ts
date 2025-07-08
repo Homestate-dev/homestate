@@ -44,12 +44,12 @@ async function ensureLegacyAgentRow(agentId: number) {
 
   const admin = adminRes.rows[0]
 
-  // Insertar fila mínima. Usamos ON CONFLICT DO NOTHING por si otro proceso la crea primero
+  // Insertar fila mínima con especialidad requerida. Usamos ON CONFLICT DO NOTHING por si otro proceso la crea primero
   await query(
-    `INSERT INTO agentes_inmobiliarios (id, nombre, email, activo)
-     VALUES ($1, $2, $3, true)
+    `INSERT INTO agentes_inmobiliarios (id, nombre, email, especialidad, activo)
+     VALUES ($1, $2, $3, $4, true)
      ON CONFLICT (id) DO NOTHING`,
-    [agentId, admin.nombre, admin.email]
+    [agentId, admin.nombre, admin.email, 'ambas']
   )
 }
 
