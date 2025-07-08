@@ -186,7 +186,7 @@ ${width} ${height} scale
         const w = parseFloat(widthMatch[1]) / width;
         const h = parseFloat(heightMatch[1]) / height;
         
-        epsBody += `${x.toFixed(6)} ${y.toFixed(6)} ${w.toFixed(6)} ${h.toFixed(6)} rectfill\\n`;
+        epsBody += `${x.toFixed(6)} ${y.toFixed(6)} ${w.toFixed(6)} ${h.toFixed(6)} rectfill\n`;
       }
     });
 
@@ -205,7 +205,7 @@ ${width} ${height} scale
         const w = pw / width;
         const h = ph / height;
 
-        epsBody += `${x.toFixed(6)} ${y.toFixed(6)} ${w.toFixed(6)} ${h.toFixed(6)} rectfill\\n`;
+        epsBody += `${x.toFixed(6)} ${y.toFixed(6)} ${w.toFixed(6)} ${h.toFixed(6)} rectfill\n`;
       }
     });
 
@@ -234,7 +234,7 @@ ${width} ${height} scale
             if (isBlackCell) {
               const x = (j * cellSize);
               const y = 1 - ((i + 1) * cellSize);
-              epsBody += `${x.toFixed(6)} ${y.toFixed(6)} ${cellSize.toFixed(6)} ${cellSize.toFixed(6)} rectfill\\n`;
+              epsBody += `${x.toFixed(6)} ${y.toFixed(6)} ${cellSize.toFixed(6)} ${cellSize.toFixed(6)} rectfill\n`;
             }
           }
         }
