@@ -107,20 +107,58 @@ export function QRGenerator({ building }: QRGeneratorProps) {
 
   const downloadEPS = async () => {
     try {
-      // Generar SVG de alta calidad
-      const svgString = await QRCodeLib.toString(qrUrl, {
-        type: 'svg',
-        width: 512,
-        margin: 4,
-        color: {
-          dark: '#000000',
-          light: '#ffffff'
-        }
-      })
+      // Generar estructura QR y acceder a la matriz de módulos (bit matrix)
+      // `QRCodeLib.create` está disponible tanto en navegador como node y no requiere canvas
+      const qr = QRCodeLib.create(qrUrl, {
+        errorCorrectionLevel: 'M' // suficiente para la mayoría de los casos y archivo más pequeño
+      }) as any
 
-      // Convertir SVG a formato EPS
-      const epsContent = convertSvgToEps(svgString, building.permalink)
-      
+      // Matriz booleana donde true = módulo negro
+      const modules: boolean[][] = qr.modules
+      const moduleCount = modules.length
+
+      const quietZone = 4 // margen de módulos blancos alrededor
+      const total = moduleCount + quietZone * 2
+
+      const epsHeader = `%!PS-Adobe-3.0 EPSF-3.0
+%%Title: QR Code - ${building.permalink}
+%%Creator: HomeState QR Generator
+%%BoundingBox: 0 0 ${total} ${total}
+%%Pages: 1
+%%LanguageLevel: 2
+%%EndComments
+
+%%BeginProlog
+/rect { newpath moveto dup 0 rlineto exch 0 exch rlineto neg 0 rlineto closepath fill } bind def
+%%EndProlog
+
+%%Page: 1 1
+gsave
+0 setgray
+` // comenzamos con color negro
+
+      let epsBody = ''
+
+      // Recorremos la matriz incluyendo quiet zone
+      for (let y = 0; y < total; y++) {
+        for (let x = 0; x < total; x++) {
+          const isQuiet = x < quietZone || y < quietZone || x >= quietZone + moduleCount || y >= quietZone + moduleCount
+          if (isQuiet) continue
+
+          if (modules[y - quietZone][x - quietZone]) {
+            // invertimos coordenada Y para PostScript (origen abajo-izquierda)
+            const psY = total - y - 1
+            epsBody += `${x} ${psY} 1 rect\n`
+          }
+        }
+      }
+
+      const epsFooter = `grestore
+showpage
+%%EOF`
+
+      const epsContent = epsHeader + epsBody + epsFooter
+
       const blob = new Blob([epsContent], { type: 'application/postscript' })
       const link = document.createElement('a')
       link.href = URL.createObjectURL(blob)
@@ -130,125 +168,8 @@ export function QRGenerator({ building }: QRGeneratorProps) {
       document.body.removeChild(link)
       URL.revokeObjectURL(link.href)
     } catch (error) {
-      console.error('Error descargando QR en formato EPS:', error)
+      console.error('Error generando/descargando QR en EPS:', error)
     }
-  }
-
-  const convertSvgToEps = (svgString: string, filename: string): string => {
-    // Extraer dimensiones del SVG
-    const widthMatch = svgString.match(/width="(\d+)"/);
-    const heightMatch = svgString.match(/height="(\d+)"/);
-    const width = widthMatch ? parseInt(widthMatch[1]) : 512;
-    const height = heightMatch ? parseInt(heightMatch[1]) : 512;
-
-    // Extraer los paths del SVG (los cuadrados negros del QR)
-    const pathMatches = svgString.match(/<path[^>]*d="([^"]*)"[^>]*>/g) || [];
-    const rectMatches = svgString.match(/<rect[^>]*>/g) || [];
-
-    // Crear el contenido EPS
-    const epsHeader = `%!PS-Adobe-3.0 EPSF-3.0
-%%Title: QR Code - ${filename}
-%%Creator: HomeState QR Generator
-%%BoundingBox: 0 0 ${width} ${height}
-%%HiResBoundingBox: 0.0 0.0 ${width}.0 ${height}.0
-%%Pages: 1
-%%LanguageLevel: 2
-%%EndComments
-
-%%BeginProlog
-/mm { 72 mul 25.4 div } def
-%%EndProlog
-
-%%Page: 1 1
-gsave
-${width} ${height} scale
-
-% Fondo blanco
-1 setgray
-0 0 1 1 rectfill
-
-% Configurar color negro para el QR
-0 setgray
-`;
-
-    let epsBody = '';
-
-    // Procesar rectángulos (cuadrados del QR)
-    rectMatches.forEach(rect => {
-      const xMatch = rect.match(/x="([^\"]*)"/);
-      const yMatch = rect.match(/y="([^\"]*)"/);
-      const widthMatch = rect.match(/width="([^\"]*)"/);
-      const heightMatch = rect.match(/height="([^\"]*)"/);
-      
-      if (xMatch && yMatch && widthMatch && heightMatch) {
-        const x = parseFloat(xMatch[1]) / width;
-        const y = 1 - (parseFloat(yMatch[1]) + parseFloat(heightMatch[1])) / height; // Invertir Y
-        const w = parseFloat(widthMatch[1]) / width;
-        const h = parseFloat(heightMatch[1]) / height;
-        
-        epsBody += `${x.toFixed(6)} ${y.toFixed(6)} ${w.toFixed(6)} ${h.toFixed(6)} rectfill\n`;
-      }
-    });
-
-    // Procesar paths si existen (la mayoría del QRCode viene como path)
-    pathMatches.forEach(path => {
-      const regex = /M(\d+(?:\.\d+)?)\s+(\d+(?:\.\d+)?)h(\d+(?:\.\d+)?)v(\d+(?:\.\d+)?)/g;
-      let m;
-      while ((m = regex.exec(path)) !== null) {
-        const px = parseFloat(m[1]);
-        const py = parseFloat(m[2]);
-        const pw = parseFloat(m[3]);
-        const ph = parseFloat(m[4]);
-
-        const x = px / width;
-        const y = 1 - (py + ph) / height;
-        const w = pw / width;
-        const h = ph / height;
-
-        epsBody += `${x.toFixed(6)} ${y.toFixed(6)} ${w.toFixed(6)} ${h.toFixed(6)} rectfill\n`;
-      }
-    });
-
-    // Si no hay elementos detectados, generar patrón aproximado finder
-    if (rectMatches.length === 0 && pathMatches.length === 0) {
-      // Generar un patrón de QR simplificado basado en una matriz
-      // Esto es una aproximación cuando no podemos extraer los elementos individuales
-      const qrSize = 25; // Tamaño típico de una matriz QR
-      const cellSize = 1 / qrSize;
-      
-      // Generar un patrón básico de QR (esto sería ideal obtenerlo de la biblioteca QR)
-      for (let i = 0; i < qrSize; i++) {
-        for (let j = 0; j < qrSize; j++) {
-          // Patrones de posicionamiento en las esquinas
-          const isFinderPattern = 
-            (i < 7 && j < 7) || 
-            (i < 7 && j >= qrSize - 7) || 
-            (i >= qrSize - 7 && j < 7);
-          
-          if (isFinderPattern) {
-            const isBlackCell = 
-              (i < 7 && j < 7 && ((i === 0 || i === 6 || j === 0 || j === 6) || (i >= 2 && i <= 4 && j >= 2 && j <= 4))) ||
-              (i < 7 && j >= qrSize - 7 && ((i === 0 || i === 6 || j === qrSize - 7 || j === qrSize - 1) || (i >= 2 && i <= 4 && j >= qrSize - 5 && j <= qrSize - 3))) ||
-              (i >= qrSize - 7 && j < 7 && ((i === qrSize - 7 || i === qrSize - 1 || j === 0 || j === 6) || (i >= qrSize - 5 && i <= qrSize - 3 && j >= 2 && j <= 4)));
-            
-            if (isBlackCell) {
-              const x = (j * cellSize);
-              const y = 1 - ((i + 1) * cellSize);
-              epsBody += `${x.toFixed(6)} ${y.toFixed(6)} ${cellSize.toFixed(6)} ${cellSize.toFixed(6)} rectfill\n`;
-            }
-          }
-        }
-      }
-    }
-
-    const epsFooter = `
-grestore
-showpage
-
-%%Trailer
-%%EOF`;
-
-    return epsHeader + epsBody + epsFooter;
   }
 
   return (
