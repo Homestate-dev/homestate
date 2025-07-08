@@ -175,10 +175,10 @@ ${width} ${height} scale
 
     // Procesar rectángulos (cuadrados del QR)
     rectMatches.forEach(rect => {
-      const xMatch = rect.match(/x="([^"]*)"/);
-      const yMatch = rect.match(/y="([^"]*)"/);
-      const widthMatch = rect.match(/width="([^"]*)"/);
-      const heightMatch = rect.match(/height="([^"]*)"/);
+      const xMatch = rect.match(/x="([^\"]*)"/);
+      const yMatch = rect.match(/y="([^\"]*)"/);
+      const widthMatch = rect.match(/width="([^\"]*)"/);
+      const heightMatch = rect.match(/height="([^\"]*)"/);
       
       if (xMatch && yMatch && widthMatch && heightMatch) {
         const x = parseFloat(xMatch[1]) / width;
@@ -186,12 +186,31 @@ ${width} ${height} scale
         const w = parseFloat(widthMatch[1]) / width;
         const h = parseFloat(heightMatch[1]) / height;
         
-        epsBody += `${x.toFixed(6)} ${y.toFixed(6)} ${w.toFixed(6)} ${h.toFixed(6)} rectfill\n`;
+        epsBody += `${x.toFixed(6)} ${y.toFixed(6)} ${w.toFixed(6)} ${h.toFixed(6)} rectfill\\n`;
       }
     });
 
-    // Si no hay rectángulos, intentar con paths
-    if (rectMatches.length === 0) {
+    // Procesar paths si existen (la mayoría del QRCode viene como path)
+    pathMatches.forEach(path => {
+      const regex = /M(\d+(?:\.\d+)?)\s+(\d+(?:\.\d+)?)h(\d+(?:\.\d+)?)v(\d+(?:\.\d+)?)/g;
+      let m;
+      while ((m = regex.exec(path)) !== null) {
+        const px = parseFloat(m[1]);
+        const py = parseFloat(m[2]);
+        const pw = parseFloat(m[3]);
+        const ph = parseFloat(m[4]);
+
+        const x = px / width;
+        const y = 1 - (py + ph) / height;
+        const w = pw / width;
+        const h = ph / height;
+
+        epsBody += `${x.toFixed(6)} ${y.toFixed(6)} ${w.toFixed(6)} ${h.toFixed(6)} rectfill\\n`;
+      }
+    });
+
+    // Si no hay elementos detectados, generar patrón aproximado finder
+    if (rectMatches.length === 0 && pathMatches.length === 0) {
       // Generar un patrón de QR simplificado basado en una matriz
       // Esto es una aproximación cuando no podemos extraer los elementos individuales
       const qrSize = 25; // Tamaño típico de una matriz QR
@@ -215,7 +234,7 @@ ${width} ${height} scale
             if (isBlackCell) {
               const x = (j * cellSize);
               const y = 1 - ((i + 1) * cellSize);
-              epsBody += `${x.toFixed(6)} ${y.toFixed(6)} ${cellSize.toFixed(6)} ${cellSize.toFixed(6)} rectfill\n`;
+              epsBody += `${x.toFixed(6)} ${y.toFixed(6)} ${cellSize.toFixed(6)} ${cellSize.toFixed(6)} rectfill\\n`;
             }
           }
         }
