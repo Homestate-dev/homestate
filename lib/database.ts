@@ -704,8 +704,9 @@ export async function refreshBuildingStats(buildingId: number) {
 
 // =================== FUNCIONES PARA AGENTES INMOBILIARIOS ===================
 
-// Crear un nuevo agente inmobiliario
+// Crear agente inmobiliario (ahora es un administrador con es_agente = true)
 export async function createAgent(agentData: {
+  firebase_uid: string
   nombre: string
   email: string
   telefono?: string
@@ -719,14 +720,15 @@ export async function createAgent(agentData: {
   creado_por: string
 }) {
   const query = `
-    INSERT INTO agentes_inmobiliarios (
-      nombre, email, telefono, cedula, especialidad, comision_ventas, 
-      comision_arriendos, foto_perfil, biografia, fecha_ingreso, creado_por
+    INSERT INTO administradores (
+      firebase_uid, nombre, email, telefono, cedula, especialidad, comision_ventas, 
+      comision_arriendos, foto_perfil, biografia, fecha_ingreso, es_agente, creado_por
     )
-    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, true, $12)
     RETURNING *
   `
   const values = [
+    agentData.firebase_uid,
     agentData.nombre,
     agentData.email,
     agentData.telefono || null,
@@ -743,14 +745,15 @@ export async function createAgent(agentData: {
   return result.rows[0]
 }
 
-// Obtener todos los agentes inmobiliarios
+// Obtener todos los agentes inmobiliarios (administradores que son agentes)
 export async function getAgents() {
   const query = `
     SELECT 
-      id, nombre, email, telefono, cedula, especialidad, 
+      id, firebase_uid, nombre, email, telefono, cedula, especialidad, 
       comision_ventas, comision_arriendos, activo, foto_perfil, 
       biografia, fecha_ingreso, fecha_creacion, fecha_actualizacion
-    FROM agentes_inmobiliarios 
+    FROM administradores 
+    WHERE es_agente = true
     ORDER BY fecha_creacion DESC
   `
   const result = await executeQuery(query)
@@ -760,13 +763,13 @@ export async function getAgents() {
 // Obtener agente por ID
 export async function getAgentById(id: number) {
   const query = `
-    SELECT * FROM agentes_inmobiliarios WHERE id = $1
+    SELECT * FROM administradores WHERE id = $1 AND es_agente = true
   `
   const result = await executeQuery(query, [id])
   return result.rows.length > 0 ? result.rows[0] : null
 }
 
-// Actualizar agente inmobiliario
+// Actualizar agente inmobiliario (administrador)
 export async function updateAgent(id: number, updates: {
   nombre?: string
   email?: string
@@ -798,9 +801,9 @@ export async function updateAgent(id: number, updates: {
 
   values.push(id)
   const query = `
-    UPDATE agentes_inmobiliarios 
+    UPDATE administradores 
     SET ${setClauses.join(', ')}, fecha_actualizacion = CURRENT_TIMESTAMP
-    WHERE id = $${paramIndex}
+    WHERE id = $${paramIndex} AND es_agente = true
     RETURNING *
   `
 
@@ -808,9 +811,15 @@ export async function updateAgent(id: number, updates: {
   return result.rows[0]
 }
 
-// Eliminar agente inmobiliario
+// Eliminar agente inmobiliario (marcar como inactivo en lugar de eliminar)
 export async function deleteAgent(id: number) {
-  const query = 'DELETE FROM agentes_inmobiliarios WHERE id = $1 RETURNING *'
+  // En lugar de eliminar, marcamos como inactivo y no agente
+  const query = `
+    UPDATE administradores 
+    SET activo = false, es_agente = false, fecha_actualizacion = CURRENT_TIMESTAMP
+    WHERE id = $1 AND es_agente = true
+    RETURNING *
+  `
   const result = await executeQuery(query, [id])
   return result.rows[0]
 }
@@ -916,7 +925,7 @@ export async function getAgentStats(agentId?: number) {
       COALESCE(SUM(t.precio_final), 0) as volumen_total,
       COALESCE(SUM(t.comision_agente), 0) as comisiones_totales,
       COALESCE(AVG(t.precio_final), 0) as precio_promedio
-    FROM agentes_inmobiliarios a
+    FROM administradores a
     LEFT JOIN transacciones_departamentos t ON a.id = t.agente_id ${whereClause}
     WHERE a.activo = true
     GROUP BY a.id, a.nombre, a.email, a.especialidad
@@ -941,7 +950,7 @@ export async function getSalesReport(startDate: string, endDate: string, agentId
       e.nombre as edificio_nombre,
       e.direccion as edificio_direccion
     FROM transacciones_departamentos t
-    JOIN agentes_inmobiliarios a ON t.agente_id = a.id
+    JOIN administradores a ON t.agente_id = a.id
     JOIN departamentos d ON t.departamento_id = d.id
     JOIN edificios e ON d.edificio_id = e.id
     WHERE t.fecha_transaccion BETWEEN $1 AND $2

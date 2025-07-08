@@ -8,12 +8,12 @@ export async function GET() {
   } catch (error: any) {
     console.error('Error al obtener agentes:', error)
     
-    // Si la tabla no existe, devolver array vacío
-    if (error.message?.includes('relation "agentes_inmobiliarios" does not exist')) {
+    // Si hay problemas de estructura, devolver array vacío
+    if (error.message?.includes('relation') && error.message?.includes('does not exist')) {
       return NextResponse.json({ 
         success: true, 
         data: [],
-        message: 'Tabla de agentes no existe aún. Necesita ejecutar el script de creación.'
+        message: 'Estructura de base de datos no configurada. Necesita ejecutar migración.'
       })
     }
     
@@ -57,7 +57,11 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Generar firebase_uid único para el agente
+    const firebase_uid = `agent_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+
     const agentData = {
+      firebase_uid,
       nombre,
       email,
       telefono,
@@ -104,8 +108,8 @@ export async function POST(request: NextRequest) {
     
     let errorMessage = 'Error al crear agente inmobiliario'
     
-    if (error.message?.includes('relation "agentes_inmobiliarios" does not exist')) {
-      errorMessage = 'La tabla de agentes inmobiliarios no existe. Contacte al administrador para configurar la base de datos.'
+    if (error.message?.includes('relation') && error.message?.includes('does not exist')) {
+      errorMessage = 'La estructura de base de datos no está configurada. Contacte al administrador.'
       return NextResponse.json(
         { 
           success: false, 

@@ -76,7 +76,7 @@ export async function GET(request: Request) {
         e.nombre as edificio_nombre,
         d.numero as departamento_numero
       FROM transacciones_ventas_arriendos tv
-      LEFT JOIN agentes_inmobiliarios a ON tv.agente_id = a.id
+      LEFT JOIN administradores a ON tv.agente_id = a.id AND a.es_agente = true
       LEFT JOIN departamentos d ON tv.departamento_id = d.id
       LEFT JOIN edificios e ON d.edificio_id = e.id
       WHERE ${whereConditions.join(' AND ')}
@@ -191,7 +191,7 @@ export async function POST(request: Request) {
           a.nombre as agente_nombre
         FROM departamentos d
         JOIN edificios e ON d.edificio_id = e.id
-        JOIN agentes_inmobiliarios a ON a.id = $2
+        JOIN administradores a ON a.id = $2 AND a.es_agente = true
         WHERE d.id = $1
       `, [data.departamento_id, data.agente_id])
 
