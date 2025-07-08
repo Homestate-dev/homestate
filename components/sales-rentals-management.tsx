@@ -188,9 +188,8 @@ export function SalesRentalsManagement() {
 
       if (transactionsData.success) setTransactions(transactionsData.data || [])
       if (agentsData.success) {
-        // Filtrar solo administradores que son agentes inmobiliarios
-        const agentAdmins = (agentsData.data || []).filter((admin: any) => admin.es_agente)
-        setAgents(agentAdmins)
+        // Incluir todos los administradores (independientemente de la bandera es_agente)
+        setAgents(agentsData.data || [])
       }
       if (buildingsData.success) setBuildings(buildingsData.data || [])
       if (departmentsData.success) setDepartments(departmentsData.data || [])

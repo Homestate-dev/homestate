@@ -133,9 +133,8 @@ export function ApartmentManagement({ buildingId, buildingName, buildingPermalin
       const response = await fetch('/api/admins')
       const data = await response.json()
       if (data.success) {
-        // Filtrar solo administradores que son agentes inmobiliarios
-        const agentAdmins = (data.data || []).filter((admin: any) => admin.es_agente)
-        setAgents(agentAdmins)
+        // Incluir todos los administradores (independientemente de la bandera es_agente)
+        setAgents(data.data || [])
       }
     } catch (error) {
       console.error('Error al cargar agentes:', error)
