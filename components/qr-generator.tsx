@@ -110,14 +110,13 @@ export function QRGenerator({ building }: QRGeneratorProps) {
       // Generar estructura QR y acceder a la matriz de módulos (bit matrix)
       // `QRCodeLib.create` está disponible tanto en navegador como node y no requiere canvas
       const qr = QRCodeLib.create(qrUrl, {
-        errorCorrectionLevel: 'M' // suficiente para la mayoría de los casos y archivo más pequeño
+        errorCorrectionLevel: 'M'
       }) as any
 
-      // Matriz booleana donde true = módulo negro
-      const modules: boolean[][] = qr.modules
-      const moduleCount = modules.length
+      const bitMatrix = qr.modules
+      const moduleCount: number = bitMatrix.size || bitMatrix.length // size property when BitMatrix, else length when 2D
 
-      const quietZone = 4 // margen de módulos blancos alrededor
+      const quietZone = 4
       const total = moduleCount + quietZone * 2
 
       const epsHeader = `%!PS-Adobe-3.0 EPSF-3.0
@@ -128,27 +127,27 @@ export function QRGenerator({ building }: QRGeneratorProps) {
 %%LanguageLevel: 2
 %%EndComments
 
-%%BeginProlog
-/rect { newpath moveto dup 0 rlineto exch 0 exch rlineto neg 0 rlineto closepath fill } bind def
-%%EndProlog
-
 %%Page: 1 1
 gsave
 0 setgray
-` // comenzamos con color negro
+`;
 
-      let epsBody = ''
+      let epsBody = '';
 
-      // Recorremos la matriz incluyendo quiet zone
-      for (let y = 0; y < total; y++) {
-        for (let x = 0; x < total; x++) {
-          const isQuiet = x < quietZone || y < quietZone || x >= quietZone + moduleCount || y >= quietZone + moduleCount
-          if (isQuiet) continue
+      const isDark = (x: number, y: number): boolean => {
+        if (typeof bitMatrix.get === 'function') {
+          return bitMatrix.get(x, y)
+        }
+        // fallback 2D array
+        return !!bitMatrix[y][x]
+      }
 
-          if (modules[y - quietZone][x - quietZone]) {
-            // invertimos coordenada Y para PostScript (origen abajo-izquierda)
-            const psY = total - y - 1
-            epsBody += `${x} ${psY} 1 rect\n`
+      for (let y = 0; y < moduleCount; y++) {
+        for (let x = 0; x < moduleCount; x++) {
+          if (isDark(x, y)) {
+            const psX = x + quietZone
+            const psY = total - (y + quietZone) - 1
+            epsBody += `${psX} ${psY} 1 1 rectfill\n`
           }
         }
       }
