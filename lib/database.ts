@@ -46,6 +46,21 @@ export async function getAdmins() {
   return result.rows
 }
 
+// Función auxiliar para verificar columnas de agente inmobiliario
+async function checkAgentColumnsExist(): Promise<boolean> {
+  try {
+    const result = await executeQuery(`
+      SELECT column_name 
+      FROM information_schema.columns 
+      WHERE table_name = 'administradores' AND column_name = 'es_agente'
+    `)
+    return result.rows.length > 0
+  } catch (error) {
+    console.warn('Error checking agent columns:', error)
+    return false
+  }
+}
+
 export async function createAdmin(adminData: {
   firebase_uid: string
   nombre: string
@@ -61,31 +76,46 @@ export async function createAdmin(adminData: {
   biografia?: string
   es_agente?: boolean
 }) {
-  const query = `
-    INSERT INTO administradores (
-      firebase_uid, nombre, email, telefono, cedula, especialidad, 
-      comision_ventas, comision_arriendos, foto_perfil, biografia, 
-      es_agente, creado_por
-    )
-    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
-    RETURNING *
-  `
-  const values = [
-    adminData.firebase_uid, 
-    adminData.nombre, 
-    adminData.email, 
-    adminData.telefono || null,
-    adminData.cedula || null,
-    adminData.especialidad || 'ambas',
-    adminData.comision_ventas || 3.00,
-    adminData.comision_arriendos || 10.00,
-    adminData.foto_perfil || null,
-    adminData.biografia || null,
-    adminData.es_agente !== false, // Por defecto true, excepto si se especifica false
-    adminData.creado_por
-  ]
-  const result = await executeQuery(query, values)
-  return result.rows[0]
+  const hasAgentColumns = await checkAgentColumnsExist()
+  
+  if (hasAgentColumns) {
+    // Usar la versión completa con campos de agente
+    const query = `
+      INSERT INTO administradores (
+        firebase_uid, nombre, email, telefono, cedula, especialidad, 
+        comision_ventas, comision_arriendos, foto_perfil, biografia, 
+        es_agente, creado_por
+      )
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+      RETURNING *
+    `
+    const values = [
+      adminData.firebase_uid, 
+      adminData.nombre, 
+      adminData.email, 
+      adminData.telefono || null,
+      adminData.cedula || null,
+      adminData.especialidad || 'ambas',
+      adminData.comision_ventas || 3.00,
+      adminData.comision_arriendos || 10.00,
+      adminData.foto_perfil || null,
+      adminData.biografia || null,
+      adminData.es_agente !== false, // Por defecto true, excepto si se especifica false
+      adminData.creado_por
+    ]
+    const result = await executeQuery(query, values)
+    return result.rows[0]
+  } else {
+    // Usar la versión básica sin campos de agente
+    const query = `
+      INSERT INTO administradores (firebase_uid, nombre, email, creado_por)
+      VALUES ($1, $2, $3, $4)
+      RETURNING *
+    `
+    const values = [adminData.firebase_uid, adminData.nombre, adminData.email, adminData.creado_por]
+    const result = await executeQuery(query, values)
+    return result.rows[0]
+  }
 }
 
 export async function updateAdmin(firebase_uid: string, updates: {
@@ -102,6 +132,8 @@ export async function updateAdmin(firebase_uid: string, updates: {
   biografia?: string
   es_agente?: boolean
 }) {
+  const hasAgentColumns = await checkAgentColumnsExist()
+  
   const setClauses = []
   const values = []
   let paramIndex = 1
@@ -125,60 +157,65 @@ export async function updateAdmin(firebase_uid: string, updates: {
     paramIndex++
   }
 
-  // Campos de agente inmobiliario
-  if (updates.telefono !== undefined) {
-    setClauses.push(`telefono = $${paramIndex}`)
-    values.push(updates.telefono || null)
-    paramIndex++
-  }
+  // Solo añadir campos de agente si las columnas existen
+  if (hasAgentColumns) {
+    if (updates.telefono !== undefined) {
+      setClauses.push(`telefono = $${paramIndex}`)
+      values.push(updates.telefono || null)
+      paramIndex++
+    }
 
-  if (updates.cedula !== undefined) {
-    setClauses.push(`cedula = $${paramIndex}`)
-    values.push(updates.cedula || null)
-    paramIndex++
-  }
+    if (updates.cedula !== undefined) {
+      setClauses.push(`cedula = $${paramIndex}`)
+      values.push(updates.cedula || null)
+      paramIndex++
+    }
 
-  if (updates.especialidad !== undefined) {
-    setClauses.push(`especialidad = $${paramIndex}`)
-    values.push(updates.especialidad)
-    paramIndex++
-  }
+    if (updates.especialidad !== undefined) {
+      setClauses.push(`especialidad = $${paramIndex}`)
+      values.push(updates.especialidad)
+      paramIndex++
+    }
 
-  if (updates.comision_ventas !== undefined) {
-    setClauses.push(`comision_ventas = $${paramIndex}`)
-    values.push(updates.comision_ventas)
-    paramIndex++
-  }
+    if (updates.comision_ventas !== undefined) {
+      setClauses.push(`comision_ventas = $${paramIndex}`)
+      values.push(updates.comision_ventas)
+      paramIndex++
+    }
 
-  if (updates.comision_arriendos !== undefined) {
-    setClauses.push(`comision_arriendos = $${paramIndex}`)
-    values.push(updates.comision_arriendos)
-    paramIndex++
-  }
+    if (updates.comision_arriendos !== undefined) {
+      setClauses.push(`comision_arriendos = $${paramIndex}`)
+      values.push(updates.comision_arriendos)
+      paramIndex++
+    }
 
-  if (updates.foto_perfil !== undefined) {
-    setClauses.push(`foto_perfil = $${paramIndex}`)
-    values.push(updates.foto_perfil || null)
-    paramIndex++
-  }
+    if (updates.foto_perfil !== undefined) {
+      setClauses.push(`foto_perfil = $${paramIndex}`)
+      values.push(updates.foto_perfil || null)
+      paramIndex++
+    }
 
-  if (updates.biografia !== undefined) {
-    setClauses.push(`biografia = $${paramIndex}`)
-    values.push(updates.biografia || null)
-    paramIndex++
-  }
+    if (updates.biografia !== undefined) {
+      setClauses.push(`biografia = $${paramIndex}`)
+      values.push(updates.biografia || null)
+      paramIndex++
+    }
 
-  if (updates.es_agente !== undefined) {
-    setClauses.push(`es_agente = $${paramIndex}`)
-    values.push(updates.es_agente)
-    paramIndex++
+    if (updates.es_agente !== undefined) {
+      setClauses.push(`es_agente = $${paramIndex}`)
+      values.push(updates.es_agente)
+      paramIndex++
+    }
   }
 
   if (setClauses.length === 0) {
     throw new Error('No hay campos para actualizar')
   }
 
-  setClauses.push(`fecha_actualizacion = CURRENT_TIMESTAMP`)
+  // Solo añadir fecha_actualizacion si la columna existe (probable que sí, pero por seguridad)
+  if (hasAgentColumns) {
+    setClauses.push(`fecha_actualizacion = CURRENT_TIMESTAMP`)
+  }
   
   values.push(firebase_uid)
   const query = `

@@ -1,6 +1,21 @@
 import { NextResponse } from 'next/server'
 import { query, logAdminAction } from '@/lib/database'
 
+// Función auxiliar para verificar si la columna es_agente existe
+async function checkColumnExists(): Promise<boolean> {
+  try {
+    const result = await query(`
+      SELECT column_name 
+      FROM information_schema.columns 
+      WHERE table_name = 'administradores' AND column_name = 'es_agente'
+    `)
+    return result.rows.length > 0
+  } catch (error) {
+    console.warn('Error checking column existence:', error)
+    return false
+  }
+}
+
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
@@ -69,6 +84,9 @@ export async function GET(request: Request) {
       queryParams.push(to)
     }
 
+    const hasEsAgenteColumn = await checkColumnExists()
+    const agentFilter = hasEsAgenteColumn ? 'AND a.es_agente = true' : ''
+
     const sql = `
       SELECT 
         tv.*,
@@ -76,7 +94,7 @@ export async function GET(request: Request) {
         e.nombre as edificio_nombre,
         d.numero as departamento_numero
       FROM transacciones_ventas_arriendos tv
-      LEFT JOIN administradores a ON tv.agente_id = a.id AND a.es_agente = true
+      LEFT JOIN administradores a ON tv.agente_id = a.id ${agentFilter}
       LEFT JOIN departamentos d ON tv.departamento_id = d.id
       LEFT JOIN edificios e ON d.edificio_id = e.id
       WHERE ${whereConditions.join(' AND ')}
@@ -183,6 +201,9 @@ export async function POST(request: Request) {
 
     // Obtener información para registrar la actividad
     try {
+      const hasEsAgenteColumn = await checkColumnExists()
+      const agentFilter = hasEsAgenteColumn ? 'AND a.es_agente = true' : ''
+      
       const transactionInfo = await query(`
         SELECT 
           d.numero as departamento_numero,
@@ -191,7 +212,7 @@ export async function POST(request: Request) {
           a.nombre as agente_nombre
         FROM departamentos d
         JOIN edificios e ON d.edificio_id = e.id
-        JOIN administradores a ON a.id = $2 AND a.es_agente = true
+        JOIN administradores a ON a.id = $2 ${agentFilter}
         WHERE d.id = $1
       `, [data.departamento_id, data.agente_id])
 
