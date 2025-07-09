@@ -142,15 +142,22 @@ export default async function DepartamentoPage({ params }: PageProps) {
                   )}
                   {safeDepartamento.valor_arriendo && safeDepartamento.valor_arriendo > 0 && (
                     <div>
-                      <p className="text-sm text-gray-600">Precio de arriendo</p>
-                      <div className="flex items-center gap-2">
-                        <p className="text-2xl font-bold text-blue-600">
-                          ${safeDepartamento.valor_arriendo.toLocaleString()}/mes
-                        </p>
-                        <p className="text-lg text-gray-500 line-through">
-                          ${(safeDepartamento.valor_arriendo * 1.25).toLocaleString()}/mes
-                        </p>
-                      </div>
+                      <p className="text-sm text-gray-600">Precio de arriendo {safeDepartamento.incluye_alicuota ? '(Incluye alícuota)' : '(No incluye alícuota)'}</p>
+                      {(() => {
+                        const base = safeDepartamento.valor_arriendo || 0
+                        const aliq = safeDepartamento.alicuota || 0
+                        const total = safeDepartamento.incluye_alicuota ? base + aliq : base
+                        return (
+                          <div className="flex items-center gap-2">
+                            <p className="text-2xl font-bold text-blue-600">
+                              ${total.toLocaleString()}/mes
+                            </p>
+                            <p className="text-lg text-gray-500 line-through">
+                              ${(total * 1.25).toLocaleString()}/mes
+                            </p>
+                          </div>
+                        )
+                      })()}
                     </div>
                   )}
                 </CardContent>
