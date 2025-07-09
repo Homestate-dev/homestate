@@ -768,14 +768,7 @@ export function ApartmentManagement({ buildingId, buildingName, buildingPermalin
                     Arrendado el {new Date(selectedDepartment.fecha_arriendo).toLocaleDateString()}
                   </Badge>
                 )}
-                {!selectedDepartment.agente_venta_id && !selectedDepartment.agente_arriendo_id && (
-                  <Button
-                    variant="outline"
-                    onClick={() => setIsTransactionDialogOpen(true)}
-                  >
-                    Registrar Transacción
-                  </Button>
-                )}
+                {/* Botón de registrar transacción eliminado */}
               </div>
 
               <div className="flex justify-end">
