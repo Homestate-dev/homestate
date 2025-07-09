@@ -16,6 +16,8 @@ interface Department {
   area: number
   valor_arriendo: number | null
   valor_venta: number | null
+  alicuota: number | null
+  incluye_alicuota: boolean | null
   disponible: boolean
   amueblado: boolean
   cantidad_habitaciones: string
@@ -155,6 +157,7 @@ export function DepartmentCard({ department }: DepartmentCardProps) {
           <div className="mb-4 space-y-1">
             {department.valor_venta && department.valor_venta > 0 ? (
               <div className="flex items-center gap-2">
+                <span className="text-sm font-semibold text-green-700">Venta</span>
                 <span className="text-lg font-bold text-green-600">
                   ${department.valor_venta.toLocaleString()}
                 </span>
@@ -165,12 +168,26 @@ export function DepartmentCard({ department }: DepartmentCardProps) {
             ) : null}
 
             {department.valor_arriendo && department.valor_arriendo > 0 ? (
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-blue-600">
-                  ${department.valor_arriendo.toLocaleString()}/mes
-                </span>
-                <span className="text-xs text-gray-500 line-through">
-                  ${(department.valor_arriendo * 1.25).toLocaleString()}/mes
+              <div className="flex flex-col">
+                {(() => {
+                  const incluye = department.incluye_alicuota ?? false
+                  const base = department.valor_arriendo || 0
+                  const alicuota = department.alicuota || 0
+                  const total = incluye ? base + alicuota : base
+                  return (
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-semibold text-blue-700">Arriendo</span>
+                      <span className="text-sm text-blue-600">
+                        ${total.toLocaleString()}/mes
+                      </span>
+                      <span className="text-xs text-gray-500 line-through">
+                        ${(total * 1.25).toLocaleString()}/mes
+                      </span>
+                    </div>
+                  )
+                })()}
+                <span className="text-xs text-gray-500">
+                  {department.incluye_alicuota ? 'Incluye alícuota' : 'No incluye alícuota'}
                 </span>
               </div>
             ) : null}
