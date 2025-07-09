@@ -29,6 +29,8 @@ interface Department {
   area: number
   valor_arriendo?: number
   valor_venta?: number
+  alicuota?: number
+  incluye_alicuota?: boolean
   disponible: boolean
   cantidad_habitaciones: string
   tipo: string
@@ -736,6 +738,16 @@ export function ApartmentManagement({ buildingId, buildingName, buildingPermalin
                     <p className="text-2xl font-bold text-blue-600">${selectedDepartment.valor_arriendo.toLocaleString()}/mes</p>
                   </div>
                 )}
+                {selectedDepartment.alicuota && selectedDepartment.alicuota > 0 && (
+                  <div>
+                    <Label className="text-sm font-medium text-gray-600">
+                      Alícuota {selectedDepartment.incluye_alicuota ? '(Incluida)' : '(No incluida)'}
+                    </Label>
+                    <p className="text-xl font-semibold text-orange-600">
+                      ${selectedDepartment.alicuota.toLocaleString()}
+                    </p>
+                  </div>
+                )}
               </div>
 
               <Separator />
@@ -946,6 +958,30 @@ export function ApartmentManagement({ buildingId, buildingName, buildingPermalin
                     />
                   </div>
                 </div>
+                {/* Alícuota (solo arriendo o arriendo y venta) */}
+                {(editingDepartment.tipo === 'arriendo' || editingDepartment.tipo === 'arriendo y venta') && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="edit-alicuota">Valor de alícuota (USD)*</Label>
+                      <Input
+                        id="edit-alicuota"
+                        type="number"
+                        value={editingDepartment.alicuota === 0 ? '' : editingDepartment.alicuota || ''}
+                        onChange={(e) => setEditingDepartment(prev => prev ? { ...prev, alicuota: e.target.value === '' ? '' : parseInt(e.target.value) } : null)}
+                        placeholder="Ej: 50000"
+                        required
+                      />
+                    </div>
+                    <div className="flex items-center space-x-2 mt-6 md:mt-0">
+                      <Checkbox
+                        id="edit-incluye-alicuota"
+                        checked={editingDepartment.incluye_alicuota || false}
+                        onCheckedChange={(checked) => setEditingDepartment(prev => prev ? { ...prev, incluye_alicuota: checked as boolean } : null)}
+                      />
+                      <Label htmlFor="edit-incluye-alicuota">Incluye alícuota</Label>
+                    </div>
+                  </div>
+                )}
               </div>
 
               <Separator />
