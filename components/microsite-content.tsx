@@ -265,21 +265,9 @@ export function MicrositeContent({ building, departments }: MicrositeContentProp
         <Header />
         
         {/* Hero Section con imagen principal */}
-        <section className="relative h-96 bg-gray-900 overflow-hidden">
-          {building.url_imagen_principal ? (
-            <Image
-              src={building.url_imagen_principal}
-              alt={building.nombre}
-              fill
-              className="object-cover"
-              priority
-            />
-          ) : (
-                         <div className="w-full h-full bg-gradient-to-r from-orange-500 to-orange-600 flex items-center justify-center">
-               <Building2 className="h-24 w-24 text-white opacity-50" />
-             </div>
-          )}
-          <div className="absolute inset-0 bg-black bg-opacity-40" />
+        <section className="relative h-96 bg-orange-600 overflow-hidden">
+          {/* Fondo naranja sólido, sin imagen */}
+          <div className="absolute inset-0 bg-orange-600" />
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="text-center text-white">
               <h1 className="text-4xl md:text-6xl font-bold mb-4">{building.nombre}</h1>
