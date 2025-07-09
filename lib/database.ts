@@ -1092,3 +1092,44 @@ export async function getSalesReport(startDate: string, endDate: string, agentId
   const result = await executeQuery(query, params)
   return result.rows
 } 
+
+// Función temporal para migración de alicuota - EJECUTAR UNA SOLA VEZ
+export async function migrateAlicuotaColumns() {
+  try {
+    // Verificar si las columnas ya existen
+    const checkQuery = `
+      SELECT column_name 
+      FROM information_schema.columns 
+      WHERE table_name = 'departamentos' 
+      AND column_name IN ('alicuota', 'incluye_alicuota')
+    `
+    const checkResult = await executeQuery(checkQuery)
+    
+    if (checkResult.rows.length >= 2) {
+      return {
+        success: true,
+        message: 'Las columnas alicuota e incluye_alicuota ya existen',
+        existingColumns: checkResult.rows
+      }
+    }
+
+    // Ejecutar migración
+    await executeQuery(`ALTER TABLE departamentos ADD COLUMN IF NOT EXISTS alicuota INTEGER DEFAULT 0`)
+    await executeQuery(`ALTER TABLE departamentos ADD COLUMN IF NOT EXISTS incluye_alicuota BOOLEAN DEFAULT false`)
+    
+    // Verificar resultado
+    const verifyResult = await executeQuery(checkQuery)
+    
+    return {
+      success: true,
+      message: 'Migración ejecutada exitosamente',
+      newColumns: verifyResult.rows
+    }
+  } catch (error: any) {
+    return {
+      success: false,
+      error: error.message,
+      message: 'Error ejecutando migración'
+    }
+  }
+} 

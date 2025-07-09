@@ -1,0 +1,2 @@
+ALTER TABLE departamentos ADD COLUMN IF NOT EXISTS alicuota INTEGER DEFAULT 0;
+ALTER TABLE departamentos ADD COLUMN IF NOT EXISTS incluye_alicuota BOOLEAN DEFAULT false; 
