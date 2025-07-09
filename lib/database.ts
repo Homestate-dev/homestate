@@ -551,6 +551,8 @@ export async function createDepartment(departmentData: {
   area: number
   valor_arriendo?: number
   valor_venta?: number
+  alicuota?: number
+  incluye_alicuota?: boolean
   cantidad_habitaciones: string
   tipo: string
   estado: string
@@ -571,12 +573,13 @@ export async function createDepartment(departmentData: {
   const query = `
     INSERT INTO departamentos (
       edificio_id, numero, nombre, piso, area, valor_arriendo, valor_venta,
+      alicuota, incluye_alicuota,
       cantidad_habitaciones, tipo, estado, ideal_para, amueblado,
       tiene_living_comedor, tiene_cocina_separada, tiene_antebano, tiene_bano_completo,
       tiene_aire_acondicionado, tiene_placares, tiene_cocina_con_horno_y_anafe,
       tiene_muebles_bajo_mesada, tiene_desayunador_madera, imagenes, creado_por
     )
-    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23)
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25)
     RETURNING *
   `
   const values = [
@@ -587,6 +590,8 @@ export async function createDepartment(departmentData: {
     departmentData.area,
     departmentData.valor_arriendo || 0,
     departmentData.valor_venta || 0,
+    departmentData.alicuota || 0,
+    departmentData.incluye_alicuota || false,
     departmentData.cantidad_habitaciones,
     departmentData.tipo,
     departmentData.estado,
@@ -612,7 +617,7 @@ export async function getDepartmentsByBuilding(edificio_id: number) {
   const query = `
     SELECT 
       id, edificio_id, numero, nombre, piso, area, valor_arriendo, valor_venta,
-      disponible, cantidad_habitaciones, tipo, estado, ideal_para, amueblado,
+      alicuota, incluye_alicuota, disponible, cantidad_habitaciones, tipo, estado, ideal_para, amueblado,
       tiene_living_comedor, tiene_cocina_separada, tiene_antebano, tiene_bano_completo,
       tiene_aire_acondicionado, tiene_placares, tiene_cocina_con_horno_y_anafe,
       tiene_muebles_bajo_mesada, tiene_desayunador_madera, imagenes,
@@ -657,6 +662,8 @@ export async function updateDepartment(id: number, updates: {
   area?: number
   valor_arriendo?: number
   valor_venta?: number
+  alicuota?: number
+  incluye_alicuota?: boolean
   disponible?: boolean
   cantidad_habitaciones?: string
   tipo?: string

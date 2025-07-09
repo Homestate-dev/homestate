@@ -43,6 +43,8 @@ export async function POST(request: NextRequest) {
       area: parseFloat(formData.get('area') as string),
       valor_arriendo: parseInt(formData.get('valor_arriendo') as string) || 0,
       valor_venta: parseInt(formData.get('valor_venta') as string) || 0,
+      alicuota: parseInt(formData.get('alicuota') as string) || 0,
+      incluye_alicuota: formData.get('incluye_alicuota') === 'true',
       cantidad_habitaciones: formData.get('cantidad_habitaciones') as string,
       tipo: formData.get('tipo') as string,
       estado: formData.get('estado') as string,
@@ -58,6 +60,14 @@ export async function POST(request: NextRequest) {
       tiene_muebles_bajo_mesada: formData.get('tiene_muebles_bajo_mesada') === 'true',
       tiene_desayunador_madera: formData.get('tiene_desayunador_madera') === 'true',
       creado_por: formData.get('currentUserUid') as string
+    }
+
+    // Validar obligatoriedad de alicuota según tipo de transacción
+    if ((departmentData.tipo === 'arriendo' || departmentData.tipo === 'arriendo y venta') && (departmentData.alicuota === 0)) {
+      return NextResponse.json({
+        success: false,
+        error: 'El valor de la alícuota es obligatorio para departamentos en arriendo o arriendo y venta'
+      }, { status: 400 })
     }
 
     // Extraer el permalink del edificio para organizar las imágenes

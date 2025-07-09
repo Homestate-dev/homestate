@@ -48,6 +48,8 @@ CREATE TABLE IF NOT EXISTS departamentos (
     area DECIMAL(10,2) NOT NULL,
     valor_arriendo INTEGER DEFAULT 0,
     valor_venta INTEGER DEFAULT 0,
+    alicuota INTEGER DEFAULT 0,
+    incluye_alicuota BOOLEAN DEFAULT false,
     disponible BOOLEAN DEFAULT true,
     cantidad_habitaciones VARCHAR(50) NOT NULL,
     tipo VARCHAR(100) NOT NULL, -- 'arriendo', 'venta', 'arriendo y venta'
