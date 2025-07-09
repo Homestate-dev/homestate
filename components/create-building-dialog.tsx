@@ -27,7 +27,7 @@ export function CreateBuildingDialog({ open, onOpenChange, onBuildingCreated }: 
     nombre: "",
     direccion: "",
     permalink: "",
-    costo_expensas: 0,
+    costo_expensas: "",
     areas_comunales: [] as string[],
     seguridad: [] as string[],
     aparcamiento: [] as string[],
@@ -220,7 +220,7 @@ export function CreateBuildingDialog({ open, onOpenChange, onBuildingCreated }: 
           nombre: "",
           direccion: "",
           permalink: "",
-          costo_expensas: 0,
+          costo_expensas: "",
           areas_comunales: [],
           seguridad: [],
           aparcamiento: [],
@@ -296,8 +296,8 @@ export function CreateBuildingDialog({ open, onOpenChange, onBuildingCreated }: 
                     id="costo_expensas"
                     type="number"
                     value={buildingData.costo_expensas}
-                    onChange={(e) => setBuildingData((prev) => ({ ...prev, costo_expensas: Number(e.target.value) }))}
-                    placeholder="0"
+                    onChange={(e) => setBuildingData((prev) => ({ ...prev, costo_expensas: e.target.value }))}
+                    placeholder="Ej: 15000"
                     min="0"
                   />
                 </div>

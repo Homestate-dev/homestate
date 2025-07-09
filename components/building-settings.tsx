@@ -242,8 +242,8 @@ export function BuildingSettings({ building, onBuildingDeleted }: BuildingSettin
               <Input
                 id="costo_expensas"
                 type="number"
-                value={buildingData.costo_expensas || ""}
-                onChange={(e) => handleInputChange("costo_expensas", parseInt(e.target.value) || 0)}
+                value={buildingData.costo_expensas === 0 ? '' : buildingData.costo_expensas || ''}
+                onChange={(e) => handleInputChange("costo_expensas", e.target.value === '' ? '' : parseInt(e.target.value))}
                 placeholder="Ej: 15000"
               />
             </div>

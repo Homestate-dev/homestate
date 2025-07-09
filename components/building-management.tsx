@@ -262,16 +262,15 @@ export function BuildingManagement() {
                         <Input
                           id="espacios-totales"
                           type="number"
-                          value={buildingData.aparcamiento.espacios_totales}
-                          onChange={(e) =>
-                            setBuildingData((prev) => ({
-                              ...prev,
-                              aparcamiento: {
-                                ...prev.aparcamiento,
-                                espacios_totales: Number.parseInt(e.target.value) || 0,
-                              },
-                            }))
-                          }
+                          value={buildingData.aparcamiento.espacios_totales === 0 ? '' : buildingData.aparcamiento.espacios_totales || ''}
+                          onChange={(e) => setBuildingData((prev) => ({
+                            ...prev,
+                            aparcamiento: {
+                              ...prev.aparcamiento,
+                              espacios_totales: e.target.value === '' ? '' : Number.parseInt(e.target.value),
+                            },
+                          }))}
+                          placeholder="Ej: 45"
                         />
                       </div>
                       <div>
@@ -279,16 +278,15 @@ export function BuildingManagement() {
                         <Input
                           id="espacios-visitantes"
                           type="number"
-                          value={buildingData.aparcamiento.espacios_visitantes}
-                          onChange={(e) =>
-                            setBuildingData((prev) => ({
-                              ...prev,
-                              aparcamiento: {
-                                ...prev.aparcamiento,
-                                espacios_visitantes: Number.parseInt(e.target.value) || 0,
-                              },
-                            }))
-                          }
+                          value={buildingData.aparcamiento.espacios_visitantes === 0 ? '' : buildingData.aparcamiento.espacios_visitantes || ''}
+                          onChange={(e) => setBuildingData((prev) => ({
+                            ...prev,
+                            aparcamiento: {
+                              ...prev.aparcamiento,
+                              espacios_visitantes: e.target.value === '' ? '' : Number.parseInt(e.target.value),
+                            },
+                          }))}
+                          placeholder="Ej: 8"
                         />
                       </div>
                     </div>

@@ -84,10 +84,10 @@ export function ApartmentManagement({ buildingId, buildingName, buildingPermalin
   const [newApartment, setNewApartment] = useState({
     numero: "",
     nombre: "",
-    piso: 1,
-    area: 0,
-    valor_arriendo: 0,
-    valor_venta: 0,
+    piso: "",
+    area: "",
+    valor_arriendo: "",
+    valor_venta: "",
     cantidad_habitaciones: "",
     tipo: "",
     estado: "",
@@ -382,10 +382,10 @@ export function ApartmentManagement({ buildingId, buildingName, buildingPermalin
       formData.append('edificio_id', buildingId.toString())
       formData.append('numero', newApartment.numero)
       formData.append('nombre', newApartment.nombre)
-      formData.append('piso', newApartment.piso.toString())
-      formData.append('area', newApartment.area.toString())
-      formData.append('valor_arriendo', newApartment.valor_arriendo.toString())
-      formData.append('valor_venta', newApartment.valor_venta.toString())
+      formData.append('piso', newApartment.piso)
+      formData.append('area', newApartment.area)
+      formData.append('valor_arriendo', newApartment.valor_arriendo)
+      formData.append('valor_venta', newApartment.valor_venta)
       formData.append('cantidad_habitaciones', newApartment.cantidad_habitaciones)
       formData.append('tipo', newApartment.tipo)
       formData.append('estado', newApartment.estado)
@@ -426,10 +426,10 @@ export function ApartmentManagement({ buildingId, buildingName, buildingPermalin
         setNewApartment({
           numero: "",
           nombre: "",
-          piso: 1,
-          area: 0,
-          valor_arriendo: 0,
-          valor_venta: 0,
+          piso: "",
+          area: "",
+          valor_arriendo: "",
+          valor_venta: "",
           cantidad_habitaciones: "",
           tipo: "",
           estado: "",
@@ -931,9 +931,9 @@ export function ApartmentManagement({ buildingId, buildingName, buildingPermalin
                     <Input
                       id="edit-valor_venta"
                       type="number"
-                      value={editingDepartment.valor_venta || 0}
-                      onChange={(e) => setEditingDepartment(prev => prev ? { ...prev, valor_venta: parseInt(e.target.value) || 0 } : null)}
-                      placeholder="0"
+                      value={editingDepartment?.valor_venta === 0 ? '' : editingDepartment?.valor_venta || ''}
+                      onChange={(e) => setEditingDepartment(prev => prev ? { ...prev, valor_venta: e.target.value === '' ? '' : parseInt(e.target.value) } : null)}
+                      placeholder="Ej: 25000000"
                     />
                   </div>
                   <div>
@@ -941,9 +941,9 @@ export function ApartmentManagement({ buildingId, buildingName, buildingPermalin
                     <Input
                       id="edit-valor_arriendo"
                       type="number"
-                      value={editingDepartment.valor_arriendo || 0}
-                      onChange={(e) => setEditingDepartment(prev => prev ? { ...prev, valor_arriendo: parseInt(e.target.value) || 0 } : null)}
-                      placeholder="0"
+                      value={editingDepartment?.valor_arriendo === 0 ? '' : editingDepartment?.valor_arriendo || ''}
+                      onChange={(e) => setEditingDepartment(prev => prev ? { ...prev, valor_arriendo: e.target.value === '' ? '' : parseInt(e.target.value) } : null)}
+                      placeholder="Ej: 1200000"
                     />
                   </div>
                 </div>
@@ -1296,7 +1296,7 @@ export function ApartmentManagement({ buildingId, buildingName, buildingPermalin
                     type="number"
                     value={newApartment.piso}
                     onChange={(e) =>
-                      setNewApartment((prev) => ({ ...prev, piso: Number.parseInt(e.target.value) || 1 }))
+                      setNewApartment((prev) => ({ ...prev, piso: e.target.value }))
                     }
                     required
                   />
@@ -1309,7 +1309,7 @@ export function ApartmentManagement({ buildingId, buildingName, buildingPermalin
                     step="0.1"
                     value={newApartment.area}
                     onChange={(e) =>
-                      setNewApartment((prev) => ({ ...prev, area: Number.parseFloat(e.target.value) || 0 }))
+                      setNewApartment((prev) => ({ ...prev, area: e.target.value }))
                     }
                     required
                   />
@@ -1418,9 +1418,9 @@ export function ApartmentManagement({ buildingId, buildingName, buildingPermalin
                     type="number"
                     value={newApartment.valor_venta}
                     onChange={(e) =>
-                      setNewApartment((prev) => ({ ...prev, valor_venta: Number.parseInt(e.target.value) || 0 }))
+                      setNewApartment((prev) => ({ ...prev, valor_venta: e.target.value }))
                     }
-                    placeholder="0"
+                    placeholder="Ej: 25000000"
                   />
                 </div>
                 <div>
@@ -1430,9 +1430,9 @@ export function ApartmentManagement({ buildingId, buildingName, buildingPermalin
                     type="number"
                     value={newApartment.valor_arriendo}
                     onChange={(e) =>
-                      setNewApartment((prev) => ({ ...prev, valor_arriendo: Number.parseInt(e.target.value) || 0 }))
+                      setNewApartment((prev) => ({ ...prev, valor_arriendo: e.target.value }))
                     }
-                    placeholder="0"
+                    placeholder="Ej: 1200000"
                   />
                 </div>
               </div>
