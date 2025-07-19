@@ -27,7 +27,10 @@ interface Department {
   numero: string
   nombre: string
   piso: number
-  area: number
+  area_total: number
+  area_cubierta?: number
+  area_descubierta?: number
+  cantidad_banos?: number
   valor_arriendo?: number
   valor_venta?: number
   alicuota?: number
@@ -38,6 +41,8 @@ interface Department {
   estado: string
   ideal_para: string
   ambientes_y_adicionales: string[]
+  tiene_bodega?: boolean
+  videos_url: string[]
   imagenes: string[]
   fecha_creacion: string
   fecha_actualizacion: string
@@ -103,7 +108,10 @@ export function ApartmentManagement({ buildingId, buildingName, buildingPermalin
     numero: "",
     nombre: "",
     piso: "",
-    area: "",
+    area_total: "",
+    area_cubierta: "",
+    area_descubierta: "",
+    cantidad_banos: "1",
     valor_arriendo: "",
     valor_venta: "",
     alicuota: "",
@@ -113,6 +121,8 @@ export function ApartmentManagement({ buildingId, buildingName, buildingPermalin
     estado: "",
     ideal_para: "",
     ambientes_y_adicionales: [] as string[],
+    tiene_bodega: false,
+    videos_url: [] as string[],
   })
 
   // Debug: verificar que las opciones estén definidas
@@ -398,7 +408,10 @@ export function ApartmentManagement({ buildingId, buildingName, buildingPermalin
       formData.append('numero', newApartment.numero)
       formData.append('nombre', newApartment.nombre)
       formData.append('piso', newApartment.piso)
-      formData.append('area', newApartment.area)
+      formData.append('area_total', newApartment.area_total)
+      formData.append('area_cubierta', newApartment.area_cubierta)
+      formData.append('area_descubierta', newApartment.area_descubierta)
+      formData.append('cantidad_banos', newApartment.cantidad_banos)
       formData.append('valor_arriendo', newApartment.valor_arriendo)
       formData.append('valor_venta', newApartment.valor_venta)
       formData.append('alicuota', newApartment.alicuota)
@@ -412,6 +425,12 @@ export function ApartmentManagement({ buildingId, buildingName, buildingPermalin
 
       // Agregar ambientes y adicionales
       formData.append('ambientes_y_adicionales', JSON.stringify(newApartment.ambientes_y_adicionales))
+      
+      // Agregar características adicionales
+      formData.append('tiene_bodega', newApartment.tiene_bodega.toString())
+      
+      // Agregar videos
+      formData.append('videos_url', JSON.stringify(newApartment.videos_url))
 
       // Agregar imágenes
       uploadedImages.forEach((file) => {
@@ -435,7 +454,10 @@ export function ApartmentManagement({ buildingId, buildingName, buildingPermalin
           numero: "",
           nombre: "",
           piso: "",
-          area: "",
+          area_total: "",
+          area_cubierta: "",
+          area_descubierta: "",
+          cantidad_banos: "1",
           valor_arriendo: "",
           valor_venta: "",
           alicuota: "",
@@ -445,6 +467,8 @@ export function ApartmentManagement({ buildingId, buildingName, buildingPermalin
           estado: "",
           ideal_para: "",
           ambientes_y_adicionales: [],
+          tiene_bodega: false,
+          videos_url: [],
         })
 
         // Recargar departamentos
@@ -704,18 +728,44 @@ export function ApartmentManagement({ buildingId, buildingName, buildingPermalin
                   <p className="text-lg">{selectedDepartment.piso}</p>
                 </div>
                 <div>
-                  <Label className="text-sm font-medium text-gray-600">Área</Label>
-                  <p className="text-lg">{selectedDepartment.area}m²</p>
+                  <Label className="text-sm font-medium text-gray-600">Área total</Label>
+                  <p className="text-lg">{selectedDepartment.area_total}m²</p>
                 </div>
                 <div>
                   <Label className="text-sm font-medium text-gray-600">Habitaciones</Label>
                   <p className="text-lg">{selectedDepartment.cantidad_habitaciones}</p>
                 </div>
                 <div>
-                  <Label className="text-sm font-medium text-gray-600">Estado</Label>
-                  <Badge variant="outline">{selectedDepartment.estado.replace('_', ' ')}</Badge>
+                  <Label className="text-sm font-medium text-gray-600">Baños</Label>
+                  <p className="text-lg">{selectedDepartment.cantidad_banos || 1}</p>
                 </div>
               </div>
+
+              {/* Áreas detalladas */}
+              {(selectedDepartment.area_cubierta || selectedDepartment.area_descubierta) && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {selectedDepartment.area_cubierta && (
+                    <div>
+                      <Label className="text-sm font-medium text-gray-600">Área cubierta</Label>
+                      <p className="text-lg">{selectedDepartment.area_cubierta}m²</p>
+                    </div>
+                  )}
+                  {selectedDepartment.area_descubierta && (
+                    <div>
+                      <Label className="text-sm font-medium text-gray-600">Área descubierta</Label>
+                      <p className="text-lg">{selectedDepartment.area_descubierta}m²</p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Bodega */}
+              {selectedDepartment.tiene_bodega && (
+                <div>
+                  <Label className="text-sm font-medium text-gray-600">Bodega</Label>
+                  <Badge variant="secondary">Sí</Badge>
+                </div>
+              )}
 
               {/* Precios */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -760,6 +810,35 @@ export function ApartmentManagement({ buildingId, buildingName, buildingPermalin
                   <p className="text-gray-500 text-sm">No se han especificado ambientes y adicionales.</p>
                 )}
               </div>
+
+              {/* Videos de YouTube */}
+              {selectedDepartment.videos_url && selectedDepartment.videos_url.length > 0 && (
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">Videos</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {selectedDepartment.videos_url.map((videoUrl: string, index: number) => {
+                      // Extraer el ID del video de YouTube
+                      const videoId = videoUrl.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\n?#]+)/)?.[1]
+                      if (!videoId) return null
+                      
+                      return (
+                        <div key={index} className="aspect-video">
+                          <iframe
+                            width="100%"
+                            height="100%"
+                            src={`https://www.youtube.com/embed/${videoId}`}
+                            title={`Video ${index + 1}`}
+                            frameBorder="0"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allowFullScreen
+                            className="rounded-lg"
+                          />
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
 
               <div className="flex items-center gap-2 mt-4">
                 {selectedDepartment.agente_venta_id && (
@@ -1225,17 +1304,58 @@ export function ApartmentManagement({ buildingId, buildingName, buildingPermalin
                   />
                 </div>
                 <div>
-                  <Label htmlFor="area">Área (m²) *</Label>
+                  <Label htmlFor="area_total">Área total (m²) *</Label>
                   <Input
-                    id="area"
+                    id="area_total"
                     type="number"
                     step="0.1"
-                    value={newApartment.area}
+                    value={newApartment.area_total}
                     onChange={(e) =>
-                      setNewApartment((prev) => ({ ...prev, area: e.target.value }))
+                      setNewApartment((prev) => ({ ...prev, area_total: e.target.value }))
                     }
                     required
                   />
+                </div>
+                <div>
+                  <Label htmlFor="area_cubierta">Área cubierta (m²)</Label>
+                  <Input
+                    id="area_cubierta"
+                    type="number"
+                    step="0.1"
+                    value={newApartment.area_cubierta}
+                    onChange={(e) =>
+                      setNewApartment((prev) => ({ ...prev, area_cubierta: e.target.value }))
+                    }
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="area_descubierta">Área descubierta (m²)</Label>
+                  <Input
+                    id="area_descubierta"
+                    type="number"
+                    step="0.1"
+                    value={newApartment.area_descubierta}
+                    onChange={(e) =>
+                      setNewApartment((prev) => ({ ...prev, area_descubierta: e.target.value }))
+                    }
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="cantidad_banos">Cantidad de baños *</Label>
+                  <Select
+                    value={newApartment.cantidad_banos}
+                    onValueChange={(value) => setNewApartment((prev) => ({ ...prev, cantidad_banos: value }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Seleccionar" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="1">1 baño</SelectItem>
+                      <SelectItem value="2">2 baños</SelectItem>
+                      <SelectItem value="3">3 baños</SelectItem>
+                      <SelectItem value="4">4 o más baños</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
               <div>
@@ -1402,6 +1522,41 @@ export function ApartmentManagement({ buildingId, buildingName, buildingPermalin
                 placeholder="Seleccionar ambientes y adicionales..."
                 label="Ambientes y adicionales"
               />
+            </div>
+
+            <Separator />
+
+            {/* Características adicionales */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">Características adicionales</h3>
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="tiene_bodega"
+                  checked={newApartment.tiene_bodega}
+                  onCheckedChange={(checked) =>
+                    setNewApartment((prev) => ({ ...prev, tiene_bodega: checked as boolean }))
+                  }
+                />
+                <Label htmlFor="tiene_bodega">Tiene bodega</Label>
+              </div>
+            </div>
+
+            <Separator />
+
+            {/* Videos de YouTube */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">Videos de YouTube</h3>
+              <TagSelector
+                selectedItems={newApartment.videos_url}
+                onItemsChange={(items) => setNewApartment((prev) => ({ ...prev, videos_url: items }))}
+                availableItems={[]}
+                placeholder="Agregar URL de video de YouTube..."
+                label="Videos"
+                allowCustom={true}
+              />
+              <p className="text-sm text-gray-500">
+                Ejemplo: https://www.youtube.com/watch?v=VIDEO_ID
+              </p>
             </div>
 
             <Separator />

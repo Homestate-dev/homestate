@@ -40,7 +40,10 @@ export async function POST(request: NextRequest) {
       numero: formData.get('numero') as string,
       nombre: formData.get('nombre') as string,
       piso: parseInt(formData.get('piso') as string),
-      area: parseFloat(formData.get('area') as string),
+      area_total: parseFloat(formData.get('area_total') as string),
+      area_cubierta: formData.get('area_cubierta') ? parseFloat(formData.get('area_cubierta') as string) : null,
+      area_descubierta: formData.get('area_descubierta') ? parseFloat(formData.get('area_descubierta') as string) : null,
+      cantidad_banos: parseInt(formData.get('cantidad_banos') as string) || 1,
       valor_arriendo: parseInt(formData.get('valor_arriendo') as string) || 0,
       valor_venta: parseInt(formData.get('valor_venta') as string) || 0,
       alicuota: parseInt(formData.get('alicuota') as string) || 0,
@@ -50,6 +53,8 @@ export async function POST(request: NextRequest) {
       estado: formData.get('estado') as string,
       ideal_para: formData.get('ideal_para') as string,
       ambientes_y_adicionales: JSON.parse(formData.get('ambientes_y_adicionales') as string || '[]'),
+      tiene_bodega: formData.get('tiene_bodega') === 'true',
+      videos_url: JSON.parse(formData.get('videos_url') as string || '[]'),
       creado_por: formData.get('currentUserUid') as string
     }
 

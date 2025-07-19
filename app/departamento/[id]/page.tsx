@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation"
 import Link from "next/link"
-import { ArrowLeft, Bed, Bath, Maximize, MapPin, Users, Home, Check, X } from "lucide-react"
+import { ArrowLeft, Bed, Bath, Maximize, MapPin, Users, Home, Check, X, Package } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -43,11 +43,16 @@ export default async function DepartamentoPage({ params }: PageProps) {
       nombre: departamento.nombre || '',
       numero: departamento.numero || '',
       piso: departamento.piso || 0,
-      area: departamento.area || 0,
+      area_total: departamento.area_total || 0,
+      area_cubierta: departamento.area_cubierta || null,
+      area_descubierta: departamento.area_descubierta || null,
+      cantidad_banos: departamento.cantidad_banos || 1,
       cantidad_habitaciones: departamento.cantidad_habitaciones || 'No especificado',
       tipo: departamento.tipo || '',
       estado: departamento.estado || '',
       ideal_para: departamento.ideal_para || '',
+      tiene_bodega: departamento.tiene_bodega || false,
+      videos_url: Array.isArray(departamento.videos_url) ? departamento.videos_url : [],
       imagenes: Array.isArray(departamento.imagenes) ? departamento.imagenes : [],
       // Construir objeto edificio desde los campos de la base de datos
       edificio: {
@@ -169,19 +174,25 @@ export default async function DepartamentoPage({ params }: PageProps) {
                   <CardTitle className="text-lg">Características</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-3 gap-4 text-center">
+                  <div className="grid grid-cols-4 gap-4 text-center">
                     <div className="flex flex-col items-center">
                       <Bed className="h-6 w-6 text-orange-600 mb-2" />
                       <span className="text-sm font-medium">{habitacionesMap[safeDepartamento.cantidad_habitaciones] || safeDepartamento.cantidad_habitaciones}</span>
                     </div>
                     <div className="flex flex-col items-center">
                       <Bath className="h-6 w-6 text-orange-600 mb-2" />
-                      <span className="text-sm font-medium">{safeDepartamento.tiene_bano_completo ? "1 Baño" : "Sin baño"}</span>
+                      <span className="text-sm font-medium">{safeDepartamento.cantidad_banos || 1} Baño{safeDepartamento.cantidad_banos > 1 ? 's' : ''}</span>
                     </div>
                     <div className="flex flex-col items-center">
                       <Maximize className="h-6 w-6 text-orange-600 mb-2" />
-                      <span className="text-sm font-medium">{safeDepartamento.area} m²</span>
+                      <span className="text-sm font-medium">{safeDepartamento.area_total} m²</span>
                     </div>
+                    {safeDepartamento.tiene_bodega && (
+                      <div className="flex flex-col items-center">
+                        <Package className="h-6 w-6 text-orange-600 mb-2" />
+                        <span className="text-sm font-medium">Bodega</span>
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -240,12 +251,48 @@ export default async function DepartamentoPage({ params }: PageProps) {
             </Card>
           </div>
 
+          {/* Videos de YouTube */}
+          {safeDepartamento.videos_url && safeDepartamento.videos_url.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-xl flex items-center">
+                  <Home className="h-5 w-5 mr-2" />
+                  Videos
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {safeDepartamento.videos_url.map((videoUrl: string, index: number) => {
+                    // Extraer el ID del video de YouTube
+                    const videoId = videoUrl.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\n?#]+)/)?.[1]
+                    if (!videoId) return null
+                    
+                    return (
+                      <div key={index} className="aspect-video">
+                        <iframe
+                          width="100%"
+                          height="100%"
+                          src={`https://www.youtube.com/embed/${videoId}`}
+                          title={`Video ${index + 1}`}
+                          frameBorder="0"
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                          allowFullScreen
+                          className="rounded-lg"
+                        />
+                      </div>
+                    )
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {/* Botón de compartir */}
           <DepartmentShareButton
             departmentName={safeDepartamento.nombre}
             departmentNumber={safeDepartamento.numero}
             floor={safeDepartamento.piso}
-            area={safeDepartamento.area}
+            area={safeDepartamento.area_total}
           />
 
           {/* Componente cliente para transacciones */}

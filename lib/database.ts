@@ -548,7 +548,10 @@ export async function createDepartment(departmentData: {
   numero: string
   nombre: string
   piso: number
-  area: number
+  area_total: number
+  area_cubierta?: number
+  area_descubierta?: number
+  cantidad_banos?: number
   valor_arriendo?: number
   valor_venta?: number
   alicuota?: number
@@ -558,16 +561,18 @@ export async function createDepartment(departmentData: {
   estado: string
   ideal_para: string
   ambientes_y_adicionales?: string[]
+  tiene_bodega?: boolean
+  videos_url?: string[]
   imagenes: string[]
   creado_por: string
 }) {
   const query = `
     INSERT INTO departamentos (
-      edificio_id, numero, nombre, piso, area, valor_arriendo, valor_venta,
-      alicuota, incluye_alicuota,
-      cantidad_habitaciones, tipo, estado, ideal_para, ambientes_y_adicionales, imagenes, creado_por
+      edificio_id, numero, nombre, piso, area_total, area_cubierta, area_descubierta, cantidad_banos,
+      valor_arriendo, valor_venta, alicuota, incluye_alicuota,
+      cantidad_habitaciones, tipo, estado, ideal_para, ambientes_y_adicionales, tiene_bodega, videos_url, imagenes, creado_por
     )
-    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21)
     RETURNING *
   `
   const values = [
@@ -575,7 +580,10 @@ export async function createDepartment(departmentData: {
     departmentData.numero,
     departmentData.nombre,
     departmentData.piso,
-    departmentData.area,
+    departmentData.area_total,
+    departmentData.area_cubierta || null,
+    departmentData.area_descubierta || null,
+    departmentData.cantidad_banos || 1,
     departmentData.valor_arriendo || 0,
     departmentData.valor_venta || 0,
     departmentData.alicuota || 0,
@@ -585,6 +593,8 @@ export async function createDepartment(departmentData: {
     departmentData.estado,
     departmentData.ideal_para,
     JSON.stringify(departmentData.ambientes_y_adicionales || []),
+    departmentData.tiene_bodega || false,
+    JSON.stringify(departmentData.videos_url || []),
     JSON.stringify(departmentData.imagenes),
     departmentData.creado_por
   ]
@@ -595,9 +605,9 @@ export async function createDepartment(departmentData: {
 export async function getDepartmentsByBuilding(edificio_id: number) {
   const query = `
     SELECT 
-      id, edificio_id, numero, nombre, piso, area, valor_arriendo, valor_venta,
-      alicuota, incluye_alicuota, disponible, cantidad_habitaciones, tipo, estado, ideal_para, 
-      ambientes_y_adicionales, imagenes,
+      id, edificio_id, numero, nombre, piso, area_total, area_cubierta, area_descubierta, cantidad_banos,
+      valor_arriendo, valor_venta, alicuota, incluye_alicuota, disponible, cantidad_habitaciones, tipo, estado, ideal_para, 
+      ambientes_y_adicionales, tiene_bodega, videos_url, imagenes,
       fecha_creacion, fecha_actualizacion
     FROM departamentos 
     WHERE edificio_id = $1 
@@ -607,7 +617,8 @@ export async function getDepartmentsByBuilding(edificio_id: number) {
   return result.rows.map(row => ({
     ...row,
     imagenes: safeJsonParse(row.imagenes, []),
-    ambientes_y_adicionales: safeJsonParse(row.ambientes_y_adicionales, [])
+    ambientes_y_adicionales: safeJsonParse(row.ambientes_y_adicionales, []),
+    videos_url: safeJsonParse(row.videos_url, [])
   }))
 }
 
@@ -630,7 +641,8 @@ export async function getDepartmentById(id: number) {
   return {
     ...department,
     imagenes: safeJsonParse(department.imagenes, []),
-    ambientes_y_adicionales: safeJsonParse(department.ambientes_y_adicionales, [])
+    ambientes_y_adicionales: safeJsonParse(department.ambientes_y_adicionales, []),
+    videos_url: safeJsonParse(department.videos_url, [])
   }
 }
 
@@ -638,7 +650,10 @@ export async function updateDepartment(id: number, updates: {
   numero?: string
   nombre?: string
   piso?: number
-  area?: number
+  area_total?: number
+  area_cubierta?: number
+  area_descubierta?: number
+  cantidad_banos?: number
   valor_arriendo?: number
   valor_venta?: number
   alicuota?: number
@@ -649,6 +664,8 @@ export async function updateDepartment(id: number, updates: {
   estado?: string
   ideal_para?: string
   ambientes_y_adicionales?: string[]
+  tiene_bodega?: boolean
+  videos_url?: string[]
   imagenes?: string[]
 }) {
   const setClauses: string[] = []
@@ -686,7 +703,8 @@ export async function updateDepartment(id: number, updates: {
   return {
     ...department,
     imagenes: safeJsonParse(department.imagenes, []),
-    ambientes_y_adicionales: safeJsonParse(department.ambientes_y_adicionales, [])
+    ambientes_y_adicionales: safeJsonParse(department.ambientes_y_adicionales, []),
+    videos_url: safeJsonParse(department.videos_url, [])
   }
 }
 
