@@ -291,13 +291,14 @@ export function CreateBuildingDialog({ open, onOpenChange, onBuildingCreated }: 
                 />
               </div>
               <div>
-                  <Label htmlFor="costo_expensas">Costo de expensas (opcional)</Label>
+                  <Label htmlFor="costo_expensas">Costo de expensas por m² (opcional)</Label>
                 <Input
                     id="costo_expensas"
                     type="number"
+                    step="0.01"
                     value={buildingData.costo_expensas}
                     onChange={(e) => setBuildingData((prev) => ({ ...prev, costo_expensas: e.target.value }))}
-                    placeholder="Ej: 15000"
+                    placeholder="Ej: 15.50"
                     min="0"
                   />
                 </div>

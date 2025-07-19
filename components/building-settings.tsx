@@ -238,13 +238,14 @@ export function BuildingSettings({ building, onBuildingDeleted }: BuildingSettin
             </div>
 
             <div>
-              <Label htmlFor="costo_expensas">Costo de expensas (mensual)</Label>
+              <Label htmlFor="costo_expensas">Costo de expensas por m² (mensual)</Label>
               <Input
                 id="costo_expensas"
                 type="number"
+                step="0.01"
                 value={buildingData.costo_expensas === 0 ? '' : buildingData.costo_expensas || ''}
-                onChange={(e) => handleInputChange("costo_expensas", e.target.value === '' ? '' : parseInt(e.target.value))}
-                placeholder="Ej: 15000"
+                onChange={(e) => handleInputChange("costo_expensas", e.target.value === '' ? '' : parseFloat(e.target.value))}
+                placeholder="Ej: 15.50"
               />
             </div>
 
