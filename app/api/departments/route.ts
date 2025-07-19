@@ -49,16 +49,7 @@ export async function POST(request: NextRequest) {
       tipo: formData.get('tipo') as string,
       estado: formData.get('estado') as string,
       ideal_para: formData.get('ideal_para') as string,
-      amueblado: formData.get('amueblado') === 'true',
-      tiene_living_comedor: formData.get('tiene_living_comedor') === 'true',
-      tiene_cocina_separada: formData.get('tiene_cocina_separada') === 'true',
-      tiene_antebano: formData.get('tiene_antebano') === 'true',
-      tiene_bano_completo: formData.get('tiene_bano_completo') === 'true',
-      tiene_aire_acondicionado: formData.get('tiene_aire_acondicionado') === 'true',
-      tiene_placares: formData.get('tiene_placares') === 'true',
-      tiene_cocina_con_horno_y_anafe: formData.get('tiene_cocina_con_horno_y_anafe') === 'true',
-      tiene_muebles_bajo_mesada: formData.get('tiene_muebles_bajo_mesada') === 'true',
-      tiene_desayunador_madera: formData.get('tiene_desayunador_madera') === 'true',
+      ambientes_y_adicionales: JSON.parse(formData.get('ambientes_y_adicionales') as string || '[]'),
       creado_por: formData.get('currentUserUid') as string
     }
 

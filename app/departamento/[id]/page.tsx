@@ -102,7 +102,7 @@ export default async function DepartamentoPage({ params }: PageProps) {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Galería de imágenes */}
             <div className="lg:col-span-2">
-              <ImageGallery images={safeDepartamento.imagenes} altText={safeDepartamento.nombre} />
+              <ImageGallery images={safeDepartamento.imagenes} alt={safeDepartamento.nombre} />
             </div>
 
             {/* Información principal */}
@@ -212,83 +212,30 @@ export default async function DepartamentoPage({ params }: PageProps) {
           </div>
 
           {/* Detalles completos */}
-          <div className="mt-12 grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* Ambientes */}
+          <div className="mt-12">
+            {/* Ambientes y adicionales */}
             <Card>
               <CardHeader>
                 <CardTitle className="text-xl flex items-center">
                   <Home className="h-5 w-5 mr-2" />
-                  Ambientes
+                  Ambientes y adicionales
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 gap-3">
-                  {safeDepartamento.tiene_living_comedor && (
-                    <div className="flex items-center justify-between">
-                      <span>Sala comedor</span>
-                      <Check className="h-5 w-5 text-green-600" />
-                    </div>
-                  )}
-                  {safeDepartamento.tiene_cocina_separada && (
-                    <div className="flex items-center justify-between">
-                      <span>Cocina separada</span>
-                      <Check className="h-5 w-5 text-green-600" />
-                    </div>
-                  )}
-                  {safeDepartamento.tiene_antebano && (
-                    <div className="flex items-center justify-between">
-                      <span>Antebaño</span>
-                      <Check className="h-5 w-5 text-green-600" />
-                    </div>
-                  )}
-                  {safeDepartamento.tiene_bano_completo && (
-                    <div className="flex items-center justify-between">
-                      <span>Baño completo</span>
-                      <Check className="h-5 w-5 text-green-600" />
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Equipamiento */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-xl">Equipamiento</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 gap-3">
-                  {safeDepartamento.tiene_aire_acondicionado && (
-                    <div className="flex items-center justify-between">
-                      <span>Aire acondicionado</span>
-                      <Check className="h-5 w-5 text-green-600" />
-                    </div>
-                  )}
-                  {safeDepartamento.tiene_placares && (
-                    <div className="flex items-center justify-between">
-                      <span>Closets</span>
-                      <Check className="h-5 w-5 text-green-600" />
-                    </div>
-                  )}
-                  {safeDepartamento.tiene_cocina_con_horno_y_anafe && (
-                    <div className="flex items-center justify-between">
-                      <span>Cocina con horno y anafe</span>
-                      <Check className="h-5 w-5 text-green-600" />
-                    </div>
-                  )}
-                  {safeDepartamento.tiene_muebles_bajo_mesada && (
-                    <div className="flex items-center justify-between">
-                      <span>Muebles bajo mesada</span>
-                      <Check className="h-5 w-5 text-green-600" />
-                    </div>
-                  )}
-                  {safeDepartamento.tiene_desayunador_madera && (
-                    <div className="flex items-center justify-between">
-                      <span>Desayunador de madera</span>
-                      <Check className="h-5 w-5 text-green-600" />
-                    </div>
-                  )}
-                </div>
+                {safeDepartamento.ambientes_y_adicionales && safeDepartamento.ambientes_y_adicionales.length > 0 ? (
+                  <div className="grid grid-cols-1 gap-3">
+                    {safeDepartamento.ambientes_y_adicionales.map((ambiente: string, index: number) => (
+                      <div key={index} className="flex items-center justify-between">
+                        <span>{ambiente}</span>
+                        <Check className="h-5 w-5 text-green-600" />
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-gray-500 text-center py-4">
+                    No se han especificado ambientes y adicionales para este departamento.
+                  </p>
+                )}
               </CardContent>
             </Card>
           </div>

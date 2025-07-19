@@ -19,6 +19,7 @@ import { toast } from "sonner"
 import { useAuth } from "@/contexts/auth-context"
 import Image from "next/image"
 import TransactionDialog from './transaction-dialog'
+import { TagSelector } from './tag-selector'
 
 interface Department {
   id: number
@@ -36,16 +37,7 @@ interface Department {
   tipo: string
   estado: string
   ideal_para: string
-  amueblado: boolean
-  tiene_living_comedor: boolean
-  tiene_cocina_separada: boolean
-  tiene_antebano: boolean
-  tiene_bano_completo: boolean
-  tiene_aire_acondicionado: boolean
-  tiene_placares: boolean
-  tiene_cocina_con_horno_y_anafe: boolean
-  tiene_muebles_bajo_mesada: boolean
-  tiene_desayunador_madera: boolean
+  ambientes_y_adicionales: string[]
   imagenes: string[]
   fecha_creacion: string
   fecha_actualizacion: string
@@ -83,6 +75,30 @@ export function ApartmentManagement({ buildingId, buildingName, buildingPermalin
   const [isTransactionDialogOpen, setIsTransactionDialogOpen] = useState(false)
   const [agents, setAgents] = useState([])
 
+  // Opciones predefinidas para ambientes y adicionales
+  const ambientesYAdicionalesDisponibles = [
+    "Living comedor",
+    "Cocina separada",
+    "Antebano",
+    "Baño completo",
+    "Aire acondicionado",
+    "Placares",
+    "Cocina con horno y anafe",
+    "Muebles bajo mesada",
+    "Desayunador de madera",
+    "Amueblado",
+    "Terraza",
+    "Balcón",
+    "Vista al mar",
+    "Vista a la ciudad",
+    "Closet walk-in",
+    "Baño de servicio",
+    "Lavandería",
+    "Estudio",
+    "Sala de estar",
+    "Comedor independiente"
+  ]
+
   const [newApartment, setNewApartment] = useState({
     numero: "",
     nombre: "",
@@ -96,16 +112,7 @@ export function ApartmentManagement({ buildingId, buildingName, buildingPermalin
     tipo: "",
     estado: "",
     ideal_para: "",
-    amueblado: false,
-    tiene_living_comedor: false,
-    tiene_cocina_separada: false,
-    tiene_antebano: false,
-    tiene_bano_completo: false,
-    tiene_aire_acondicionado: false,
-    tiene_placares: false,
-    tiene_cocina_con_horno_y_anafe: false,
-    tiene_muebles_bajo_mesada: false,
-    tiene_desayunador_madera: false,
+    ambientes_y_adicionales: [] as string[],
   })
 
   useEffect(() => {
@@ -399,17 +406,8 @@ export function ApartmentManagement({ buildingId, buildingName, buildingPermalin
       formData.append('currentUserUid', user.uid)
       formData.append('buildingPermalink', buildingPermalink)
 
-      // Agregar características booleanas
-      formData.append('amueblado', newApartment.amueblado.toString())
-      formData.append('tiene_living_comedor', newApartment.tiene_living_comedor.toString())
-      formData.append('tiene_cocina_separada', newApartment.tiene_cocina_separada.toString())
-      formData.append('tiene_antebano', newApartment.tiene_antebano.toString())
-      formData.append('tiene_bano_completo', newApartment.tiene_bano_completo.toString())
-      formData.append('tiene_aire_acondicionado', newApartment.tiene_aire_acondicionado.toString())
-      formData.append('tiene_placares', newApartment.tiene_placares.toString())
-      formData.append('tiene_cocina_con_horno_y_anafe', newApartment.tiene_cocina_con_horno_y_anafe.toString())
-      formData.append('tiene_muebles_bajo_mesada', newApartment.tiene_muebles_bajo_mesada.toString())
-      formData.append('tiene_desayunador_madera', newApartment.tiene_desayunador_madera.toString())
+      // Agregar ambientes y adicionales
+      formData.append('ambientes_y_adicionales', JSON.stringify(newApartment.ambientes_y_adicionales))
 
       // Agregar imágenes
       uploadedImages.forEach((file) => {
@@ -442,16 +440,7 @@ export function ApartmentManagement({ buildingId, buildingName, buildingPermalin
           tipo: "",
           estado: "",
           ideal_para: "",
-          amueblado: false,
-          tiene_living_comedor: false,
-          tiene_cocina_separada: false,
-          tiene_antebano: false,
-          tiene_bano_completo: false,
-          tiene_aire_acondicionado: false,
-          tiene_placares: false,
-          tiene_cocina_con_horno_y_anafe: false,
-          tiene_muebles_bajo_mesada: false,
-          tiene_desayunador_madera: false,
+          ambientes_y_adicionales: [],
         })
 
         // Recargar departamentos
@@ -988,118 +977,14 @@ export function ApartmentManagement({ buildingId, buildingName, buildingPermalin
 
               {/* Ambientes */}
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Ambientes</h3>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="edit-amueblado"
-                      checked={editingDepartment.amueblado}
-                      onCheckedChange={(checked) =>
-                        setEditingDepartment(prev => prev ? { ...prev, amueblado: checked as boolean } : null)
-                      }
-                    />
-                    <Label htmlFor="edit-amueblado">Amoblado</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="edit-living_comedor"
-                      checked={editingDepartment.tiene_living_comedor}
-                      onCheckedChange={(checked) =>
-                        setEditingDepartment(prev => prev ? { ...prev, tiene_living_comedor: checked as boolean } : null)
-                      }
-                    />
-                    <Label htmlFor="edit-living_comedor">Sala comedor</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="edit-cocina_separada"
-                      checked={editingDepartment.tiene_cocina_separada}
-                      onCheckedChange={(checked) =>
-                        setEditingDepartment(prev => prev ? { ...prev, tiene_cocina_separada: checked as boolean } : null)
-                      }
-                    />
-                    <Label htmlFor="edit-cocina_separada">Cocina separada</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="edit-antebano"
-                      checked={editingDepartment.tiene_antebano}
-                      onCheckedChange={(checked) =>
-                        setEditingDepartment(prev => prev ? { ...prev, tiene_antebano: checked as boolean } : null)
-                      }
-                    />
-                    <Label htmlFor="edit-antebano">Antebaño</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="edit-bano_completo"
-                      checked={editingDepartment.tiene_bano_completo}
-                      onCheckedChange={(checked) =>
-                        setEditingDepartment(prev => prev ? { ...prev, tiene_bano_completo: checked as boolean } : null)
-                      }
-                    />
-                    <Label htmlFor="edit-bano_completo">Baño completo</Label>
-                  </div>
-                </div>
-              </div>
-
-              <Separator />
-
-              {/* Equipamiento */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Equipamiento</h3>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="edit-aire_acondicionado"
-                      checked={editingDepartment.tiene_aire_acondicionado}
-                      onCheckedChange={(checked) =>
-                        setEditingDepartment(prev => prev ? { ...prev, tiene_aire_acondicionado: checked as boolean } : null)
-                      }
-                    />
-                    <Label htmlFor="edit-aire_acondicionado">Aire acondicionado</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="edit-placares"
-                      checked={editingDepartment.tiene_placares}
-                      onCheckedChange={(checked) =>
-                        setEditingDepartment(prev => prev ? { ...prev, tiene_placares: checked as boolean } : null)
-                      }
-                    />
-                    <Label htmlFor="edit-placares">Closets</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="edit-cocina_horno_anafe"
-                      checked={editingDepartment.tiene_cocina_con_horno_y_anafe}
-                      onCheckedChange={(checked) =>
-                        setEditingDepartment(prev => prev ? { ...prev, tiene_cocina_con_horno_y_anafe: checked as boolean } : null)
-                      }
-                    />
-                    <Label htmlFor="edit-cocina_horno_anafe">Cocina con horno y anafe</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="edit-muebles_bajo_mesada"
-                      checked={editingDepartment.tiene_muebles_bajo_mesada}
-                      onCheckedChange={(checked) =>
-                        setEditingDepartment(prev => prev ? { ...prev, tiene_muebles_bajo_mesada: checked as boolean } : null)
-                      }
-                    />
-                    <Label htmlFor="edit-muebles_bajo_mesada">Muebles bajo mesada</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="edit-desayunador_madera"
-                      checked={editingDepartment.tiene_desayunador_madera}
-                      onCheckedChange={(checked) =>
-                        setEditingDepartment(prev => prev ? { ...prev, tiene_desayunador_madera: checked as boolean } : null)
-                      }
-                    />
-                    <Label htmlFor="edit-desayunador_madera">Desayunador de madera</Label>
-                  </div>
-                </div>
+                <h3 className="text-lg font-semibold">Ambientes y adicionales</h3>
+                <TagSelector
+                  selectedItems={editingDepartment.ambientes_y_adicionales || []}
+                  onItemsChange={(items) => setEditingDepartment(prev => prev ? { ...prev, ambientes_y_adicionales: items } : null)}
+                  availableOptions={ambientesYAdicionalesDisponibles}
+                  placeholder="Seleccionar ambientes y adicionales..."
+                  label="Ambientes y adicionales"
+                />
               </div>
 
               <Separator />
@@ -1504,120 +1389,16 @@ export function ApartmentManagement({ buildingId, buildingName, buildingPermalin
 
             <Separator />
 
-            {/* Ambientes */}
+            {/* Ambientes y adicionales */}
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Ambientes</h3>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="amueblado"
-                    checked={newApartment.amueblado}
-                    onCheckedChange={(checked) =>
-                      setNewApartment((prev) => ({ ...prev, amueblado: checked as boolean }))
-                    }
-                  />
-                  <Label htmlFor="amueblado">Amoblado</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="living_comedor"
-                    checked={newApartment.tiene_living_comedor}
-                    onCheckedChange={(checked) =>
-                      setNewApartment((prev) => ({ ...prev, tiene_living_comedor: checked as boolean }))
-                    }
-                  />
-                  <Label htmlFor="living_comedor">Sala comedor</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="cocina_separada"
-                    checked={newApartment.tiene_cocina_separada}
-                    onCheckedChange={(checked) =>
-                      setNewApartment((prev) => ({ ...prev, tiene_cocina_separada: checked as boolean }))
-                    }
-                  />
-                  <Label htmlFor="cocina_separada">Cocina separada</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="antebano"
-                    checked={newApartment.tiene_antebano}
-                    onCheckedChange={(checked) =>
-                      setNewApartment((prev) => ({ ...prev, tiene_antebano: checked as boolean }))
-                    }
-                  />
-                  <Label htmlFor="antebano">Antebaño</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="bano_completo"
-                    checked={newApartment.tiene_bano_completo}
-                    onCheckedChange={(checked) =>
-                      setNewApartment((prev) => ({ ...prev, tiene_bano_completo: checked as boolean }))
-                    }
-                  />
-                  <Label htmlFor="bano_completo">Baño completo</Label>
-                </div>
-              </div>
-            </div>
-
-            <Separator />
-
-            {/* Equipamiento */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Equipamiento</h3>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="aire_acondicionado"
-                    checked={newApartment.tiene_aire_acondicionado}
-                    onCheckedChange={(checked) =>
-                      setNewApartment((prev) => ({ ...prev, tiene_aire_acondicionado: checked as boolean }))
-                    }
-                  />
-                  <Label htmlFor="aire_acondicionado">Aire acondicionado</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="placares"
-                    checked={newApartment.tiene_placares}
-                    onCheckedChange={(checked) =>
-                      setNewApartment((prev) => ({ ...prev, tiene_placares: checked as boolean }))
-                    }
-                  />
-                  <Label htmlFor="placares">Closets</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="cocina_horno_anafe"
-                    checked={newApartment.tiene_cocina_con_horno_y_anafe}
-                    onCheckedChange={(checked) =>
-                      setNewApartment((prev) => ({ ...prev, tiene_cocina_con_horno_y_anafe: checked as boolean }))
-                    }
-                  />
-                  <Label htmlFor="cocina_horno_anafe">Cocina con horno y anafe</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="muebles_bajo_mesada"
-                    checked={newApartment.tiene_muebles_bajo_mesada}
-                    onCheckedChange={(checked) =>
-                      setNewApartment((prev) => ({ ...prev, tiene_muebles_bajo_mesada: checked as boolean }))
-                    }
-                  />
-                  <Label htmlFor="muebles_bajo_mesada">Muebles bajo mesada</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="desayunador_madera"
-                    checked={newApartment.tiene_desayunador_madera}
-                    onCheckedChange={(checked) =>
-                      setNewApartment((prev) => ({ ...prev, tiene_desayunador_madera: checked as boolean }))
-                    }
-                  />
-                  <Label htmlFor="desayunador_madera">Desayunador de madera</Label>
-                </div>
-              </div>
+              <h3 className="text-lg font-semibold">Ambientes y adicionales</h3>
+              <TagSelector
+                selectedItems={newApartment.ambientes_y_adicionales}
+                onItemsChange={(items) => setNewApartment((prev) => ({ ...prev, ambientes_y_adicionales: items }))}
+                availableOptions={ambientesYAdicionalesDisponibles}
+                placeholder="Seleccionar ambientes y adicionales..."
+                label="Ambientes y adicionales"
+              />
             </div>
 
             <Separator />
