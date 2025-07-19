@@ -30,13 +30,18 @@ export function TagSelector({
   onItemsChange,
   allowCustom = true
 }: TagSelectorProps) {
+  // Validaciones para evitar errores
+  const safeSelectedItems = selectedItems || []
+  const safeAvailableItems = availableItems || []
+  
+  console.log('TagSelector props:', { label, selectedItems, availableItems })
   const [selectedValue, setSelectedValue] = useState("")
   const [customValue, setCustomValue] = useState("")
   const [showCustomInput, setShowCustomInput] = useState(false)
 
   const handleAddItem = (value: string) => {
-    if (value && !selectedItems.includes(value)) {
-      onItemsChange([...selectedItems, value])
+    if (value && !safeSelectedItems.includes(value)) {
+      onItemsChange([...safeSelectedItems, value])
       setSelectedValue("")
       setCustomValue("")
       setShowCustomInput(false)
@@ -44,17 +49,17 @@ export function TagSelector({
   }
 
   const handleRemoveItem = (itemToRemove: string) => {
-    onItemsChange(selectedItems.filter(item => item !== itemToRemove))
+    onItemsChange(safeSelectedItems.filter(item => item !== itemToRemove))
   }
 
   const handleCustomAdd = () => {
-    if (customValue.trim() && !selectedItems.includes(customValue.trim())) {
+    if (customValue.trim() && !safeSelectedItems.includes(customValue.trim())) {
       handleAddItem(customValue.trim())
     }
   }
 
-  const filteredAvailableItems = availableItems.filter(
-    item => !selectedItems.includes(item)
+  const filteredAvailableItems = safeAvailableItems.filter(
+    item => !safeSelectedItems.includes(item)
   )
 
   return (
@@ -62,9 +67,9 @@ export function TagSelector({
       <label className="text-base font-semibold">{label}</label>
       <div className="space-y-3 mt-2">
         {/* Tags seleccionados */}
-        {selectedItems.length > 0 && (
+        {safeSelectedItems.length > 0 && (
           <div className="flex flex-wrap gap-2">
-            {selectedItems.map((item) => (
+            {safeSelectedItems.map((item) => (
               <Badge
                 key={item}
                 variant="secondary"

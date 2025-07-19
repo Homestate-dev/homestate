@@ -115,6 +115,10 @@ export function ApartmentManagement({ buildingId, buildingName, buildingPermalin
     ambientes_y_adicionales: [] as string[],
   })
 
+  // Debug: verificar que las opciones estén definidas
+  console.log('ambientesYAdicionalesDisponibles:', ambientesYAdicionalesDisponibles)
+  console.log('newApartment.ambientes_y_adicionales:', newApartment.ambientes_y_adicionales)
+
   useEffect(() => {
     fetchDepartments()
     loadAgents()
@@ -741,21 +745,20 @@ export function ApartmentManagement({ buildingId, buildingName, buildingPermalin
 
               <Separator />
 
-              {/* Características */}
+              {/* Ambientes y adicionales */}
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Características</h3>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                  {selectedDepartment.amueblado && <Badge variant="secondary">Amoblado</Badge>}
-                  {selectedDepartment.tiene_living_comedor && <Badge variant="secondary">Sala comedor</Badge>}
-                  {selectedDepartment.tiene_cocina_separada && <Badge variant="secondary">Cocina separada</Badge>}
-                  {selectedDepartment.tiene_antebano && <Badge variant="secondary">Antebaño</Badge>}
-                  {selectedDepartment.tiene_bano_completo && <Badge variant="secondary">Baño completo</Badge>}
-                  {selectedDepartment.tiene_aire_acondicionado && <Badge variant="secondary">Aire acondicionado</Badge>}
-                  {selectedDepartment.tiene_placares && <Badge variant="secondary">Closets</Badge>}
-                  {selectedDepartment.tiene_cocina_con_horno_y_anafe && <Badge variant="secondary">Cocina equipada</Badge>}
-                  {selectedDepartment.tiene_muebles_bajo_mesada && <Badge variant="secondary">Muebles bajo mesada</Badge>}
-                  {selectedDepartment.tiene_desayunador_madera && <Badge variant="secondary">Desayunador de madera</Badge>}
-                </div>
+                <h3 className="text-lg font-semibold">Ambientes y adicionales</h3>
+                {selectedDepartment.ambientes_y_adicionales && selectedDepartment.ambientes_y_adicionales.length > 0 ? (
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    {selectedDepartment.ambientes_y_adicionales.map((ambiente: string, index: number) => (
+                      <Badge key={index} variant="secondary">
+                        {ambiente}
+                      </Badge>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-gray-500 text-sm">No se han especificado ambientes y adicionales.</p>
+                )}
               </div>
 
               <div className="flex items-center gap-2 mt-4">
@@ -979,9 +982,9 @@ export function ApartmentManagement({ buildingId, buildingName, buildingPermalin
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold">Ambientes y adicionales</h3>
                 <TagSelector
-                  selectedItems={editingDepartment.ambientes_y_adicionales || []}
+                  selectedItems={editingDepartment?.ambientes_y_adicionales || []}
                   onItemsChange={(items) => setEditingDepartment(prev => prev ? { ...prev, ambientes_y_adicionales: items } : null)}
-                  availableOptions={ambientesYAdicionalesDisponibles}
+                  availableItems={ambientesYAdicionalesDisponibles}
                   placeholder="Seleccionar ambientes y adicionales..."
                   label="Ambientes y adicionales"
                 />
@@ -1395,7 +1398,7 @@ export function ApartmentManagement({ buildingId, buildingName, buildingPermalin
               <TagSelector
                 selectedItems={newApartment.ambientes_y_adicionales}
                 onItemsChange={(items) => setNewApartment((prev) => ({ ...prev, ambientes_y_adicionales: items }))}
-                availableOptions={ambientesYAdicionalesDisponibles}
+                availableItems={ambientesYAdicionalesDisponibles}
                 placeholder="Seleccionar ambientes y adicionales..."
                 label="Ambientes y adicionales"
               />
