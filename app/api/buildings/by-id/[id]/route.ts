@@ -110,41 +110,54 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
+    console.log('DELETE endpoint called with params:', params)
+    
     const buildingId = parseInt(params.id)
     if (isNaN(buildingId)) {
+      console.log('Invalid building ID:', params.id)
       return NextResponse.json(
         { success: false, error: 'ID de edificio inválido' },
         { status: 400 }
       )
     }
 
+    console.log('Parsing request body...')
     const body = await request.json()
+    console.log('Request body:', body)
+    
     const { currentUserUid, buildingName } = body
 
     if (!currentUserUid) {
+      console.log('No currentUserUid provided')
       return NextResponse.json(
         { success: false, error: 'Usuario no autenticado' },
         { status: 401 }
       )
     }
 
+    console.log('Getting building by ID:', buildingId)
     // Obtener los datos del edificio antes de eliminarlo
     const building = await getBuildingById(buildingId)
     if (!building) {
+      console.log('Building not found:', buildingId)
       return NextResponse.json(
         { success: false, error: 'Edificio no encontrado' },
         { status: 404 }
       )
     }
 
+    console.log('Building found:', building.nombre)
+
     // Verificar que el nombre coincida (seguridad adicional)
     if (buildingName && building.nombre !== buildingName) {
+      console.log('Building name mismatch:', buildingName, 'vs', building.nombre)
       return NextResponse.json(
         { success: false, error: 'El nombre del edificio no coincide' },
         { status: 400 }
       )
     }
 
+    console.log('Attempting to delete building images...')
     // Intentar eliminar las imágenes de Firebase primero
     let imagesDeletionResult = null
     try {
@@ -159,16 +172,19 @@ export async function DELETE(
       // Continuar con la eliminación del edificio aunque falle la eliminación de imágenes
     }
 
+    console.log('Deleting building from database...')
     // Eliminar el edificio de la base de datos
     const deletedBuilding = await deleteBuilding(buildingId)
     
     if (!deletedBuilding) {
+      console.log('Failed to delete building from database')
       return NextResponse.json(
         { success: false, error: 'No se pudo eliminar el edificio' },
         { status: 500 }
       )
     }
 
+    console.log('Building deleted from database, logging admin action...')
     // Registrar la acción del administrador
     await logAdminAction(
       currentUserUid,
@@ -182,6 +198,7 @@ export async function DELETE(
       }
     )
 
+    console.log('Successfully deleted building')
     return NextResponse.json({ 
       success: true, 
       message: 'Edificio eliminado exitosamente',

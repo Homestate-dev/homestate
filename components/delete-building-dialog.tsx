@@ -65,7 +65,9 @@ export function DeleteBuildingDialog({
     setError('')
 
     try {
-      const response = await fetch(`/api/buildings/${building.id}`, {
+      console.log('Iniciando eliminación del edificio:', building.id)
+      
+      const response = await fetch(`/api/buildings/by-id/${building.id}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
@@ -76,9 +78,25 @@ export function DeleteBuildingDialog({
         })
       })
 
+      console.log('Response status:', response.status)
+      console.log('Response headers:', response.headers)
+
+      // Verificar si la respuesta es JSON
+      const contentType = response.headers.get('content-type')
+      if (!contentType || !contentType.includes('application/json')) {
+        const textResponse = await response.text()
+        console.error('Response is not JSON:', textResponse)
+        throw new Error('El servidor devolvió una respuesta inválida. Inténtalo de nuevo.')
+      }
+
       const data = await response.json()
+      console.log('Response data:', data)
 
       if (!response.ok) {
+        throw new Error(data.error || 'Error al eliminar el edificio')
+      }
+
+      if (!data.success) {
         throw new Error(data.error || 'Error al eliminar el edificio')
       }
 
