@@ -14,6 +14,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { toast } from "sonner"
 import { useAuth } from "@/contexts/auth-context"
 import { DeleteBuildingDialog } from "@/components/delete-building-dialog"
+import { TagSelector } from './tag-selector'
 
 interface Building {
   id: number
@@ -41,9 +42,7 @@ export function BuildingSettings({ building, onBuildingDeleted }: BuildingSettin
   const [hasChanges, setHasChanges] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
-  const [newAreaComunal, setNewAreaComunal] = useState("")
-  const [newSeguridad, setNewSeguridad] = useState("")
-  const [newAparcamiento, setNewAparcamiento] = useState("")
+
   const { user } = useAuth()
 
   // Opciones predefinidas
@@ -97,9 +96,7 @@ export function BuildingSettings({ building, onBuildingDeleted }: BuildingSettin
     setHasChanges(true)
     
     // Limpiar el input correspondiente
-    if (field === 'areas_comunales') setNewAreaComunal("")
-    if (field === 'seguridad') setNewSeguridad("")
-    if (field === 'aparcamiento') setNewAparcamiento("")
+
   }
 
   const handleArrayRemove = (field: string, index: number) => {
@@ -269,137 +266,35 @@ export function BuildingSettings({ building, onBuildingDeleted }: BuildingSettin
           </CardHeader>
           <CardContent className="space-y-6">
             {/* Áreas Comunales */}
-            <div>
-              <Label className="text-base font-semibold">Áreas Comunales</Label>
-              <div className="space-y-3 mt-2">
-                <div className="flex flex-wrap gap-2">
-                  {buildingData.areas_comunales.map((area, index) => (
-                    <Badge key={index} variant="secondary" className="flex items-center gap-1">
-                      {area}
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => handleArrayRemove('areas_comunales', index)}
-                        className="h-4 w-4 p-0 hover:bg-red-100"
-                      >
-                        <X className="h-3 w-3" />
-                      </Button>
-                    </Badge>
-                  ))}
-                </div>
-                <div className="flex gap-2">
-                  <Select value={newAreaComunal} onValueChange={setNewAreaComunal}>
-                    <SelectTrigger className="flex-1">
-                      <SelectValue placeholder="Seleccionar área comunal..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {areasComunalesDisponibles
-                        .filter(area => !buildingData.areas_comunales.includes(area))
-                        .map(area => (
-                          <SelectItem key={area} value={area}>{area}</SelectItem>
-                        ))}
-                    </SelectContent>
-                  </Select>
-                  <Button 
-                    size="sm" 
-                    onClick={() => handleArrayAdd('areas_comunales', newAreaComunal)}
-                    disabled={!newAreaComunal}
-                  >
-                    <Plus className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            </div>
+            <TagSelector
+              label="Áreas Comunales"
+              placeholder="Seleccionar área comunal..."
+              selectedItems={buildingData.areas_comunales}
+              availableItems={areasComunalesDisponibles}
+              onItemsChange={(items) => setBuildingData(prev => ({ ...prev, areas_comunales: items }))}
+            />
 
             <Separator />
 
             {/* Seguridad */}
-            <div>
-              <Label className="text-base font-semibold">Seguridad</Label>
-              <div className="space-y-3 mt-2">
-                <div className="flex flex-wrap gap-2">
-                  {buildingData.seguridad.map((item, index) => (
-                    <Badge key={index} variant="secondary" className="flex items-center gap-1">
-                      {item}
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => handleArrayRemove('seguridad', index)}
-                        className="h-4 w-4 p-0 hover:bg-red-100"
-                      >
-                        <X className="h-3 w-3" />
-                      </Button>
-                    </Badge>
-                  ))}
-                </div>
-                <div className="flex gap-2">
-                  <Select value={newSeguridad} onValueChange={setNewSeguridad}>
-                    <SelectTrigger className="flex-1">
-                      <SelectValue placeholder="Seleccionar tipo de seguridad..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {seguridadDisponible
-                        .filter(item => !buildingData.seguridad.includes(item))
-                        .map(item => (
-                          <SelectItem key={item} value={item}>{item}</SelectItem>
-                        ))}
-                    </SelectContent>
-                  </Select>
-                  <Button 
-                    size="sm" 
-                    onClick={() => handleArrayAdd('seguridad', newSeguridad)}
-                    disabled={!newSeguridad}
-                  >
-                    <Plus className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            </div>
+            <TagSelector
+              label="Seguridad"
+              placeholder="Seleccionar tipo de seguridad..."
+              selectedItems={buildingData.seguridad}
+              availableItems={seguridadDisponible}
+              onItemsChange={(items) => setBuildingData(prev => ({ ...prev, seguridad: items }))}
+            />
 
             <Separator />
 
             {/* Aparcamiento */}
-            <div>
-              <Label className="text-base font-semibold">Aparcamiento</Label>
-              <div className="space-y-3 mt-2">
-                <div className="flex flex-wrap gap-2">
-                  {buildingData.aparcamiento.map((item, index) => (
-                    <Badge key={index} variant="secondary" className="flex items-center gap-1">
-                      {item}
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => handleArrayRemove('aparcamiento', index)}
-                        className="h-4 w-4 p-0 hover:bg-red-100"
-                      >
-                        <X className="h-3 w-3" />
-                      </Button>
-                    </Badge>
-                  ))}
-                </div>
-                <div className="flex gap-2">
-                  <Select value={newAparcamiento} onValueChange={setNewAparcamiento}>
-                    <SelectTrigger className="flex-1">
-                      <SelectValue placeholder="Seleccionar características..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {aparcamientoDisponible
-                        .filter(item => !buildingData.aparcamiento.includes(item))
-                        .map(item => (
-                          <SelectItem key={item} value={item}>{item}</SelectItem>
-                        ))}
-                    </SelectContent>
-                  </Select>
-                  <Button 
-                    size="sm" 
-                    onClick={() => handleArrayAdd('aparcamiento', newAparcamiento)}
-                    disabled={!newAparcamiento}
-                  >
-                    <Plus className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            </div>
+            <TagSelector
+              label="Aparcamiento"
+              placeholder="Seleccionar características..."
+              selectedItems={buildingData.aparcamiento}
+              availableItems={aparcamientoDisponible}
+              onItemsChange={(items) => setBuildingData(prev => ({ ...prev, aparcamiento: items }))}
+            />
           </CardContent>
         </Card>
       </div>

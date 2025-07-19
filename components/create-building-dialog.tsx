@@ -13,6 +13,7 @@ import { Separator } from "@/components/ui/separator"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useAuth } from "@/contexts/auth-context"
 import { toast } from "sonner"
+import { TagSelector } from './tag-selector'
 
 interface CreateBuildingDialogProps {
   open: boolean
@@ -306,72 +307,42 @@ export function CreateBuildingDialog({ open, onOpenChange, onBuildingCreated }: 
             </CardContent>
           </Card>
 
-          {/* Áreas Comunales */}
+          {/* Información del edificio */}
           <Card>
             <CardHeader>
               <CardTitle>Información del edificio</CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {areasComunalesDisponibles.map((area) => (
-                  <div key={area} className="flex items-center space-x-2">
-                  <Checkbox
-                      id={`area-${area}`}
-                      checked={buildingData.areas_comunales.includes(area)}
-                      onCheckedChange={(checked) => 
-                        handleCheckboxChange('areas_comunales', area, checked as boolean)
-                      }
-                    />
-                    <Label htmlFor={`area-${area}`} className="text-sm">{area}</Label>
-                </div>
-              ))}
-            </div>
-            </CardContent>
-          </Card>
-
-          {/* Seguridad */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Seguridad</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                {seguridadDisponible.map((seg) => (
-                  <div key={seg} className="flex items-center space-x-2">
-                  <Checkbox
-                      id={`seg-${seg}`}
-                      checked={buildingData.seguridad.includes(seg)}
-                      onCheckedChange={(checked) => 
-                        handleCheckboxChange('seguridad', seg, checked as boolean)
-                      }
-                    />
-                    <Label htmlFor={`seg-${seg}`} className="text-sm">{seg}</Label>
-                </div>
-              ))}
-            </div>
-            </CardContent>
-          </Card>
-
-          {/* Aparcamiento */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Aparcamiento</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                {aparcamientoDisponible.map((park) => (
-                  <div key={park} className="flex items-center space-x-2">
-                    <Checkbox
-                      id={`park-${park}`}
-                      checked={buildingData.aparcamiento.includes(park)}
-                      onCheckedChange={(checked) => 
-                        handleCheckboxChange('aparcamiento', park, checked as boolean)
-                      }
-                    />
-                    <Label htmlFor={`park-${park}`} className="text-sm">{park}</Label>
-                  </div>
-                ))}
-              </div>
+            <CardContent className="space-y-6">
+              {/* Áreas Comunales */}
+              <TagSelector
+                label="Áreas Comunales"
+                placeholder="Seleccionar área comunal..."
+                selectedItems={buildingData.areas_comunales}
+                availableItems={areasComunalesDisponibles}
+                onItemsChange={(items) => setBuildingData(prev => ({ ...prev, areas_comunales: items }))}
+              />
+              
+              <Separator />
+              
+              {/* Seguridad */}
+              <TagSelector
+                label="Seguridad"
+                placeholder="Seleccionar tipo de seguridad..."
+                selectedItems={buildingData.seguridad}
+                availableItems={seguridadDisponible}
+                onItemsChange={(items) => setBuildingData(prev => ({ ...prev, seguridad: items }))}
+              />
+              
+              <Separator />
+              
+              {/* Aparcamiento */}
+              <TagSelector
+                label="Aparcamiento"
+                placeholder="Seleccionar características..."
+                selectedItems={buildingData.aparcamiento}
+                availableItems={aparcamientoDisponible}
+                onItemsChange={(items) => setBuildingData(prev => ({ ...prev, aparcamiento: items }))}
+              />
             </CardContent>
           </Card>
 
