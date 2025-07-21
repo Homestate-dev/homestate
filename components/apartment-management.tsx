@@ -123,6 +123,7 @@ export function ApartmentManagement({ buildingId, buildingName, buildingPermalin
     ambientes_y_adicionales: [] as string[],
     tiene_bodega: false,
     videos_url: [] as string[],
+    descripcion: "",
   })
 
   // Debug: verificar que las opciones estén definidas
@@ -420,6 +421,7 @@ export function ApartmentManagement({ buildingId, buildingName, buildingPermalin
       formData.append('tipo', newApartment.tipo)
       formData.append('estado', newApartment.estado)
       formData.append('ideal_para', newApartment.ideal_para)
+      formData.append('descripcion', newApartment.descripcion)
       formData.append('currentUserUid', user.uid)
       formData.append('buildingPermalink', buildingPermalink)
 
@@ -469,6 +471,7 @@ export function ApartmentManagement({ buildingId, buildingName, buildingPermalin
           ambientes_y_adicionales: [],
           tiene_bodega: false,
           videos_url: [],
+          descripcion: "",
         })
 
         // Recargar departamentos
@@ -1366,6 +1369,17 @@ export function ApartmentManagement({ buildingId, buildingName, buildingPermalin
                   onChange={(e) => setNewApartment((prev) => ({ ...prev, nombre: e.target.value }))}
                   placeholder="Ej: Departamento Ejecutivo"
                   required
+                />
+              </div>
+              <div>
+                <Label htmlFor="descripcion">Descripción *</Label>
+                <textarea
+                  id="descripcion"
+                  value={newApartment.descripcion}
+                  onChange={(e) => setNewApartment((prev) => ({ ...prev, descripcion: e.target.value }))}
+                  placeholder="Describe el departamento..."
+                  required
+                  className="w-full min-h-[80px] border rounded p-2"
                 />
               </div>
             </div>

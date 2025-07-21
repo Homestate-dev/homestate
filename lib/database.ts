@@ -270,6 +270,7 @@ export async function createBuilding(buildingData: {
   areas_comunales: string[]
   seguridad: string[]
   aparcamiento: string[]
+  descripcion: string
   url_imagen_principal: string
   imagenes_secundarias: string[]
   creado_por: string
@@ -277,9 +278,9 @@ export async function createBuilding(buildingData: {
   const query = `
     INSERT INTO edificios (
       nombre, direccion, permalink, costo_expensas, areas_comunales, 
-      seguridad, aparcamiento, url_imagen_principal, imagenes_secundarias, creado_por
+      seguridad, aparcamiento, descripcion, url_imagen_principal, imagenes_secundarias, creado_por
     )
-    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
     RETURNING *
   `
   const values = [
@@ -290,6 +291,7 @@ export async function createBuilding(buildingData: {
     JSON.stringify(buildingData.areas_comunales),
     JSON.stringify(buildingData.seguridad),
     JSON.stringify(buildingData.aparcamiento),
+    buildingData.descripcion,
     buildingData.url_imagen_principal,
     JSON.stringify(buildingData.imagenes_secundarias),
     buildingData.creado_por
@@ -564,15 +566,16 @@ export async function createDepartment(departmentData: {
   tiene_bodega?: boolean
   videos_url?: string[]
   imagenes: string[]
+  descripcion: string
   creado_por: string
 }) {
   const query = `
     INSERT INTO departamentos (
       edificio_id, numero, nombre, piso, area_total, area_cubierta, area_descubierta, cantidad_banos,
       valor_arriendo, valor_venta, alicuota, incluye_alicuota,
-      cantidad_habitaciones, tipo, estado, ideal_para, ambientes_y_adicionales, tiene_bodega, videos_url, imagenes, creado_por
+      cantidad_habitaciones, tipo, estado, ideal_para, ambientes_y_adicionales, tiene_bodega, videos_url, imagenes, descripcion, creado_por
     )
-    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21)
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22)
     RETURNING *
   `
   const values = [
@@ -596,6 +599,7 @@ export async function createDepartment(departmentData: {
     departmentData.tiene_bodega || false,
     JSON.stringify(departmentData.videos_url || []),
     JSON.stringify(departmentData.imagenes),
+    departmentData.descripcion,
     departmentData.creado_por
   ]
   const result = await executeQuery(query, values)

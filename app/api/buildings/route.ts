@@ -25,6 +25,7 @@ export async function POST(request: NextRequest) {
       areas_comunales,
       seguridad,
       aparcamiento,
+      descripcion,
       url_imagen_principal,
       imagenes_secundarias,
       currentUserUid 
@@ -45,6 +46,7 @@ export async function POST(request: NextRequest) {
       areas_comunales: areas_comunales || [],
       seguridad: seguridad || [],
       aparcamiento: aparcamiento || [],
+      descripcion: descripcion || '',
       url_imagen_principal,
       imagenes_secundarias: imagenes_secundarias || [],
       creado_por: currentUserUid

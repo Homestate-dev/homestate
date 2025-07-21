@@ -32,6 +32,7 @@ export function CreateBuildingDialog({ open, onOpenChange, onBuildingCreated }: 
     areas_comunales: [] as string[],
     seguridad: [] as string[],
     aparcamiento: [] as string[],
+    descripcion: "",
   })
 
   const [mainImage, setMainImage] = useState<File | null>(null)
@@ -225,6 +226,7 @@ export function CreateBuildingDialog({ open, onOpenChange, onBuildingCreated }: 
           areas_comunales: [],
           seguridad: [],
           aparcamiento: [],
+          descripcion: "",
         })
         setMainImage(null)
         setMainImagePreview(null)
@@ -303,6 +305,17 @@ export function CreateBuildingDialog({ open, onOpenChange, onBuildingCreated }: 
                     min="0"
                   />
                 </div>
+              <div className="md:col-span-2">
+                <Label htmlFor="descripcion">Descripción *</Label>
+                <textarea
+                  id="descripcion"
+                  value={buildingData.descripcion}
+                  onChange={(e) => setBuildingData((prev) => ({ ...prev, descripcion: e.target.value }))}
+                  placeholder="Describe el edificio..."
+                  required
+                  className="w-full min-h-[80px] border rounded p-2"
+                />
+              </div>
             </div>
             </CardContent>
           </Card>

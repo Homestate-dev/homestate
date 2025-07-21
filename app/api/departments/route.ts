@@ -55,6 +55,7 @@ export async function POST(request: NextRequest) {
       ambientes_y_adicionales: JSON.parse(formData.get('ambientes_y_adicionales') as string || '[]'),
       tiene_bodega: formData.get('tiene_bodega') === 'true',
       videos_url: JSON.parse(formData.get('videos_url') as string || '[]'),
+      descripcion: formData.get('descripcion') as string,
       creado_por: formData.get('currentUserUid') as string
     }
 
