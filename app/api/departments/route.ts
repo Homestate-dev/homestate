@@ -59,12 +59,42 @@ export async function POST(request: NextRequest) {
       creado_por: formData.get('currentUserUid') as string
     }
 
-    // Validar obligatoriedad de alicuota según tipo de transacción
-    if ((departmentData.tipo === 'arriendo' || departmentData.tipo === 'arriendo y venta') && (departmentData.alicuota === 0)) {
-      return NextResponse.json({
-        success: false,
-        error: 'El valor de la alícuota es obligatorio para departamentos en arriendo o arriendo y venta'
-      }, { status: 400 })
+    // Validar obligatoriedad de campos según tipo de transacción
+    if (departmentData.tipo === 'venta') {
+      if (!departmentData.valor_venta || departmentData.valor_venta <= 0) {
+        return NextResponse.json({
+          success: false,
+          error: 'El valor de venta es obligatorio para departamentos en venta'
+        }, { status: 400 })
+      }
+    }
+    if (departmentData.tipo === 'arriendo') {
+      if (!departmentData.valor_arriendo || departmentData.valor_arriendo <= 0) {
+        return NextResponse.json({
+          success: false,
+          error: 'El valor de arriendo es obligatorio para departamentos en arriendo'
+        }, { status: 400 })
+      }
+      if (!departmentData.alicuota || departmentData.alicuota <= 0) {
+        return NextResponse.json({
+          success: false,
+          error: 'El valor de la alícuota es obligatorio para departamentos en arriendo'
+        }, { status: 400 })
+      }
+    }
+    if (departmentData.tipo === 'arriendo y venta') {
+      if ((!departmentData.valor_venta || departmentData.valor_venta <= 0) && (!departmentData.valor_arriendo || departmentData.valor_arriendo <= 0)) {
+        return NextResponse.json({
+          success: false,
+          error: 'Debes ingresar al menos un valor de venta o arriendo para departamentos en arriendo y venta'
+        }, { status: 400 })
+      }
+      if (!departmentData.alicuota || departmentData.alicuota <= 0) {
+        return NextResponse.json({
+          success: false,
+          error: 'El valor de la alícuota es obligatorio para departamentos en arriendo y venta'
+        }, { status: 400 })
+      }
     }
 
     // Extraer el permalink del edificio para organizar las imágenes

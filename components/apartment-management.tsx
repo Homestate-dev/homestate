@@ -399,6 +399,30 @@ export function ApartmentManagement({ buildingId, buildingName, buildingPermalin
       return
     }
 
+    // Validación condicional
+    if (newApartment.tipo === 'venta' && (!newApartment.valor_venta || Number(newApartment.valor_venta) <= 0)) {
+      toast.error('El valor de venta es obligatorio para departamentos en venta')
+      return
+    }
+    if (newApartment.tipo === 'arriendo' && (!newApartment.valor_arriendo || Number(newApartment.valor_arriendo) <= 0)) {
+      toast.error('El valor de arriendo es obligatorio para departamentos en arriendo')
+      return
+    }
+    if (newApartment.tipo === 'arriendo' && (!newApartment.alicuota || Number(newApartment.alicuota) <= 0)) {
+      toast.error('El valor de alícuota es obligatorio para departamentos en arriendo')
+      return
+    }
+    if (newApartment.tipo === 'arriendo y venta') {
+      if ((!newApartment.valor_venta || Number(newApartment.valor_venta) <= 0) && (!newApartment.valor_arriendo || Number(newApartment.valor_arriendo) <= 0)) {
+        toast.error('Debes ingresar al menos un valor de venta o arriendo para departamentos en arriendo y venta')
+        return
+      }
+      if (!newApartment.alicuota || Number(newApartment.alicuota) <= 0) {
+        toast.error('El valor de alícuota es obligatorio para departamentos en arriendo y venta')
+        return
+      }
+    }
+
     setCreating(true)
 
     try {
@@ -1485,30 +1509,38 @@ export function ApartmentManagement({ buildingId, buildingName, buildingPermalin
             <div className="space-y-4">
               <h3 className="text-lg font-semibold">Precios</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="valor_venta">Valor de venta (USD)</Label>
-                  <Input
-                    id="valor_venta"
-                    type="number"
-                    value={newApartment.valor_venta}
-                    onChange={(e) =>
-                      setNewApartment((prev) => ({ ...prev, valor_venta: e.target.value }))
-                    }
-                    placeholder="Ej: 25000000"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="valor_arriendo">Valor de arriendo (USD/mes)</Label>
-                  <Input
-                    id="valor_arriendo"
-                    type="number"
-                    value={newApartment.valor_arriendo}
-                    onChange={(e) =>
-                      setNewApartment((prev) => ({ ...prev, valor_arriendo: e.target.value }))
-                    }
-                    placeholder="Ej: 1200000"
-                  />
-                </div>
+                {/* Mostrar solo si es venta o arriendo y venta */}
+                {(newApartment.tipo === 'venta' || newApartment.tipo === 'arriendo y venta') && (
+                  <div>
+                    <Label htmlFor="valor_venta">Valor de venta (USD){newApartment.tipo === 'venta' ? ' *' : ''}</Label>
+                    <Input
+                      id="valor_venta"
+                      type="number"
+                      value={newApartment.valor_venta}
+                      onChange={(e) =>
+                        setNewApartment((prev) => ({ ...prev, valor_venta: e.target.value }))
+                      }
+                      placeholder="Ej: 25000000"
+                      required={newApartment.tipo === 'venta'}
+                    />
+                  </div>
+                )}
+                {/* Mostrar solo si es arriendo o arriendo y venta */}
+                {(newApartment.tipo === 'arriendo' || newApartment.tipo === 'arriendo y venta') && (
+                  <div>
+                    <Label htmlFor="valor_arriendo">Valor de arriendo (USD/mes){newApartment.tipo === 'arriendo' ? ' *' : ''}</Label>
+                    <Input
+                      id="valor_arriendo"
+                      type="number"
+                      value={newApartment.valor_arriendo}
+                      onChange={(e) =>
+                        setNewApartment((prev) => ({ ...prev, valor_arriendo: e.target.value }))
+                      }
+                      placeholder="Ej: 1200000"
+                      required={newApartment.tipo === 'arriendo'}
+                    />
+                  </div>
+                )}
               </div>
 
               {/* Alícuota (solo para arriendo o arriendo y venta) */}
