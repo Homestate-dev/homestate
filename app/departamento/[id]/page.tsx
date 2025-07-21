@@ -11,6 +11,7 @@ import { ImageGallery } from "@/components/image-gallery"
 import { DepartmentShareButton } from "@/components/department-share-button"
 import { getDepartmentById } from "@/lib/database"
 import DepartmentClientWrapper from "@/components/department-client-wrapper"
+import React from "react"
 
 interface PageProps {
   params: Promise<{ id: string }>
@@ -207,6 +208,27 @@ export default async function DepartamentoPage({ params }: PageProps) {
                     <span className="text-gray-600">Estado:</span>
                     <Badge variant="outline">{estadoMap[safeDepartamento.estado] || safeDepartamento.estado}</Badge>
                   </div>
+                  {/* Mensaje de marketing de edificios similares */}
+                  {(() => {
+                    // Obtener el total de edificios
+                    const edificiosPromise = import("@/lib/database").then(mod => mod.getBuildings())
+                    const [edificios, setEdificios] = React.useState<any[]>([])
+                    React.useEffect(() => {
+                      edificiosPromise.then(data => setEdificios(data))
+                    }, [])
+                    if (!edificios.length) return null
+                    return (
+                      <div className="my-6 p-4 rounded-lg bg-orange-50 border border-orange-200 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                        <div>
+                          <span className="font-semibold text-orange-700">¡Hemos detectado {edificios.length} edificios más que te podrían interesar y que tienen departamentos como este!</span>
+                          <p className="text-gray-700 mt-1">Descubre más opciones en otros edificios de la zona.</p>
+                        </div>
+                        <Link href="/edificios-en-la-zona">
+                          <Button className="bg-orange-600 hover:bg-orange-700 text-white mt-2 md:mt-0">Ver otros edificios en la zona</Button>
+                        </Link>
+                      </div>
+                    )
+                  })()}
                   <div className="flex justify-between">
                     <span className="text-gray-600">Ideal para:</span>
                     <Badge variant="outline">{idealParaMap[safeDepartamento.ideal_para] || safeDepartamento.ideal_para}</Badge>
