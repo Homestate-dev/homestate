@@ -408,17 +408,9 @@ export function ApartmentManagement({ buildingId, buildingName, buildingPermalin
       toast.error('El valor de arriendo es obligatorio para departamentos en arriendo')
       return
     }
-    if (newApartment.tipo === 'arriendo' && (!newApartment.alicuota || Number(newApartment.alicuota) <= 0)) {
-      toast.error('El valor de alícuota es obligatorio para departamentos en arriendo')
-      return
-    }
     if (newApartment.tipo === 'arriendo y venta') {
       if ((!newApartment.valor_venta || Number(newApartment.valor_venta) <= 0) && (!newApartment.valor_arriendo || Number(newApartment.valor_arriendo) <= 0)) {
         toast.error('Debes ingresar al menos un valor de venta o arriendo para departamentos en arriendo y venta')
-        return
-      }
-      if (!newApartment.alicuota || Number(newApartment.alicuota) <= 0) {
-        toast.error('El valor de alícuota es obligatorio para departamentos en arriendo y venta')
         return
       }
     }
@@ -1597,6 +1589,9 @@ export function ApartmentManagement({ buildingId, buildingName, buildingPermalin
             {/* Videos de YouTube */}
             <div className="space-y-4">
               <h3 className="text-lg font-semibold">Videos de YouTube</h3>
+              <p className="text-sm text-gray-600">
+                Se visualizarán {newApartment.videos_url.length} video{newApartment.videos_url.length === 1 ? '' : 's'} en este departamento.
+              </p>
               <TagSelector
                 selectedItems={newApartment.videos_url}
                 onItemsChange={(items) => setNewApartment((prev) => ({ ...prev, videos_url: items }))}
