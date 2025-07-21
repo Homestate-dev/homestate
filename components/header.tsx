@@ -25,8 +25,8 @@ export function Header() {
         </nav>
 
         <Button className="bg-green-500 hover:bg-green-600 text-white flex items-center gap-2">
-          <FaWhatsapp className="h-5 w-5" />
-          <span className="hidden sm:inline">WhatsApp</span>
+          <FaWhatsapp className="h-8 w-8" />
+          <span className="hidden sm:inline">Respuesta inmediatatata</span>
         </Button>
       </div>
     </header>

@@ -408,7 +408,7 @@ export function ApartmentManagement({ buildingId, buildingName, buildingPermalin
       formData.append('numero', newApartment.numero)
       formData.append('nombre', newApartment.nombre)
       formData.append('piso', newApartment.piso)
-      formData.append('area_total', newApartment.area_total)
+      formData.append('area_total', ((parseFloat(newApartment.area_cubierta) || 0) + (parseFloat(newApartment.area_descubierta) || 0)).toString())
       formData.append('area_cubierta', newApartment.area_cubierta)
       formData.append('area_descubierta', newApartment.area_descubierta)
       formData.append('cantidad_banos', newApartment.cantidad_banos)
@@ -556,7 +556,7 @@ export function ApartmentManagement({ buildingId, buildingName, buildingPermalin
                 <p className={`${isMobile ? 'text-xs' : 'text-sm'} text-gray-600`}>Área prom.</p>
                 <p className={`${isMobile ? 'text-lg' : 'text-2xl'} font-bold`}>
                   {departamentos.length > 0
-                    ? Math.round(departamentos.reduce((acc, d) => acc + d.area, 0) / departamentos.length)
+                    ? Math.round(departamentos.reduce((acc, d) => acc + d.area_total, 0) / departamentos.length)
                     : 0}
                   m²
                 </p>
@@ -601,7 +601,7 @@ export function ApartmentManagement({ buildingId, buildingName, buildingPermalin
                     <TableCell className="font-medium">{dept.numero}</TableCell>
                     <TableCell>{dept.nombre}</TableCell>
                     <TableCell>{dept.piso}</TableCell>
-                    <TableCell>{dept.area}m²</TableCell>
+                    <TableCell>{dept.area_total}m²</TableCell>
                     <TableCell>{dept.cantidad_habitaciones}</TableCell>
                     <TableCell>
                       <Badge variant="outline">{dept.tipo}</Badge>
@@ -906,8 +906,8 @@ export function ApartmentManagement({ buildingId, buildingName, buildingPermalin
                       id="edit-area"
                       type="number"
                       step="0.1"
-                      value={editingDepartment.area}
-                      onChange={(e) => setEditingDepartment(prev => prev ? { ...prev, area: parseFloat(e.target.value) || 0 } : null)}
+                      value={editingDepartment.area_total}
+                      onChange={(e) => setEditingDepartment(prev => prev ? { ...prev, area_total: parseFloat(e.target.value) || 0 } : null)}
                       required
                     />
                   </div>
@@ -945,6 +945,23 @@ export function ApartmentManagement({ buildingId, buildingName, buildingPermalin
                         <SelectItem value="2">2 habitaciones</SelectItem>
                         <SelectItem value="3">3 habitaciones</SelectItem>
                         <SelectItem value="4">4 o más habitaciones</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="edit-cantidad_banos">Cantidad de baños *</Label>
+                    <Select
+                      value={editingDepartment.cantidad_banos}
+                      onValueChange={(value) => setEditingDepartment(prev => prev ? { ...prev, cantidad_banos: value } : null)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Seleccionar" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="1">1 baño</SelectItem>
+                        <SelectItem value="2">2 baños</SelectItem>
+                        <SelectItem value="3">3 baños</SelectItem>
+                        <SelectItem value="4">4 o más baños</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -1309,11 +1326,11 @@ export function ApartmentManagement({ buildingId, buildingName, buildingPermalin
                     id="area_total"
                     type="number"
                     step="0.1"
-                    value={newApartment.area_total}
-                    onChange={(e) =>
-                      setNewApartment((prev) => ({ ...prev, area_total: e.target.value }))
+                    value={
+                      (parseFloat(newApartment.area_cubierta) || 0) + (parseFloat(newApartment.area_descubierta) || 0)
                     }
-                    required
+                    readOnly
+                    disabled
                   />
                 </div>
                 <div>
@@ -1339,23 +1356,6 @@ export function ApartmentManagement({ buildingId, buildingName, buildingPermalin
                       setNewApartment((prev) => ({ ...prev, area_descubierta: e.target.value }))
                     }
                   />
-                </div>
-                <div>
-                  <Label htmlFor="cantidad_banos">Cantidad de baños *</Label>
-                  <Select
-                    value={newApartment.cantidad_banos}
-                    onValueChange={(value) => setNewApartment((prev) => ({ ...prev, cantidad_banos: value }))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Seleccionar" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="1">1 baño</SelectItem>
-                      <SelectItem value="2">2 baños</SelectItem>
-                      <SelectItem value="3">3 baños</SelectItem>
-                      <SelectItem value="4">4 o más baños</SelectItem>
-                    </SelectContent>
-                  </Select>
                 </div>
               </div>
               <div>
@@ -1391,6 +1391,23 @@ export function ApartmentManagement({ buildingId, buildingName, buildingPermalin
                       <SelectItem value="2">2 habitaciones</SelectItem>
                       <SelectItem value="3">3 habitaciones</SelectItem>
                       <SelectItem value="4">4 o más habitaciones</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="cantidad_banos">Cantidad de baños *</Label>
+                  <Select
+                    value={newApartment.cantidad_banos}
+                    onValueChange={(value) => setNewApartment((prev) => ({ ...prev, cantidad_banos: value }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Seleccionar" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="1">1 baño</SelectItem>
+                      <SelectItem value="2">2 baños</SelectItem>
+                      <SelectItem value="3">3 baños</SelectItem>
+                      <SelectItem value="4">4 o más baños</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
