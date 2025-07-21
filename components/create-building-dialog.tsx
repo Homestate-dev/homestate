@@ -368,49 +368,69 @@ export function CreateBuildingDialog({ open, onOpenChange, onBuildingCreated }: 
               {/* Imagen principal */}
               <div>
                 <Label htmlFor="main-image">Imagen Principal *</Label>
-                    <Input
-                  id="main-image"
-                  type="file"
-                  accept="image/*"
-                  onChange={handleMainImageUpload}
-                  required
-                />
-                {mainImagePreview && (
-                  <div className="mt-2">
-                    <img src={mainImagePreview} alt="Preview" className="w-32 h-32 object-cover rounded" />
-                  </div>
-                )}
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                  <Upload className="h-8 w-8 mx-auto text-gray-400 mb-2" />
+                  <p className="text-sm text-gray-600 mb-2">Arrastra la imagen principal aquí o</p>
+                  <Label htmlFor="main-image" className="cursor-pointer">
+                    <Button variant="outline" size="sm" asChild>
+                      <span>Seleccionar imagen principal</span>
+                    </Button>
+                  </Label>
+                  <Input
+                    id="main-image"
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleMainImageUpload}
+                    required
+                  />
+                  {mainImagePreview && (
+                    <div className="mt-4 flex justify-center">
+                      <img src={mainImagePreview} alt="Preview" className="w-32 h-32 object-cover rounded border" />
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Imágenes secundarias */}
               <div>
                 <Label htmlFor="secondary-images">Imágenes Secundarias (opcional)</Label>
-                <Input
-                  id="secondary-images"
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  onChange={handleSecondaryImageUpload}
-                />
-                {secondaryImagePreviews.length > 0 && (
-                  <div className="mt-2 grid grid-cols-4 gap-2">
-                    {secondaryImagePreviews.map((preview, index) => (
-                      <div key={index} className="relative">
-                        <img src={preview} alt={`Preview ${index + 1}`} className="w-24 h-24 object-cover rounded" />
-                        <Button
-                          type="button"
-                          variant="destructive"
-                          size="sm"
-                          className="absolute -top-2 -right-2 h-6 w-6 rounded-full p-0"
-                          onClick={() => removeSecondaryImage(index)}
-                        >
-                          <X className="h-3 w-3" />
-                  </Button>
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                  <Upload className="h-8 w-8 mx-auto text-gray-400 mb-2" />
+                  <p className="text-sm text-gray-600 mb-2">Arrastra imágenes aquí o</p>
+                  <Label htmlFor="secondary-images" className="cursor-pointer">
+                    <Button variant="outline" size="sm" asChild>
+                      <span>Seleccionar imágenes</span>
+                    </Button>
+                  </Label>
+                  <Input
+                    id="secondary-images"
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    className="hidden"
+                    onChange={handleSecondaryImageUpload}
+                  />
+                  {secondaryImagePreviews.length > 0 && (
+                    <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-2">
+                      {secondaryImagePreviews.map((preview, index) => (
+                        <div key={index} className="relative">
+                          <img src={preview} alt={`Preview ${index + 1}`} className="w-24 h-24 object-cover rounded border" />
+                          <Button
+                            type="button"
+                            variant="destructive"
+                            size="sm"
+                            className="absolute -top-2 -right-2 h-6 w-6 rounded-full p-0"
+                            onClick={() => removeSecondaryImage(index)}
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
-              ))}
-            </div>
-                )}
-          </div>
+              </div>
             </CardContent>
           </Card>
 
