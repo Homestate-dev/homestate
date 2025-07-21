@@ -117,9 +117,9 @@ export function MicrositeContent({ building, departments }: MicrositeContentProp
   // Manejar hidratación
   useEffect(() => {
     setMounted(true)
-    // Inicializar departamentos filtrados
+    // Inicializar departamentos filtrados SOLO con los disponibles
     if (Array.isArray(departments) && departments.length > 0) {
-      setFilteredDepartments(departments)
+      setFilteredDepartments(departments.filter(d => d.disponible))
     }
   }, [departments])
 
@@ -193,7 +193,7 @@ export function MicrositeContent({ building, departments }: MicrositeContentProp
 
   // Función para aplicar filtros
   const applyFilters = (filters: FilterState) => {
-    let filtered = [...validDepartments]
+    let filtered = [...validDepartments].filter(dept => dept.disponible)
 
     // Filtrar por tipo de operación
     if (filters.tipo !== "todos") {
