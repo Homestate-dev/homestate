@@ -128,6 +128,20 @@ export default async function DepartamentoPage({ params }: PageProps) {
                 </p>
               </div>
 
+              {/* Descripción del departamento */}
+              {safeDepartamento.descripcion && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg"></CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-gray-700 leading-relaxed">
+                      {safeDepartamento.descripcion}
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
+
               {/* Precios */}
               <Card>
                 <CardHeader>
