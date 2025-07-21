@@ -728,7 +728,7 @@ export function ApartmentManagement({ buildingId, buildingName, buildingPermalin
                   <p className="text-lg">{selectedDepartment.piso}</p>
                 </div>
                 <div>
-                  <Label className="text-sm font-medium text-gray-600">Área total</Label>
+                  <Label className="text-sm font-medium text-gray-600">Área total (calculado automáticamente)</Label>
                   <p className="text-lg">{selectedDepartment.area_total}m²</p>
                 </div>
                 <div>
