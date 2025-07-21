@@ -582,10 +582,13 @@ export function ApartmentManagement({ buildingId, buildingName, buildingPermalin
               <div>
                 <p className={`${isMobile ? 'text-xs' : 'text-sm'} text-gray-600`}>Área prom.</p>
                 <p className={`${isMobile ? 'text-lg' : 'text-2xl'} font-bold`}>
-                  {departamentos.length > 0
-                    ? Math.round(departamentos.reduce((acc, d) => acc + d.area_total, 0) / departamentos.length)
-                    : 0}
-                  m²
+                  {(() => {
+                    const areas = departamentos
+                      .map((d) => Number(d.area_total))
+                      .filter((a) => !isNaN(a) && a > 0)
+                    if (areas.length === 0) return 0
+                    return Math.round(areas.reduce((acc, a) => acc + a, 0) / areas.length)
+                  })()}m²
                 </p>
               </div>
             </div>
@@ -635,10 +638,10 @@ export function ApartmentManagement({ buildingId, buildingName, buildingPermalin
                     </TableCell>
                     <TableCell>
                       <div className="space-y-1">
-                        {dept.valor_venta && dept.valor_venta > 0 && (
+                        {typeof dept.valor_venta === 'number' && dept.valor_venta > 0 && (
                           <div className="text-sm">${dept.valor_venta.toLocaleString()}</div>
                         )}
-                        {dept.valor_arriendo && dept.valor_arriendo > 0 && (
+                        {typeof dept.valor_arriendo === 'number' && dept.valor_arriendo > 0 && (
                           <div className="text-sm text-gray-600">${dept.valor_arriendo}/mes</div>
                         )}
                       </div>
@@ -1348,7 +1351,7 @@ export function ApartmentManagement({ buildingId, buildingName, buildingPermalin
                   />
                 </div>
                 <div>
-                  <Label htmlFor="area_total">Área total (m²) *</Label>
+                  <Label htmlFor="area_total">Área total (m²) - calculado automaticamente*</Label>
                   <Input
                     id="area_total"
                     type="number"
