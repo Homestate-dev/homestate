@@ -57,6 +57,7 @@ interface Building {
   url_imagen_principal: string
   imagenes_secundarias: string[]
   fecha_creacion: string
+  descripcion?: string // Added descripcion field
 }
 
 interface MicrositeContentProps {
@@ -275,7 +276,10 @@ export function MicrositeContent({ building, departments }: MicrositeContentProp
                 <MapPin className="h-6 w-6 mr-2" />
                 {building.direccion}
               </p>
-                             <MicrositeShareButton buildingName={building.nombre} buildingAddress={building.direccion} />
+              {building.descripcion && (
+                <p className="text-white italic text-lg md:text-xl mb-4">{building.descripcion}</p>
+              )}
+              <MicrositeShareButton buildingName={building.nombre} buildingAddress={building.direccion} />
             </div>
           </div>
         </section>
