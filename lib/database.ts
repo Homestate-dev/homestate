@@ -746,7 +746,7 @@ export async function getBuildingWithDepartmentsByPermalink(permalink: string) {
     const buildingQuery = `
       SELECT 
         id, nombre, direccion, permalink, costo_expensas, areas_comunales, 
-        seguridad, aparcamiento, url_imagen_principal, imagenes_secundarias, fecha_creacion
+        seguridad, aparcamiento, url_imagen_principal, imagenes_secundarias, fecha_creacion, descripcion
       FROM edificios 
       WHERE permalink = $1
     `
@@ -783,7 +783,8 @@ export async function getBuildingWithDepartmentsByPermalink(permalink: string) {
         seguridad: safeJsonParse(building.seguridad, []),
         aparcamiento: safeJsonParse(building.aparcamiento, []),
         url_imagen_principal: building.url_imagen_principal || '',
-        imagenes_secundarias: safeJsonParse(building.imagenes_secundarias, [])
+        imagenes_secundarias: safeJsonParse(building.imagenes_secundarias, []),
+        descripcion: building.descripcion || ''
       },
       departments: validDepartments
     }
