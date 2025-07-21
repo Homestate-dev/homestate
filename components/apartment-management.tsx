@@ -1548,30 +1548,15 @@ export function ApartmentManagement({ buildingId, buildingName, buildingPermalin
 
               {/* Alícuota (solo para arriendo o arriendo y venta) */}
               {(newApartment.tipo === 'arriendo' || newApartment.tipo === 'arriendo y venta') && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                  <div>
-                    <Label htmlFor="alicuota">Valor de alícuota (USD)*</Label>
-                    <Input
-                      id="alicuota"
-                      type="number"
-                      value={newApartment.alicuota}
-                      onChange={(e) =>
-                        setNewApartment((prev) => ({ ...prev, alicuota: e.target.value }))
-                      }
-                      placeholder="Ej: 50000"
-                      required
-                    />
-                  </div>
-                  <div className="flex items-center space-x-2 mt-6 md:mt-0">
-                    <Checkbox
-                      id="incluye_alicuota"
-                      checked={newApartment.incluye_alicuota}
-                      onCheckedChange={(checked) =>
-                        setNewApartment((prev) => ({ ...prev, incluye_alicuota: checked as boolean }))
-                      }
-                    />
-                    <Label htmlFor="incluye_alicuota">Incluye alícuota</Label>
-                  </div>
+                <div className="flex items-center space-x-2 mt-4">
+                  <Checkbox
+                    id="incluye_alicuota"
+                    checked={newApartment.incluye_alicuota}
+                    onCheckedChange={(checked) =>
+                      setNewApartment((prev) => ({ ...prev, incluye_alicuota: checked as boolean }))
+                    }
+                  />
+                  <Label htmlFor="incluye_alicuota">Incluye alícuota</Label>
                 </div>
               )}
             </div>
