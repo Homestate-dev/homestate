@@ -134,7 +134,7 @@ export default async function DepartamentoPage({ params }: PageProps) {
                   <CardTitle className="text-xl">Precios</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  {safeDepartamento.valor_venta && safeDepartamento.valor_venta > 0 && (
+                  {safeDepartamento.valor_venta != null && safeDepartamento.valor_venta !== undefined && safeDepartamento.valor_venta > 0 && (
                     <div>
                       <p className="text-sm text-gray-600">Precio de venta</p>
                       <div className="flex items-center gap-2">
@@ -147,7 +147,7 @@ export default async function DepartamentoPage({ params }: PageProps) {
                       </div>
                     </div>
                   )}
-                  {safeDepartamento.valor_arriendo && safeDepartamento.valor_arriendo > 0 && (
+                  {safeDepartamento.valor_arriendo != null && safeDepartamento.valor_arriendo !== undefined && safeDepartamento.valor_arriendo > 0 && (
                     <div>
                       <p className="text-sm text-gray-600">Precio de arriendo {safeDepartamento.incluye_alicuota ? '(Incluye alícuota)' : '(No incluye alícuota)'}</p>
                       {(() => {

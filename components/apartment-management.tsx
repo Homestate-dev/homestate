@@ -928,7 +928,7 @@ export function ApartmentManagement({ buildingId, buildingName, buildingPermalin
                     />
                   </div>
                   <div>
-                    <Label htmlFor="edit-area">Área (m²) *</Label>
+                    <Label htmlFor="edit-area">Área (m²) - Calculado automáticamente</Label>
                     <Input
                       id="edit-area"
                       type="number"
