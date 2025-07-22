@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Plus, Eye, Edit, EyeOff, Home, Maximize, Upload, X, Loader2, ChevronLeft, ChevronRight, ToggleLeft, ToggleRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -79,6 +79,8 @@ export function ApartmentManagement({ buildingId, buildingName, buildingPermalin
   const { user } = useAuth()
   const [isTransactionDialogOpen, setIsTransactionDialogOpen] = useState(false)
   const [agents, setAgents] = useState([])
+  const [isDragActive, setIsDragActive] = useState(false)
+  const dropRef = useRef<HTMLDivElement>(null)
 
   // Opciones predefinidas para ambientes y adicionales
   const ambientesYAdicionalesDisponibles = [
@@ -501,6 +503,27 @@ export function ApartmentManagement({ buildingId, buildingName, buildingPermalin
     } finally {
       setCreating(false)
     }
+  }
+
+  const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault()
+    event.stopPropagation()
+    setIsDragActive(false)
+    if (event.dataTransfer.files && event.dataTransfer.files.length > 0) {
+      setUploadedImages((prev) => [...prev, ...Array.from(event.dataTransfer.files)])
+    }
+  }
+
+  const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault()
+    event.stopPropagation()
+    setIsDragActive(true)
+  }
+
+  const handleDragLeave = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault()
+    event.stopPropagation()
+    setIsDragActive(false)
   }
 
   if (loading) {
@@ -1368,7 +1391,7 @@ export function ApartmentManagement({ buildingId, buildingName, buildingPermalin
                   />
                 </div>
                 <div>
-                  <Label htmlFor="area_total">Área total (m²) - calculado automaticamente*</Label>
+                  <Label htmlFor="area_total">Área total (m²) - calculado automáticamente*</Label>
                   <Input
                     id="area_total"
                     type="number"
@@ -1611,7 +1634,13 @@ export function ApartmentManagement({ buildingId, buildingName, buildingPermalin
             {/* Imágenes */}
             <div className="space-y-4">
               <h3 className="text-lg font-semibold">Imágenes del Departamento</h3>
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+              <div
+                ref={dropRef}
+                className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${isDragActive ? 'border-blue-400 bg-blue-50' : 'border-gray-300'}`}
+                onDrop={handleDrop}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+              >
                 <Upload className="h-8 w-8 mx-auto text-gray-400 mb-2" />
                 <p className="text-sm text-gray-600 mb-2">Arrastra imágenes aquí o</p>
                 <Label htmlFor="apartment-images" className="cursor-pointer">
