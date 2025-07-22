@@ -1342,19 +1342,7 @@ export function ApartmentManagement({ buildingId, buildingName, buildingPermalin
                     required
                   />
                 </div>
-                <div>
-                  <Label htmlFor="area_total">Área total (m²) - calculado automaticamente*</Label>
-                  <Input
-                    id="area_total"
-                    type="number"
-                    step="0.1"
-                    value={
-                      (parseFloat(newApartment.area_cubierta) || 0) + (parseFloat(newApartment.area_descubierta) || 0)
-                    }
-                    readOnly
-                    disabled
-                  />
-                </div>
+              
                 <div>
                   <Label htmlFor="area_cubierta">Área cubierta (m²)</Label>
                   <Input
@@ -1377,6 +1365,19 @@ export function ApartmentManagement({ buildingId, buildingName, buildingPermalin
                     onChange={(e) =>
                       setNewApartment((prev) => ({ ...prev, area_descubierta: e.target.value }))
                     }
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="area_total">Área total (m²) - calculado automaticamente*</Label>
+                  <Input
+                    id="area_total"
+                    type="number"
+                    step="0.1"
+                    value={
+                      (parseFloat(newApartment.area_cubierta) || 0) + (parseFloat(newApartment.area_descubierta) || 0)
+                    }
+                    readOnly
+                    disabled
                   />
                 </div>
               </div>
