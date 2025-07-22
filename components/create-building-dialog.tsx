@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useRef } from "react"
 import { Upload, Building2, X, Plus, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -243,6 +243,48 @@ export function CreateBuildingDialog({ open, onOpenChange, onBuildingCreated }: 
     }
   }
 
+  const [isMainDragActive, setIsMainDragActive] = useState(false)
+  const [isSecondaryDragActive, setIsSecondaryDragActive] = useState(false)
+  const mainDropRef = useRef<HTMLDivElement>(null)
+  const secondaryDropRef = useRef<HTMLDivElement>(null)
+
+  const handleMainDrop = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault()
+    event.stopPropagation()
+    setIsMainDragActive(false)
+    if (event.dataTransfer.files && event.dataTransfer.files.length > 0) {
+      handleMainImageUpload({ target: { files: event.dataTransfer.files } })
+    }
+  }
+  const handleMainDragOver = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault()
+    event.stopPropagation()
+    setIsMainDragActive(true)
+  }
+  const handleMainDragLeave = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault()
+    event.stopPropagation()
+    setIsMainDragActive(false)
+  }
+  const handleSecondaryDrop = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault()
+    event.stopPropagation()
+    setIsSecondaryDragActive(false)
+    if (event.dataTransfer.files && event.dataTransfer.files.length > 0) {
+      handleSecondaryImageUpload({ target: { files: event.dataTransfer.files } })
+    }
+  }
+  const handleSecondaryDragOver = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault()
+    event.stopPropagation()
+    setIsSecondaryDragActive(true)
+  }
+  const handleSecondaryDragLeave = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault()
+    event.stopPropagation()
+    setIsSecondaryDragActive(false)
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
@@ -368,7 +410,13 @@ export function CreateBuildingDialog({ open, onOpenChange, onBuildingCreated }: 
               {/* Imagen principal */}
               <div>
                 <Label htmlFor="main-image">Imagen Principal *</Label>
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                <div
+                  ref={mainDropRef}
+                  className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${isMainDragActive ? 'border-blue-400 bg-blue-50' : 'border-gray-300'}`}
+                  onDrop={handleMainDrop}
+                  onDragOver={handleMainDragOver}
+                  onDragLeave={handleMainDragLeave}
+                >
                   <Upload className="h-8 w-8 mx-auto text-gray-400 mb-2" />
                   <p className="text-sm text-gray-600 mb-2">Arrastra la imagen principal aquí o</p>
                   <Label htmlFor="main-image" className="cursor-pointer">
@@ -395,7 +443,13 @@ export function CreateBuildingDialog({ open, onOpenChange, onBuildingCreated }: 
               {/* Imágenes secundarias */}
               <div>
                 <Label htmlFor="secondary-images">Imágenes Secundarias (opcional)</Label>
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                <div
+                  ref={secondaryDropRef}
+                  className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${isSecondaryDragActive ? 'border-blue-400 bg-blue-50' : 'border-gray-300'}`}
+                  onDrop={handleSecondaryDrop}
+                  onDragOver={handleSecondaryDragOver}
+                  onDragLeave={handleSecondaryDragLeave}
+                >
                   <Upload className="h-8 w-8 mx-auto text-gray-400 mb-2" />
                   <p className="text-sm text-gray-600 mb-2">Arrastra imágenes aquí o</p>
                   <Label htmlFor="secondary-images" className="cursor-pointer">
