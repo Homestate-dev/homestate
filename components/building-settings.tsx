@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useRef } from "react"
 import { Settings, Save, Trash2, AlertTriangle, Loader2, X, Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -81,6 +81,15 @@ export function BuildingSettings({ building, onBuildingDeleted }: BuildingSettin
     "Carga para autos eléctricos"
   ]
 
+  const [mainImagePreview, setMainImagePreview] = useState(buildingData.url_imagen_principal || "")
+  const [mainImageFile, setMainImageFile] = useState<File | null>(null)
+  const [secondaryImagePreviews, setSecondaryImagePreviews] = useState<string[]>(buildingData.imagenes_secundarias || [])
+  const [secondaryImageFiles, setSecondaryImageFiles] = useState<File[]>([])
+  const [isMainDragActive, setIsMainDragActive] = useState(false)
+  const [isSecondaryDragActive, setIsSecondaryDragActive] = useState(false)
+  const mainDropRef = useRef<HTMLDivElement>(null)
+  const secondaryDropRef = useRef<HTMLDivElement>(null)
+
   const handleInputChange = (field: string, value: string | number) => {
     setBuildingData((prev) => ({ ...prev, [field]: value }))
     setHasChanges(true)
@@ -105,6 +114,70 @@ export function BuildingSettings({ building, onBuildingDeleted }: BuildingSettin
       [field]: (prev[field as keyof Building] as string[]).filter((_, i) => i !== index)
     }))
     setHasChanges(true)
+  }
+
+  const handleMainImageUpload = (event: React.ChangeEvent<HTMLInputElement> | { target: { files: FileList } }) => {
+    const files = event.target.files
+    if (files && files[0]) {
+      setMainImageFile(files[0])
+      setMainImagePreview(URL.createObjectURL(files[0]))
+      setHasChanges(true)
+    }
+  }
+  const handleRemoveMainImage = () => {
+    setMainImageFile(null)
+    setMainImagePreview("")
+    setHasChanges(true)
+  }
+  const handleSecondaryImageUpload = (event: React.ChangeEvent<HTMLInputElement> | { target: { files: FileList } }) => {
+    const files = event.target.files
+    if (files && files.length > 0) {
+      const newFiles = Array.from(files)
+      setSecondaryImageFiles((prev) => [...prev, ...newFiles])
+      setSecondaryImagePreviews((prev) => [...prev, ...newFiles.map(f => URL.createObjectURL(f))])
+      setHasChanges(true)
+    }
+  }
+  const handleRemoveSecondaryImage = (index: number) => {
+    setSecondaryImageFiles((prev) => prev.filter((_, i) => i !== index))
+    setSecondaryImagePreviews((prev) => prev.filter((_, i) => i !== index))
+    setHasChanges(true)
+  }
+  const handleMainDrop = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault()
+    event.stopPropagation()
+    setIsMainDragActive(false)
+    if (event.dataTransfer.files && event.dataTransfer.files.length > 0) {
+      handleMainImageUpload({ target: { files: event.dataTransfer.files } })
+    }
+  }
+  const handleMainDragOver = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault()
+    event.stopPropagation()
+    setIsMainDragActive(true)
+  }
+  const handleMainDragLeave = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault()
+    event.stopPropagation()
+    setIsMainDragActive(false)
+  }
+  const handleSecondaryDrop = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault()
+    event.stopPropagation()
+    setIsSecondaryDragActive(false)
+    if (event.dataTransfer.files && event.dataTransfer.files.length > 0) {
+      handleSecondaryImageUpload({ target: { files: event.dataTransfer.files } })
+    }
+  }
+  const handleSecondaryDragOver = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault()
+    event.stopPropagation()
+    setIsSecondaryDragActive(true)
+  }
+  const handleSecondaryDragLeave = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault()
+    event.stopPropagation()
+    setIsSecondaryDragActive(false)
   }
 
   const handleSave = async () => {
@@ -295,6 +368,102 @@ export function BuildingSettings({ building, onBuildingDeleted }: BuildingSettin
               availableItems={aparcamientoDisponible}
               onItemsChange={(items) => setBuildingData(prev => ({ ...prev, aparcamiento: items }))}
             />
+          </CardContent>
+        </Card>
+
+        {/* Imágenes del Edificio */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Imágenes del Edificio</CardTitle>
+            <CardDescription>Gestiona la imagen principal y las imágenes secundarias del edificio</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {/* Imagen principal */}
+            <div>
+              <Label htmlFor="main-image">Imagen Principal</Label>
+              {mainImagePreview ? (
+                <div className="mt-4 flex justify-center relative group">
+                  <img src={mainImagePreview} alt="Preview" className="w-32 h-32 object-cover rounded border" />
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="sm"
+                    className="absolute -top-2 -right-2 h-6 w-6 rounded-full p-0"
+                    onClick={handleRemoveMainImage}
+                  >
+                    <X className="h-3 w-3" />
+                  </Button>
+                </div>
+              ) : (
+                <div
+                  ref={mainDropRef}
+                  className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${isMainDragActive ? 'border-blue-400 bg-blue-50' : 'border-gray-300'}`}
+                  onDrop={handleMainDrop}
+                  onDragOver={handleMainDragOver}
+                  onDragLeave={handleMainDragLeave}
+                >
+                  <Settings className="h-8 w-8 mx-auto text-gray-400 mb-2" />
+                  <p className="text-sm text-gray-600 mb-2">Arrastra la imagen principal aquí o</p>
+                  <Label htmlFor="main-image" className="cursor-pointer">
+                    <Button variant="outline" size="sm" asChild>
+                      <span>Seleccionar imagen principal</span>
+                    </Button>
+                  </Label>
+                  <Input
+                    id="main-image"
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleMainImageUpload}
+                  />
+                </div>
+              )}
+            </div>
+            {/* Imágenes secundarias */}
+            <div>
+              <Label htmlFor="secondary-images">Imágenes Secundarias</Label>
+              {secondaryImagePreviews.length > 0 && (
+                <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-2">
+                  {secondaryImagePreviews.map((preview, index) => (
+                    <div key={index} className="relative group">
+                      <img src={preview} alt={`Preview ${index + 1}`} className="w-24 h-24 object-cover rounded border" />
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="sm"
+                        className="absolute -top-2 -right-2 h-6 w-6 rounded-full p-0"
+                        onClick={() => handleRemoveSecondaryImage(index)}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <div
+                ref={secondaryDropRef}
+                className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors mt-4 ${isSecondaryDragActive ? 'border-blue-400 bg-blue-50' : 'border-gray-300'}`}
+                onDrop={handleSecondaryDrop}
+                onDragOver={handleSecondaryDragOver}
+                onDragLeave={handleSecondaryDragLeave}
+              >
+                <Settings className="h-8 w-8 mx-auto text-gray-400 mb-2" />
+                <p className="text-sm text-gray-600 mb-2">Arrastra imágenes aquí o</p>
+                <Label htmlFor="secondary-images" className="cursor-pointer">
+                  <Button variant="outline" size="sm" asChild>
+                    <span>Seleccionar imágenes</span>
+                  </Button>
+                </Label>
+                <Input
+                  id="secondary-images"
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  className="hidden"
+                  onChange={handleSecondaryImageUpload}
+                />
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>
