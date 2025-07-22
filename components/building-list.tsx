@@ -300,7 +300,7 @@ export function BuildingList({ buildings, onSelectBuilding, onBuildingCreated, o
                       <Button 
                         size="sm" 
                         variant="outline"
-                        onClick={() => onSelectBuilding(building.id, 'configuracion')}
+                        onClick={() => onSelectBuilding(building.id, 'settings')}
                         className="hover:bg-orange-50 hover:text-orange-600 hover:border-orange-200"
                         title="Configurar edificio"
                       >
