@@ -15,12 +15,10 @@ export default function EdificiosZonaBuscador({ edificios }: { edificios: any[] 
 
   return (
     <>
-      <div className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Edificios en la zona</h1>
-          <p className="text-gray-600">Descubre todos los edificios disponibles y encuentra más opciones que se adaptan a ti.</p>
-        </div>
-        <div className="relative w-full sm:w-80">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">Edificios en la zona</h1>
+        <p className="text-gray-600">Descubre todos los edificios disponibles y encuentra más opciones que se adaptan a ti.</p>
+        <div className="relative w-full mt-4">
           <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
             <Search className="h-5 w-5" />
           </span>
