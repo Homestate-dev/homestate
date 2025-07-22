@@ -4,7 +4,7 @@ import { useState } from "react"
 import Link from "next/link"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { MapPin, Users } from "lucide-react"
+import { MapPin, Users, Search } from "lucide-react"
 
 export default function EdificiosZonaBuscador({ edificios }: { edificios: any[] }) {
   const [searchTerm, setSearchTerm] = useState("")
@@ -20,13 +20,18 @@ export default function EdificiosZonaBuscador({ edificios }: { edificios: any[] 
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Edificios en la zona</h1>
           <p className="text-gray-600">Descubre todos los edificios disponibles y encuentra más opciones que se adaptan a ti.</p>
         </div>
-        <input
-          type="text"
-          placeholder="Buscar por nombre o dirección..."
-          value={searchTerm}
-          onChange={e => setSearchTerm(e.target.value)}
-          className="border border-gray-300 rounded-md px-3 py-2 w-full sm:w-80 focus:outline-none focus:ring-2 focus:ring-orange-500"
-        />
+        <div className="relative w-full sm:w-80">
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+            <Search className="h-5 w-5" />
+          </span>
+          <input
+            type="text"
+            placeholder="Buscar edificios por nombre o dirección..."
+            value={searchTerm}
+            onChange={e => setSearchTerm(e.target.value)}
+            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm pl-10"
+          />
+        </div>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredEdificios.map((edificio: any) => (
