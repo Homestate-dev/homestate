@@ -180,15 +180,71 @@ export function BuildingSettings({ building, onBuildingDeleted }: BuildingSettin
     setIsSecondaryDragActive(false)
   }
 
+  // Agregar función para subir imágenes igual que en create-building-dialog
+  const uploadImages = async (buildingPermalink: string) => {
+    const images: { main?: string; secondary: string[] } = { secondary: [] }
+    try {
+      // Subir imagen principal si hay nueva
+      if (mainImageFile) {
+        const mainFormData = new FormData()
+        mainFormData.append('image', mainImageFile)
+        mainFormData.append('path', `edificios/${buildingPermalink}/principal.jpg`)
+        const mainResponse = await fetch('/api/upload-image', {
+          method: 'POST',
+          body: mainFormData,
+        })
+        if (mainResponse.ok) {
+          const mainData = await mainResponse.json()
+          images.main = mainData.url
+        }
+      } else if (mainImagePreview) {
+        images.main = mainImagePreview
+      } else {
+        images.main = ''
+      }
+      // Subir imágenes secundarias nuevas
+      for (let i = 0; i < secondaryImageFiles.length; i++) {
+        const formData = new FormData()
+        formData.append('image', secondaryImageFiles[i])
+        formData.append('path', `edificios/${buildingPermalink}/secundaria_${Date.now()}_${i + 1}.jpg`)
+        const response = await fetch('/api/upload-image', {
+          method: 'POST',
+          body: formData,
+        })
+        if (response.ok) {
+          const data = await response.json()
+          images.secondary.push(data.url)
+        }
+      }
+      // Mantener las imágenes secundarias existentes
+      if (secondaryImagePreviews.length > secondaryImageFiles.length) {
+        // Solo las que no son previews de archivos nuevos
+        const existing = secondaryImagePreviews.slice(0, secondaryImagePreviews.length - secondaryImageFiles.length)
+        images.secondary = [...existing, ...images.secondary]
+      }
+      return images
+    } catch (error) {
+      console.error('Error uploading images:', error)
+      throw error
+    }
+  }
+
+  // Modificar handleSave para subir imágenes antes de guardar
   const handleSave = async () => {
     if (!user) {
       toast.error("No estás autenticado")
       return
     }
-
     setIsSaving(true)
-
     try {
+      let images = {
+        main: mainImagePreview,
+        secondary: secondaryImagePreviews
+      }
+      // Subir imágenes nuevas si hay
+      if (mainImageFile || secondaryImageFiles.length > 0) {
+        images = await uploadImages(buildingData.permalink)
+      }
       const response = await fetch(`/api/buildings/by-id/${building.id}`, {
         method: 'PUT',
         headers: {
@@ -196,21 +252,19 @@ export function BuildingSettings({ building, onBuildingDeleted }: BuildingSettin
         },
         body: JSON.stringify({
           ...buildingData,
+          url_imagen_principal: images.main,
+          imagenes_secundarias: images.secondary,
           currentUserUid: user.uid
         })
       })
-
       const data = await response.json()
-
       if (!response.ok) {
         throw new Error(data.error || 'Error al guardar los cambios')
       }
-
       setHasChanges(false)
       toast.success("Cambios guardados exitosamente", {
         description: `Los datos de ${building.nombre} han sido actualizados.`
       })
-
     } catch (error: any) {
       console.error('Error al guardar:', error)
       toast.error("Error al guardar", {
