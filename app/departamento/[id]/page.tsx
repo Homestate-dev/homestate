@@ -199,10 +199,26 @@ export default async function DepartamentoPage({ params }: PageProps) {
                       <Bath className="h-6 w-6 text-orange-600 mb-2" />
                       <span className="text-sm font-medium">{safeDepartamento.cantidad_banos || 1} Baño{safeDepartamento.cantidad_banos > 1 ? 's' : ''}</span>
                     </div>
-                    <div className="flex flex-col items-center">
-                      <Maximize className="h-6 w-6 text-orange-600 mb-2" />
-                      <span className="text-sm font-medium">{safeDepartamento.area_total} m²</span>
-                    </div>
+                    {safeDepartamento.area_cubierta && (
+                      <div className="flex flex-col items-center">
+                        <Maximize className="h-6 w-6 text-orange-600 mb-2" />
+                        <span className="text-sm font-medium">{safeDepartamento.area_cubierta} m²</span>
+                        <span className="text-xs text-gray-500">Cubierta</span>
+                      </div>
+                    )}
+                    {safeDepartamento.area_descubierta && (
+                      <div className="flex flex-col items-center">
+                        <Maximize className="h-6 w-6 text-orange-600 mb-2" />
+                        <span className="text-sm font-medium">{safeDepartamento.area_descubierta} m²</span>
+                        <span className="text-xs text-gray-500">Descubierta</span>
+                      </div>
+                    )}
+                    {!safeDepartamento.area_cubierta && !safeDepartamento.area_descubierta && (
+                      <div className="flex flex-col items-center">
+                        <Maximize className="h-6 w-6 text-orange-600 mb-2" />
+                        <span className="text-sm font-medium">{safeDepartamento.area_total} m²</span>
+                      </div>
+                    )}
                     {safeDepartamento.tiene_bodega && (
                       <div className="flex flex-col items-center">
                         <Package className="h-6 w-6 text-orange-600 mb-2" />
