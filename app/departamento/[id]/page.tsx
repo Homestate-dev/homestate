@@ -333,7 +333,7 @@ export default async function DepartamentoPage({ params }: PageProps) {
                 <p className="text-gray-700 mt-1">Descubre más opciones en otros edificios.</p>
               </div>
               <Link href="/edificios-en-la-zona">
-                <Button className="bg-orange-600 hover:bg-orange-700 text-white mt-2 md:mt-0">Ver otros edificios en la zona</Button>
+                <Button className="bg-orange-600 hover:bg-orange-700 text-white mt-2 md:mt-0">Ver otros departamentos cerca de ti</Button>
               </Link>
             </div>
           )}
