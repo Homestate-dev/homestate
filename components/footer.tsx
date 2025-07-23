@@ -35,18 +35,8 @@ export function Footer() {
             <h3 className="font-semibold text-gray-900 mb-4">Enlaces rápidos</h3>
             <ul className="space-y-2">
               <li>
-                <Link href="#" className="text-gray-600 hover:text-orange-600">
-                  Inicio
-                </Link>
-              </li>
-              <li>
-                <Link href="#" className="text-gray-600 hover:text-orange-600">
-                  Edificios
-                </Link>
-              </li>
-              <li>
-                <Link href="#" className="text-gray-600 hover:text-orange-600">
-                  Departamentos
+                <Link href="/edificios-en-la-zona" className="text-gray-600 hover:text-orange-600">
+                  Edificios y Departamentos
                 </Link>
               </li>
               <li>
