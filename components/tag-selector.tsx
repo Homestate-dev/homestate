@@ -163,7 +163,7 @@ export function TagSelector({
                 </SelectItem>
               ))}
               {allowCustom && (
-                <SelectItem value="custom">
+                <SelectItem value="custom" className="bg-orange-50 hover:bg-orange-100 text-orange-700 font-medium">
                   + Agregar personalizado
                 </SelectItem>
               )}
@@ -192,6 +192,7 @@ export function TagSelector({
                 onClick={handleCustomAdd}
                 disabled={!customValue.trim()}
                 size="sm"
+                className="bg-orange-100 hover:bg-orange-200 text-orange-700 border-orange-200"
               >
                 <Plus className="h-4 w-4" />
               </Button>
@@ -213,6 +214,7 @@ export function TagSelector({
               onClick={() => setShowCustomInput(true)}
               disabled={selectedValue === ""}
               size="sm"
+              className="bg-orange-100 hover:bg-orange-200 text-orange-700 border-orange-200"
             >
               <Plus className="h-4 w-4" />
             </Button>
