@@ -13,11 +13,14 @@ interface Department {
   numero: string
   nombre: string
   piso: number
-  area: number
+  area_total: number
+  area_cubierta?: number
+  area_descubierta?: number
+  cantidad_banos?: number
   valor_arriendo: number | null
   valor_venta: number | null
-  alicuota: number | null
-  incluye_alicuota: boolean | null
+  alicuota?: number
+  incluye_alicuota?: boolean
   disponible: boolean
   amueblado: boolean
   cantidad_habitaciones: string
@@ -32,6 +35,9 @@ interface Department {
   tiene_cocina_con_horno_y_anafe: boolean
   tiene_muebles_bajo_mesada: boolean
   tiene_desayunador_madera: boolean
+  tiene_bodega?: boolean
+  ambientes_y_adicionales?: string[]
+  videos_url?: string[]
   imagenes: string[]
 }
 
@@ -201,11 +207,15 @@ export function DepartmentCard({ department }: DepartmentCardProps) {
             </div>
             <div className="flex flex-col items-center">
               <Bath className="h-4 w-4 text-orange-600 mb-1" />
-              <span className="text-xs">{department.tiene_bano_completo ? "1 Baño" : "Sin baño"}</span>
+              <span className="text-xs">
+                {department.cantidad_banos && department.cantidad_banos > 0 
+                  ? `${department.cantidad_banos} Baño${department.cantidad_banos > 1 ? 's' : ''}` 
+                  : "Sin baño"}
+              </span>
             </div>
             <div className="flex flex-col items-center">
               <Maximize className="h-4 w-4 text-orange-600 mb-1" />
-              <span className="text-xs">{department.area} m²</span>
+              <span className="text-xs">{department.area_total} m²</span>
             </div>
           </div>
         </CardContent>

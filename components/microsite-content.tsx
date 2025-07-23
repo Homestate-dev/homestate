@@ -24,9 +24,14 @@ interface Department {
   numero: string
   nombre: string
   piso: number
-  area: number
+  area_total: number
+  area_cubierta?: number
+  area_descubierta?: number
+  cantidad_banos?: number
   valor_arriendo: number | null
   valor_venta: number | null
+  alicuota?: number
+  incluye_alicuota?: boolean
   disponible: boolean
   amueblado: boolean
   cantidad_habitaciones: string
@@ -42,6 +47,9 @@ interface Department {
   tiene_cocina_con_horno_y_anafe: boolean
   tiene_muebles_bajo_mesada: boolean
   tiene_desayunador_madera: boolean
+  tiene_bodega?: boolean
+  ambientes_y_adicionales?: string[]
+  videos_url?: string[]
   imagenes: string[]
 }
 
@@ -235,7 +243,7 @@ export function MicrositeContent({ building, departments }: MicrositeContentProp
 
     // Filtrar por área
     filtered = filtered.filter(dept => {
-      return dept.area >= filters.areaRange[0] && dept.area <= filters.areaRange[1]
+      return dept.area_total >= filters.areaRange[0] && dept.area_total <= filters.areaRange[1]
     })
 
     // Filtrar por características
@@ -347,7 +355,7 @@ export function MicrositeContent({ building, departments }: MicrositeContentProp
           {/* Filtros */}
           <div className="bg-white rounded-lg shadow-sm mb-8 p-6">
             <MicrositeFilterBar 
-              departments={departments}
+              departmentsCount={departments.length}
               onFiltersChange={applyFilters}
             />
           </div>
