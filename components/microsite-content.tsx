@@ -200,8 +200,25 @@ export function MicrositeContent({ building, departments }: MicrositeContentProp
     return buildingImagesRef.current
   })()
 
+  // Función para detectar si los filtros están limpios (valores por defecto)
+  const areFiltersClean = (filters: FilterState) => {
+    return (
+      filters.tipo === "todos" &&
+      filters.habitaciones === "todas" &&
+      filters.estado === "todos" &&
+      filters.idealPara === "todos" &&
+      filters.priceRange[0] === 0 && filters.priceRange[1] === 500000 &&
+      filters.rentRange[0] === 0 && filters.rentRange[1] === 5000 &&
+      filters.areaRange[0] === 0 && filters.areaRange[1] === 200
+    )
+  }
+
   // Función para aplicar filtros
   const applyFilters = (filters: FilterState) => {
+    console.log('🔍 Aplicando filtros:', filters)
+    console.log('📊 Departamentos disponibles antes de filtrar:', validDepartments.filter(dept => dept.disponible).length)
+    console.log('🧹 Filtros están limpios:', areFiltersClean(filters))
+    
     let filtered = [...validDepartments].filter(dept => dept.disponible)
 
     // Filtrar por tipo de operación
@@ -235,23 +252,48 @@ export function MicrositeContent({ building, departments }: MicrositeContentProp
       filtered = filtered.filter(dept => dept.ideal_para === filters.idealPara)
     }
 
-    // Filtrar por precio de venta
-    filtered = filtered.filter(dept => {
-      const precioVenta = dept.valor_venta || 0
-      return precioVenta >= filters.priceRange[0] && precioVenta <= filters.priceRange[1]
-    })
+    // Solo aplicar filtros de rango si los filtros no están limpios
+    if (!areFiltersClean(filters)) {
+      // Filtrar por precio de venta (solo si el usuario ha modificado el rango)
+      const isPriceRangeModified = filters.priceRange[0] !== 0 || filters.priceRange[1] !== 500000
+      console.log('💰 Filtro precio venta modificado:', isPriceRangeModified, 'Rango:', filters.priceRange)
+      if (isPriceRangeModified) {
+        const beforeCount = filtered.length
+        filtered = filtered.filter(dept => {
+          const precioVenta = dept.valor_venta || 0
+          return precioVenta >= filters.priceRange[0] && precioVenta <= filters.priceRange[1]
+        })
+        console.log('💰 Departamentos después filtro venta:', filtered.length, 'de', beforeCount)
+      }
 
-    // Filtrar por precio de arriendo
-    filtered = filtered.filter(dept => {
-      const precioArriendo = dept.valor_arriendo || 0
-      return precioArriendo >= filters.rentRange[0] && precioArriendo <= filters.rentRange[1]
-    })
+      // Filtrar por precio de arriendo (solo si el usuario ha modificado el rango)
+      const isRentRangeModified = filters.rentRange[0] !== 0 || filters.rentRange[1] !== 5000
+      console.log('🏠 Filtro precio arriendo modificado:', isRentRangeModified, 'Rango:', filters.rentRange)
+      if (isRentRangeModified) {
+        const beforeCount = filtered.length
+        filtered = filtered.filter(dept => {
+          const precioArriendo = dept.valor_arriendo || 0
+          return precioArriendo >= filters.rentRange[0] && precioArriendo <= filters.rentRange[1]
+        })
+        console.log('🏠 Departamentos después filtro arriendo:', filtered.length, 'de', beforeCount)
+      }
 
-    // Filtrar por área
-    filtered = filtered.filter(dept => {
-      return dept.area_total >= filters.areaRange[0] && dept.area_total <= filters.areaRange[1]
-    })
+      // Filtrar por área (solo si el usuario ha modificado el rango)
+      const isAreaRangeModified = filters.areaRange[0] !== 0 || filters.areaRange[1] !== 200
+      console.log('📏 Filtro área modificado:', isAreaRangeModified, 'Rango:', filters.areaRange)
+      if (isAreaRangeModified) {
+        const beforeCount = filtered.length
+        filtered = filtered.filter(dept => {
+          return dept.area_total >= filters.areaRange[0] && dept.area_total <= filters.areaRange[1]
+        })
+        console.log('📏 Departamentos después filtro área:', filtered.length, 'de', beforeCount)
+      }
+    } else {
+      console.log('🧹 Filtros limpios - no aplicando filtros de rango')
+    }
 
+    console.log('✅ Departamentos después del filtrado:', filtered.length)
+    console.log('📋 IDs de departamentos filtrados:', filtered.map(d => d.id))
     setFilteredDepartments(filtered)
   }
 
