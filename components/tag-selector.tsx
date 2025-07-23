@@ -1,10 +1,11 @@
 "use client"
 
 import { useState } from "react"
-import { X, Plus, ChevronDown } from "lucide-react"
+import { X, Plus, ChevronDown, AlertCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 import {
   Select,
   SelectContent,
@@ -38,13 +39,52 @@ export function TagSelector({
   const [selectedValue, setSelectedValue] = useState("")
   const [customValue, setCustomValue] = useState("")
   const [showCustomInput, setShowCustomInput] = useState(false)
+  const [error, setError] = useState("")
+
+  // Función para validar URLs de YouTube
+  const validateYouTubeUrl = (url: string): { isValid: boolean; isShort: boolean; message: string } => {
+    // Detectar YouTube Shorts
+    if (url.includes('youtube.com/shorts/') || url.includes('youtu.be/') && url.includes('/shorts/')) {
+      return {
+        isValid: false,
+        isShort: true,
+        message: "No se permiten YouTube Shorts. Solo se aceptan videos normales de YouTube."
+      }
+    }
+    
+    // Validar formato de URL de YouTube normal
+    const youtubeRegex = /^(https?:\/\/)?(www\.)?(youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})(\S*)?$/
+    if (!youtubeRegex.test(url)) {
+      return {
+        isValid: false,
+        isShort: false,
+        message: "URL de YouTube inválida. Use el formato: https://www.youtube.com/watch?v=VIDEO_ID"
+      }
+    }
+    
+    return {
+      isValid: true,
+      isShort: false,
+      message: ""
+    }
+  }
 
   const handleAddItem = (value: string) => {
     if (value && !safeSelectedItems.includes(value)) {
+      // Validar URL de YouTube si el placeholder indica que es para videos
+      if (placeholder.toLowerCase().includes('youtube') || placeholder.toLowerCase().includes('video')) {
+        const validation = validateYouTubeUrl(value)
+        if (!validation.isValid) {
+          setError(validation.message)
+          return
+        }
+      }
+      
       onItemsChange([...safeSelectedItems, value])
       setSelectedValue("")
       setCustomValue("")
       setShowCustomInput(false)
+      setError("") // Limpiar error si la validación pasa
     }
   }
 
@@ -65,6 +105,15 @@ export function TagSelector({
   return (
     <div className="space-y-3">
       <label className="text-base font-semibold">{label}</label>
+      
+      {/* Mostrar error si existe */}
+      {error && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+      
       <div className="space-y-3 mt-2">
         {/* Tags seleccionados */}
         {safeSelectedItems.length > 0 && (
@@ -127,7 +176,10 @@ export function TagSelector({
               <Input
                 placeholder="Escribir personalizado..."
                 value={customValue}
-                onChange={(e) => setCustomValue(e.target.value)}
+                onChange={(e) => {
+                  setCustomValue(e.target.value)
+                  setError("") // Limpiar error cuando el usuario escribe
+                }}
                 onKeyPress={(e) => {
                   if (e.key === 'Enter') {
                     e.preventDefault()

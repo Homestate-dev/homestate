@@ -84,26 +84,13 @@ export function ApartmentManagement({ buildingId, buildingName, buildingPermalin
 
   // Opciones predefinidas para ambientes y adicionales
   const ambientesYAdicionalesDisponibles = [
-    "Living comedor",
-    "Cocina separada",
-    "Antebano",
-    "Baño completo",
     "Aire acondicionado",
-    "Placares",
-    "Cocina con horno y anafe",
-    "Muebles bajo mesada",
-    "Desayunador de madera",
-    "Amueblado",
-    "Terraza",
     "Balcón",
-    "Vista al mar",
     "Vista a la ciudad",
     "Closet walk-in",
-    "Baño de servicio",
     "Lavandería",
     "Estudio",
     "Sala de estar",
-    "Comedor independiente"
   ]
 
   const [newApartment, setNewApartment] = useState({
