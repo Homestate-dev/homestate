@@ -22,15 +22,8 @@ interface FilterState {
   estado: string
   idealPara: string
   priceRange: number[]
+  rentRange: number[]
   areaRange: number[]
-  characteristics: {
-    amueblado: boolean
-    livingComedor: boolean
-    cocinaSeparada: boolean
-    banoCompleto: boolean
-    aireAcondicionado: boolean
-    placares: boolean
-  }
 }
 
 interface MicrositeFilterBarProps {
@@ -45,15 +38,8 @@ export function MicrositeFilterBar({ onFiltersChange, departmentsCount }: Micros
     estado: "todos",
     idealPara: "todos",
     priceRange: [0, 500000],
-    areaRange: [0, 200],
-    characteristics: {
-      amueblado: false,
-      livingComedor: false,
-      cocinaSeparada: false,
-      banoCompleto: false,
-      aireAcondicionado: false,
-      placares: false
-    }
+    rentRange: [0, 5000],
+    areaRange: [0, 200]
   })
 
   const [isOpen, setIsOpen] = useState(false)
@@ -64,12 +50,7 @@ export function MicrositeFilterBar({ onFiltersChange, departmentsCount }: Micros
     onFiltersChange(newFilters)
   }
 
-  const handleCharacteristicChange = (key: keyof FilterState['characteristics'], checked: boolean) => {
-    const newCharacteristics = { ...filters.characteristics, [key]: checked }
-    const newFilters = { ...filters, characteristics: newCharacteristics }
-    setFilters(newFilters)
-    onFiltersChange(newFilters)
-  }
+
 
   const resetFilters = () => {
     const defaultFilters: FilterState = {
@@ -78,15 +59,8 @@ export function MicrositeFilterBar({ onFiltersChange, departmentsCount }: Micros
       estado: "todos",
       idealPara: "todos",
       priceRange: [0, 500000],
-      areaRange: [0, 200],
-      characteristics: {
-        amueblado: false,
-        livingComedor: false,
-        cocinaSeparada: false,
-        banoCompleto: false,
-        aireAcondicionado: false,
-        placares: false
-      }
+      rentRange: [0, 5000],
+      areaRange: [0, 200]
     }
     setFilters(defaultFilters)
     onFiltersChange(defaultFilters)
@@ -96,8 +70,7 @@ export function MicrositeFilterBar({ onFiltersChange, departmentsCount }: Micros
     filters.tipo !== "todos" || 
     filters.habitaciones !== "todas" || 
     filters.estado !== "todos" || 
-    filters.idealPara !== "todos" ||
-    Object.values(filters.characteristics).some(val => val)
+    filters.idealPara !== "todos"
 
   return (
     <div className="flex items-center justify-between mb-6">
@@ -193,16 +166,29 @@ export function MicrositeFilterBar({ onFiltersChange, departmentsCount }: Micros
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
               <div>
                 <label className="text-sm font-medium text-gray-700 mb-3 block">
-                  Rango de precio (USD): ${filters.priceRange[0].toLocaleString()} - ${filters.priceRange[1].toLocaleString()}
+                  Rango de precio venta (USD): ${filters.priceRange[0].toLocaleString()} - ${filters.priceRange[1].toLocaleString()}
                 </label>
                 <Slider
                   value={filters.priceRange}
                   onValueChange={(value) => handleFilterChange('priceRange', value)}
                   max={500000}
                   step={10000}
+                  className="py-2"
+                />
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-gray-700 mb-3 block">
+                  Rango de arriendo (USD/mes): ${filters.rentRange[0].toLocaleString()} - ${filters.rentRange[1].toLocaleString()}
+                </label>
+                <Slider
+                  value={filters.rentRange}
+                  onValueChange={(value) => handleFilterChange('rentRange', value)}
+                  max={10000}
+                  step={100}
                   className="py-2"
                 />
               </div>
@@ -221,65 +207,7 @@ export function MicrositeFilterBar({ onFiltersChange, departmentsCount }: Micros
               </div>
             </div>
 
-            <div className="mt-6">
-              <h4 className="text-sm font-medium text-gray-700 mb-3">Características</h4>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                <label className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    checked={filters.characteristics.amueblado}
-                    onChange={(e) => handleCharacteristicChange('amueblado', e.target.checked)}
-                    className="rounded"
-                  />
-                  <span className="text-sm">Amueblado</span>
-                </label>
-                <label className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    checked={filters.characteristics.livingComedor}
-                    onChange={(e) => handleCharacteristicChange('livingComedor', e.target.checked)}
-                    className="rounded"
-                  />
-                  <span className="text-sm">Sala comedor</span>
-                </label>
-                <label className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    checked={filters.characteristics.cocinaSeparada}
-                    onChange={(e) => handleCharacteristicChange('cocinaSeparada', e.target.checked)}
-                    className="rounded"
-                  />
-                  <span className="text-sm">Cocina separada</span>
-                </label>
-                <label className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    checked={filters.characteristics.banoCompleto}
-                    onChange={(e) => handleCharacteristicChange('banoCompleto', e.target.checked)}
-                    className="rounded"
-                  />
-                  <span className="text-sm">Baño completo</span>
-                </label>
-                <label className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    checked={filters.characteristics.aireAcondicionado}
-                    onChange={(e) => handleCharacteristicChange('aireAcondicionado', e.target.checked)}
-                    className="rounded"
-                  />
-                  <span className="text-sm">Aire acondicionado</span>
-                </label>
-                <label className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    checked={filters.characteristics.placares}
-                    onChange={(e) => handleCharacteristicChange('placares', e.target.checked)}
-                    className="rounded"
-                  />
-                  <span className="text-sm">Placares</span>
-                </label>
-              </div>
-            </div>
+
 
             <div className="mt-6 flex justify-between">
               <Button 

@@ -235,36 +235,22 @@ export function MicrositeContent({ building, departments }: MicrositeContentProp
       filtered = filtered.filter(dept => dept.ideal_para === filters.idealPara)
     }
 
-    // Filtrar por precio
+    // Filtrar por precio de venta
     filtered = filtered.filter(dept => {
-      const precio = dept.valor_venta || dept.valor_arriendo || 0
-      return precio >= filters.priceRange[0] && precio <= filters.priceRange[1]
+      const precioVenta = dept.valor_venta || 0
+      return precioVenta >= filters.priceRange[0] && precioVenta <= filters.priceRange[1]
+    })
+
+    // Filtrar por precio de arriendo
+    filtered = filtered.filter(dept => {
+      const precioArriendo = dept.valor_arriendo || 0
+      return precioArriendo >= filters.rentRange[0] && precioArriendo <= filters.rentRange[1]
     })
 
     // Filtrar por área
     filtered = filtered.filter(dept => {
       return dept.area_total >= filters.areaRange[0] && dept.area_total <= filters.areaRange[1]
     })
-
-    // Filtrar por características
-    if (filters.characteristics.amueblado) {
-      filtered = filtered.filter(dept => dept.amueblado)
-    }
-    if (filters.characteristics.livingComedor) {
-      filtered = filtered.filter(dept => dept.tiene_living_comedor)
-    }
-    if (filters.characteristics.cocinaSeparada) {
-      filtered = filtered.filter(dept => dept.tiene_cocina_separada)
-    }
-    if (filters.characteristics.banoCompleto) {
-      filtered = filtered.filter(dept => dept.tiene_bano_completo)
-    }
-    if (filters.characteristics.aireAcondicionado) {
-      filtered = filtered.filter(dept => dept.tiene_aire_acondicionado)
-    }
-    if (filters.characteristics.placares) {
-      filtered = filtered.filter(dept => dept.tiene_placares)
-    }
 
     setFilteredDepartments(filtered)
   }
@@ -384,16 +370,9 @@ export function MicrositeContent({ building, departments }: MicrositeContentProp
                     habitaciones: "todas",
                     estado: "todos",
                     idealPara: "todos",
-                    priceRange: [0, 10000000],
-                    areaRange: [0, 500],
-                    characteristics: {
-                      amueblado: false,
-                      livingComedor: false,
-                      cocinaSeparada: false,
-                      banoCompleto: false,
-                      aireAcondicionado: false,
-                      placares: false
-                    }
+                    priceRange: [0, 500000],
+                    rentRange: [0, 5000],
+                    areaRange: [0, 200]
                   })}
                 >
                   Limpiar filtros
@@ -405,7 +384,6 @@ export function MicrositeContent({ building, departments }: MicrositeContentProp
                   <DepartmentCard
                     key={department.id}
                     department={department}
-                    buildingName={building.nombre}
                   />
                 ))}
               </div>
