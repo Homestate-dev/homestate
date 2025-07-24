@@ -138,9 +138,28 @@ export async function GET(request: Request) {
     
     const result = await query(sql, queryParams)
 
+    // Sanitizar los datos para evitar errores en el frontend
+    const safeData = result.rows.map(row => {
+      const safeRow: any = {}
+      
+      // Copiar todas las propiedades y asegurar que no sean undefined
+      Object.keys(row).forEach(key => {
+        const value = row[key]
+        if (value === null || value === undefined) {
+          safeRow[key] = key.includes('fecha') ? null : (key.includes('valor') || key.includes('precio') || key.includes('comision') ? 0 : '')
+        } else if (typeof value === 'object' && value instanceof Date) {
+          safeRow[key] = value.toISOString()
+        } else {
+          safeRow[key] = value
+        }
+      })
+      
+      return safeRow
+    })
+
     return NextResponse.json({
       success: true,
-      data: result.rows
+      data: safeData
     })
 
   } catch (error) {
