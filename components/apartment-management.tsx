@@ -314,8 +314,8 @@ export function ApartmentManagement({ buildingId, buildingName, buildingPermalin
       })
 
       // Agregar datos necesarios
-      formData.append('edificio_id', editingDepartment.edificio_id.toString())
-      formData.append('departamento_id', editingDepartment.id.toString())
+      formData.append('edificio_id', (editingDepartment.edificio_id || 0).toString())
+      formData.append('departamento_id', (editingDepartment.id || 0).toString())
       formData.append('departamento_numero', editingDepartment.numero)
       formData.append('currentUserUid', user.uid)
       formData.append('buildingPermalink', buildingPermalink)
@@ -421,7 +421,7 @@ export function ApartmentManagement({ buildingId, buildingName, buildingPermalin
       formData.append('valor_arriendo', newApartment.valor_arriendo)
       formData.append('valor_venta', newApartment.valor_venta)
       formData.append('alicuota', newApartment.alicuota)
-      formData.append('incluye_alicuota', newApartment.incluye_alicuota.toString())
+      formData.append('incluye_alicuota', (newApartment.incluye_alicuota || false).toString())
       formData.append('cantidad_habitaciones', newApartment.cantidad_habitaciones)
       formData.append('tipo', newApartment.tipo)
       formData.append('estado', newApartment.estado)
@@ -434,7 +434,7 @@ export function ApartmentManagement({ buildingId, buildingName, buildingPermalin
       formData.append('ambientes_y_adicionales', JSON.stringify(newApartment.ambientes_y_adicionales))
       
       // Agregar características adicionales
-      formData.append('tiene_bodega', newApartment.tiene_bodega.toString())
+      formData.append('tiene_bodega', (newApartment.tiene_bodega || false).toString())
       
       // Agregar videos
       formData.append('videos_url', JSON.stringify(newApartment.videos_url))
