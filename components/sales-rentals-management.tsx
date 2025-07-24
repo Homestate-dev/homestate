@@ -13,6 +13,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Textarea } from "@/components/ui/textarea"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { toast } from "sonner"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 import { 
   Plus, 
   Search, 
@@ -28,7 +29,8 @@ import {
   Edit,
   Trash2,
   Download,
-  BarChart3
+  BarChart3,
+  AlertTriangle
 } from "lucide-react"
 import { useIsMobile } from "@/hooks/use-mobile"
 
@@ -128,6 +130,10 @@ export function SalesRentalsManagement() {
     tipo_transaccion: "venta" as "venta" | "arriendo",
     valor_transaccion: "",
     comision_porcentaje: "3.0",
+    comision_valor: "",
+    porcentaje_homestate: "60",
+    porcentaje_bienes_raices: "30",
+    porcentaje_admin_edificio: "10",
     fecha_transaccion: new Date().toISOString().split('T')[0],
     fecha_firma_contrato: "",
     cliente_nombre: "",
@@ -149,6 +155,17 @@ export function SalesRentalsManagement() {
     fecha_primer_contacto: "",
     observaciones: ""
   })
+
+  // Valores calculados
+  const [calculatedValues, setCalculatedValues] = useState({
+    valor_comision: 0,
+    valor_homestate: 0,
+    valor_bienes_raices: 0,
+    valor_admin_edificio: 0
+  })
+
+  // Estado para validación de porcentajes
+  const [percentageError, setPercentageError] = useState('')
 
   // Departamentos filtrados por edificio seleccionado
   // Ahora departments ya contiene los departamentos correctos según la selección
@@ -233,12 +250,26 @@ export function SalesRentalsManagement() {
         return
       }
 
+      // Validar porcentajes
+      const totalPorcentajes = parseFloat(formData.porcentaje_homestate) + 
+                              parseFloat(formData.porcentaje_bienes_raices) + 
+                              parseFloat(formData.porcentaje_admin_edificio)
+      
+      if (totalPorcentajes > 100) {
+        toast.error('La suma de los porcentajes no puede exceder el 100%')
+        return
+      }
+
       const response = await fetch('/api/sales-rentals/transactions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...formData,
-          currentUserUid: user.uid
+          currentUserUid: user.uid,
+          // Incluir valores calculados
+          valor_homestate: calculatedValues.valor_homestate,
+          valor_bienes_raices: calculatedValues.valor_bienes_raices,
+          valor_admin_edificio: calculatedValues.valor_admin_edificio
         })
       })
 
@@ -290,6 +321,10 @@ export function SalesRentalsManagement() {
       tipo_transaccion: "venta",
       valor_transaccion: "",
       comision_porcentaje: "3.0",
+      comision_valor: "",
+      porcentaje_homestate: "60",
+      porcentaje_bienes_raices: "30",
+      porcentaje_admin_edificio: "10",
       fecha_transaccion: new Date().toISOString().split('T')[0],
       fecha_firma_contrato: "",
       cliente_nombre: "",
@@ -383,6 +418,59 @@ export function SalesRentalsManagement() {
     }))
   }
 
+  // Función para manejar cambio de tipo de transacción
+  const handleTransactionTypeChange = (value: "venta" | "arriendo") => {
+    setFormData(prev => ({ 
+      ...prev, 
+      tipo_transaccion: value,
+      comision_porcentaje: value === "venta" ? "3.0" : "",
+      comision_valor: value === "arriendo" ? prev.valor_transaccion : ""
+    }))
+  }
+
+  // Función para calcular valores de comisión
+  const calculateCommissionValues = () => {
+    const valorTransaccion = parseFloat(formData.valor_transaccion) || 0
+    const porcentajeHomestate = parseFloat(formData.porcentaje_homestate) || 0
+    const porcentajeBienesRaices = parseFloat(formData.porcentaje_bienes_raices) || 0
+    const porcentajeAdminEdificio = parseFloat(formData.porcentaje_admin_edificio) || 0
+
+    // Validar que la suma de porcentajes no exceda 100%
+    const totalPorcentajes = porcentajeHomestate + porcentajeBienesRaices + porcentajeAdminEdificio
+    if (totalPorcentajes > 100) {
+      setPercentageError('La suma de los porcentajes no puede exceder el 100%')
+    } else {
+      setPercentageError('')
+    }
+
+    let valorComision = 0
+
+    if (formData.tipo_transaccion === 'venta') {
+      // Para ventas: usar comisión porcentual
+      const comisionPorcentaje = parseFloat(formData.comision_porcentaje) || 0
+      valorComision = (valorTransaccion * comisionPorcentaje) / 100
+    } else if (formData.tipo_transaccion === 'arriendo') {
+      // Para arriendos: usar comisión en valor
+      valorComision = parseFloat(formData.comision_valor) || valorTransaccion
+    }
+
+    const valorHomestate = (valorComision * porcentajeHomestate) / 100
+    const valorBienesRaices = (valorComision * porcentajeBienesRaices) / 100
+    const valorAdminEdificio = (valorComision * porcentajeAdminEdificio) / 100
+
+    setCalculatedValues({
+      valor_comision: valorComision,
+      valor_homestate: valorHomestate,
+      valor_bienes_raices: valorBienesRaices,
+      valor_admin_edificio: valorAdminEdificio
+    })
+  }
+
+  // Calcular valores cuando cambian los inputs relevantes
+  useEffect(() => {
+    calculateCommissionValues()
+  }, [formData.tipo_transaccion, formData.valor_transaccion, formData.comision_porcentaje, formData.comision_valor, formData.porcentaje_homestate, formData.porcentaje_bienes_raices, formData.porcentaje_admin_edificio])
+
   const filteredTransactions = transactions.filter(transaction => {
     const matchesSearch = !searchTerm || 
       transaction.cliente_nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -399,10 +487,10 @@ export function SalesRentalsManagement() {
 
   const getStatusBadge = (status: string) => {
     const statusConfig = {
-      pendiente: { variant: "secondary" as const, text: "Pendiente" },
-      en_proceso: { variant: "default" as const, text: "En Proceso" },
+      pendiente: { variant: "secondary" as const, text: "Pendiente", className: "" },
+      en_proceso: { variant: "default" as const, text: "En Proceso", className: "" },
       completada: { variant: "default" as const, text: "Completada", className: "bg-green-100 text-green-800" },
-      cancelada: { variant: "destructive" as const, text: "Cancelada" }
+      cancelada: { variant: "destructive" as const, text: "Cancelada", className: "" }
     }
     
     const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.pendiente
@@ -691,7 +779,7 @@ export function SalesRentalsManagement() {
                     <Label htmlFor="tipo_transaccion">Tipo de Transacción</Label>
                     <Select 
                       value={formData.tipo_transaccion} 
-                      onValueChange={(value: "venta" | "arriendo") => setFormData(prev => ({ ...prev, tipo_transaccion: value }))}
+                      onValueChange={handleTransactionTypeChange}
                     >
                       <SelectTrigger>
                         <SelectValue />
@@ -823,16 +911,101 @@ export function SalesRentalsManagement() {
                       onChange={(e) => setFormData(prev => ({ ...prev, valor_transaccion: e.target.value }))}
                     />
                   </div>
-                  <div>
-                    <Label htmlFor="comision_porcentaje">Comisión (%)</Label>
-                    <Input
-                      id="comision_porcentaje"
-                      type="number"
-                      step="0.1"
-                      placeholder="3.0"
-                      value={formData.comision_porcentaje}
-                      onChange={(e) => setFormData(prev => ({ ...prev, comision_porcentaje: e.target.value }))}
-                    />
+                  
+                  {/* Campos de comisión según tipo de transacción */}
+                  {formData.tipo_transaccion === 'venta' ? (
+                    <div>
+                      <Label htmlFor="comision_porcentaje">Comisión (%)</Label>
+                      <Input
+                        id="comision_porcentaje"
+                        type="number"
+                        step="0.1"
+                        placeholder="3.0"
+                        value={formData.comision_porcentaje}
+                        onChange={(e) => setFormData(prev => ({ ...prev, comision_porcentaje: e.target.value }))}
+                      />
+                    </div>
+                  ) : (
+                    <div>
+                      <Label htmlFor="comision_valor">Comisión (Valor)</Label>
+                      <Input
+                        id="comision_valor"
+                        type="number"
+                        step="0.01"
+                        value={formData.comision_valor}
+                        onChange={(e) => setFormData(prev => ({ ...prev, comision_valor: e.target.value }))}
+                      />
+                    </div>
+                  )}
+                </div>
+
+                {/* Porcentajes de distribución */}
+                <div className="space-y-4">
+                  <Label className="text-base font-medium">Distribución de Comisiones</Label>
+                  
+                  {percentageError && (
+                    <Alert variant="destructive">
+                      <AlertTriangle className="h-4 w-4" />
+                      <AlertDescription>{percentageError}</AlertDescription>
+                    </Alert>
+                  )}
+
+                  <div className="grid grid-cols-3 gap-4">
+                    <div>
+                      <Label htmlFor="porcentaje_homestate">Homestate (%)</Label>
+                      <Input
+                        id="porcentaje_homestate"
+                        type="number"
+                        step="0.1"
+                        value={formData.porcentaje_homestate}
+                        onChange={(e) => setFormData(prev => ({ ...prev, porcentaje_homestate: e.target.value }))}
+                      />
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="porcentaje_bienes_raices">Bienes Raíces (%)</Label>
+                      <Input
+                        id="porcentaje_bienes_raices"
+                        type="number"
+                        step="0.1"
+                        value={formData.porcentaje_bienes_raices}
+                        onChange={(e) => setFormData(prev => ({ ...prev, porcentaje_bienes_raices: e.target.value }))}
+                      />
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="porcentaje_admin_edificio">Administración (%)</Label>
+                      <Input
+                        id="porcentaje_admin_edificio"
+                        type="number"
+                        step="0.1"
+                        value={formData.porcentaje_admin_edificio}
+                        onChange={(e) => setFormData(prev => ({ ...prev, porcentaje_admin_edificio: e.target.value }))}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Valores calculados */}
+                  <div className="bg-gray-50 p-4 rounded-lg space-y-2">
+                    <h4 className="font-medium text-sm">Valores Calculados</h4>
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <span className="text-gray-600">Comisión Total:</span>
+                        <p className="font-medium">{formatCurrency(calculatedValues.valor_comision)}</p>
+                      </div>
+                      <div>
+                        <span className="text-gray-600">Homestate:</span>
+                        <p className="font-medium">{formatCurrency(calculatedValues.valor_homestate)}</p>
+                      </div>
+                      <div>
+                        <span className="text-gray-600">Bienes Raíces:</span>
+                        <p className="font-medium">{formatCurrency(calculatedValues.valor_bienes_raices)}</p>
+                      </div>
+                      <div>
+                        <span className="text-gray-600">Administración:</span>
+                        <p className="font-medium">{formatCurrency(calculatedValues.valor_admin_edificio)}</p>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
@@ -1113,7 +1286,7 @@ export function SalesRentalsManagement() {
             <Button variant="outline" onClick={() => setShowCreateDialog(false)}>
               Cancelar
             </Button>
-            <Button onClick={handleCreateTransaction} className="bg-green-600 hover:bg-green-700">
+            <Button onClick={handleCreateTransaction} className="bg-green-600 hover:bg-green-700" disabled={!!percentageError}>
               Crear Transacción
             </Button>
           </DialogFooter>

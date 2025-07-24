@@ -961,6 +961,15 @@ export async function createTransaction(transactionData: {
   cliente_telefono?: string
   notas?: string
   creado_por: string
+  // Nuevos campos para comisiones
+  comision_porcentaje?: number
+  comision_valor?: number
+  porcentaje_homestate?: number
+  porcentaje_bienes_raices?: number
+  porcentaje_admin_edificio?: number
+  valor_homestate?: number
+  valor_bienes_raices?: number
+  valor_admin_edificio?: number
 }) {
   // Obtener información del agente para calcular comisión
   const agent = await getAgentById(transactionData.agente_id)
@@ -968,18 +977,37 @@ export async function createTransaction(transactionData: {
     throw new Error('Agente no encontrado')
   }
 
-  const comisionPorcentaje = transactionData.tipo_transaccion === 'venta' 
-    ? agent.comision_ventas 
-    : agent.comision_arriendos
-  
-  const comision_agente = (transactionData.precio_final * comisionPorcentaje) / 100
+  let comisionPorcentaje = 0
+  let comisionValor = 0
+
+  if (transactionData.tipo_transaccion === 'venta') {
+    // Para ventas: usar comisión porcentual
+    comisionPorcentaje = transactionData.comision_porcentaje || agent.comision_ventas
+    comisionValor = (transactionData.precio_final * comisionPorcentaje) / 100
+  } else {
+    // Para arriendos: usar comisión en valor
+    comisionValor = transactionData.comision_valor || transactionData.precio_final
+    comisionPorcentaje = 0 // No se usa para arriendos
+  }
+
+  // Calcular distribución de comisiones
+  const porcentajeHomestate = transactionData.porcentaje_homestate || 0
+  const porcentajeBienesRaices = transactionData.porcentaje_bienes_raices || 0
+  const porcentajeAdminEdificio = transactionData.porcentaje_admin_edificio || 0
+
+  const valorHomestate = (comisionValor * porcentajeHomestate) / 100
+  const valorBienesRaices = (comisionValor * porcentajeBienesRaices) / 100
+  const valorAdminEdificio = (comisionValor * porcentajeAdminEdificio) / 100
 
   const query = `
     INSERT INTO transacciones_departamentos (
       departamento_id, agente_id, tipo_transaccion, precio_final, precio_original,
-      comision_agente, cliente_nombre, cliente_email, cliente_telefono, notas, creado_por
+      comision_agente, comision_porcentaje, comision_valor,
+      porcentaje_homestate, porcentaje_bienes_raices, porcentaje_admin_edificio,
+      valor_homestate, valor_bienes_raices, valor_admin_edificio,
+      cliente_nombre, cliente_email, cliente_telefono, notas, creado_por
     )
-    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)
     RETURNING *
   `
   const values = [
@@ -988,7 +1016,15 @@ export async function createTransaction(transactionData: {
     transactionData.tipo_transaccion,
     transactionData.precio_final,
     transactionData.precio_original || null,
-    comision_agente,
+    comisionValor, // comision_agente (mantener para compatibilidad)
+    comisionPorcentaje,
+    comisionValor,
+    porcentajeHomestate,
+    porcentajeBienesRaices,
+    porcentajeAdminEdificio,
+    valorHomestate,
+    valorBienesRaices,
+    valorAdminEdificio,
     transactionData.cliente_nombre || null,
     transactionData.cliente_email || null,
     transactionData.cliente_telefono || null,
