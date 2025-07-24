@@ -18,39 +18,20 @@ async function checkColumnExists(): Promise<boolean> {
 
 // Helper: verifica si una tabla existe en la BD
 async function tableExists(tableName: string): Promise<boolean> {
-  const res = await query(
-    `SELECT EXISTS (
-       SELECT 1
-       FROM   information_schema.tables
-       WHERE  table_name = $1
-     ) AS exists`,
-    [tableName]
-  )
-  return res.rows[0]?.exists === true
-}
-
-// Helper: inserta registro mínimo en agentes_inmobiliarios si falta (compatibilidad pre-migración)
-async function ensureLegacyAgentRow(agentId: number, currentUserUid: string) {
-  // Continuar solo si la tabla existe
-  if (!(await tableExists('agentes_inmobiliarios'))) return
-
-  // ¿Ya existe el agente en la tabla antigua?
-  const check = await query('SELECT 1 FROM agentes_inmobiliarios WHERE id = $1 LIMIT 1', [agentId])
-  if (check.rows.length > 0) return // ya existe, nada que hacer
-
-  // Obtener datos básicos del administrador
-  const adminRes = await query('SELECT nombre, email FROM administradores WHERE id = $1', [agentId])
-  if (adminRes.rows.length === 0) return // no existe admin; no podemos crear
-
-  const admin = adminRes.rows[0]
-
-  // Insertar fila mínima con todos los campos requeridos. Usamos ON CONFLICT DO NOTHING por si otro proceso la crea primero
-  await query(
-    `INSERT INTO agentes_inmobiliarios (id, nombre, email, especialidad, creado_por, activo)
-     VALUES ($1, $2, $3, $4, $5, true)
-     ON CONFLICT (id) DO NOTHING`,
-    [agentId, admin.nombre, admin.email, 'ambas', currentUserUid]
-  )
+  try {
+    const res = await query(
+      `SELECT EXISTS (
+         SELECT 1
+         FROM   information_schema.tables
+         WHERE  table_name = $1
+       ) AS exists`,
+      [tableName]
+    )
+    return res.rows[0]?.exists === true
+  } catch (error) {
+    console.warn(`Error checking if table ${tableName} exists:`, error)
+    return false
+  }
 }
 
 export async function GET(request: Request) {
@@ -64,6 +45,21 @@ export async function GET(request: Request) {
     const from = searchParams.get('from') || ''
     const to = searchParams.get('to') || ''
 
+    // Verificar qué tabla de transacciones existe
+    const hasTransaccionesDepartamentos = await tableExists('transacciones_departamentos')
+    const hasTransaccionesVentasArriendos = await tableExists('transacciones_ventas_arriendos')
+    
+    if (!hasTransaccionesDepartamentos && !hasTransaccionesVentasArriendos) {
+      return NextResponse.json({
+        success: false,
+        error: 'No se encontró tabla de transacciones'
+      }, { status: 500 })
+    }
+
+    // Usar la tabla que existe
+    const tableName = hasTransaccionesDepartamentos ? 'transacciones_departamentos' : 'transacciones_ventas_arriendos'
+    const tableAlias = hasTransaccionesDepartamentos ? 'td' : 'tv'
+
     let whereConditions = ['1=1']
     let queryParams: any[] = []
     let paramCount = 0
@@ -72,7 +68,7 @@ export async function GET(request: Request) {
     if (search) {
       paramCount++
       whereConditions.push(`(
-        tv.cliente_nombre ILIKE $${paramCount} OR 
+        ${tableAlias}.cliente_nombre ILIKE $${paramCount} OR 
         e.nombre ILIKE $${paramCount} OR 
         d.numero ILIKE $${paramCount} OR 
         a.nombre ILIKE $${paramCount}
@@ -83,21 +79,21 @@ export async function GET(request: Request) {
     // Filtro de tipo
     if (type && type !== 'all') {
       paramCount++
-      whereConditions.push(`tv.tipo_transaccion = $${paramCount}`)
+      whereConditions.push(`${tableAlias}.tipo_transaccion = $${paramCount}`)
       queryParams.push(type)
     }
 
     // Filtro de estado
     if (status && status !== 'all') {
       paramCount++
-      whereConditions.push(`tv.estado = $${paramCount}`)
+      whereConditions.push(`${tableAlias}.estado = $${paramCount}`)
       queryParams.push(status)
     }
 
     // Filtro de agente
     if (agent && agent !== 'all') {
       paramCount++
-      whereConditions.push(`tv.agente_id = $${paramCount}`)
+      whereConditions.push(`${tableAlias}.agente_id = $${paramCount}`)
       queryParams.push(parseInt(agent))
     }
 
@@ -111,13 +107,13 @@ export async function GET(request: Request) {
     // Filtro de fechas
     if (from) {
       paramCount++
-      whereConditions.push(`tv.fecha_transaccion >= $${paramCount}`)
+      whereConditions.push(`${tableAlias}.fecha_transaccion >= $${paramCount}`)
       queryParams.push(from)
     }
 
     if (to) {
       paramCount++
-      whereConditions.push(`tv.fecha_transaccion <= $${paramCount}`)
+      whereConditions.push(`${tableAlias}.fecha_transaccion <= $${paramCount}`)
       queryParams.push(to)
     }
 
@@ -126,18 +122,20 @@ export async function GET(request: Request) {
 
     const sql = `
       SELECT 
-        tv.*,
+        ${tableAlias}.*,
         a.nombre as agente_nombre,
         e.nombre as edificio_nombre,
         d.numero as departamento_numero
-      FROM transacciones_ventas_arriendos tv
-      LEFT JOIN administradores a ON tv.agente_id = a.id ${agentFilter}
-      LEFT JOIN departamentos d ON tv.departamento_id = d.id
+      FROM ${tableName} ${tableAlias}
+      LEFT JOIN administradores a ON ${tableAlias}.agente_id = a.id ${agentFilter}
+      LEFT JOIN departamentos d ON ${tableAlias}.departamento_id = d.id
       LEFT JOIN edificios e ON d.edificio_id = e.id
       WHERE ${whereConditions.join(' AND ')}
-      ORDER BY tv.fecha_registro DESC
+      ORDER BY ${tableAlias}.fecha_registro DESC
     `
 
+    console.log('Ejecutando query de transacciones:', sql, 'con parámetros:', queryParams)
+    
     const result = await query(sql, queryParams)
 
     return NextResponse.json({
@@ -148,7 +146,11 @@ export async function GET(request: Request) {
   } catch (error) {
     console.error('Error al obtener transacciones:', error)
     return NextResponse.json(
-      { success: false, error: 'Error al obtener transacciones' },
+      { 
+        success: false, 
+        error: 'Error al obtener transacciones',
+        details: process.env.NODE_ENV === 'development' ? error : undefined
+      },
       { status: 500 }
     )
   }
@@ -174,12 +176,23 @@ export async function POST(request: Request) {
       )
     }
 
-    // Garantizar compatibilidad con FKs antiguos antes de cualquier inserción
-    await ensureLegacyAgentRow(parseInt(data.agente_id), data.currentUserUid)
+    // Verificar qué tabla de transacciones existe
+    const hasTransaccionesDepartamentos = await tableExists('transacciones_departamentos')
+    const hasTransaccionesVentasArriendos = await tableExists('transacciones_ventas_arriendos')
+    
+    if (!hasTransaccionesDepartamentos && !hasTransaccionesVentasArriendos) {
+      return NextResponse.json({
+        success: false,
+        error: 'No se encontró tabla de transacciones'
+      }, { status: 500 })
+    }
+
+    // Usar la tabla que existe
+    const tableName = hasTransaccionesDepartamentos ? 'transacciones_departamentos' : 'transacciones_ventas_arriendos'
 
     // Verificar que el departamento no tenga una transacción activa del mismo tipo
     const existingTransaction = await query(
-      'SELECT id FROM transacciones_ventas_arriendos WHERE departamento_id = $1 AND tipo_transaccion = $2 AND estado IN ($3, $4)',
+      `SELECT id FROM ${tableName} WHERE departamento_id = $1 AND tipo_transaccion = $2 AND estado IN ($3, $4)`,
       [data.departamento_id, data.tipo_transaccion, 'pendiente', 'en_proceso']
     )
 
@@ -190,45 +203,102 @@ export async function POST(request: Request) {
       )
     }
 
-    const sql = `
-      INSERT INTO transacciones_ventas_arriendos (
-        departamento_id, agente_id, tipo_transaccion, valor_transaccion, 
-        comision_porcentaje, fecha_transaccion, fecha_firma_contrato,
-        cliente_nombre, cliente_email, cliente_telefono, cliente_cedula, cliente_tipo_documento,
-        duracion_contrato_meses, deposito_garantia, valor_administracion,
-        forma_pago, entidad_financiera, valor_credito, valor_inicial,
-        estado, notas, referido_por, canal_captacion, fecha_primer_contacto, observaciones
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25)
-      RETURNING *
-    `
+    // Construir la query según la tabla que existe
+    let sql: string
+    let queryParams: any[]
 
-    const result = await query(sql, [
-      data.departamento_id,
-      data.agente_id,
-      data.tipo_transaccion,
-      data.valor_transaccion,
-      data.comision_porcentaje || 3.0,
-      data.fecha_transaccion,
-      data.fecha_firma_contrato || null,
-      data.cliente_nombre,
-      data.cliente_email || null,
-      data.cliente_telefono || null,
-      data.cliente_cedula || null,
-      data.cliente_tipo_documento || 'CC',
-      data.duracion_contrato_meses || null,
-      data.deposito_garantia || null,
-      data.valor_administracion || null,
-      data.forma_pago || null,
-      data.entidad_financiera || null,
-      data.valor_credito || null,
-      data.valor_inicial || null,
-      data.estado || 'pendiente',
-      data.notas || null,
-      data.referido_por || null,
-      data.canal_captacion || null,
-      data.fecha_primer_contacto || null,
-      data.observaciones || null
-    ])
+    if (hasTransaccionesDepartamentos) {
+      // Usar la nueva tabla con campos de comisiones
+      sql = `
+        INSERT INTO transacciones_departamentos (
+          departamento_id, agente_id, tipo_transaccion, precio_final, precio_original,
+          comision_agente, comision_porcentaje, comision_valor,
+          porcentaje_homestate, porcentaje_bienes_raices, porcentaje_admin_edificio,
+          valor_homestate, valor_bienes_raices, valor_admin_edificio,
+          cliente_nombre, cliente_email, cliente_telefono, notas, creado_por
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)
+        RETURNING *
+      `
+      
+      const comisionPorcentaje = data.comision_porcentaje || 3.0
+      const comisionValor = data.tipo_transaccion === 'venta' 
+        ? (data.valor_transaccion * comisionPorcentaje) / 100 
+        : (data.comision_valor || data.valor_transaccion)
+      
+      const porcentajeHomestate = data.porcentaje_homestate || 60
+      const porcentajeBienesRaices = data.porcentaje_bienes_raices || 30
+      const porcentajeAdminEdificio = data.porcentaje_admin_edificio || 10
+      
+      const valorHomestate = (comisionValor * porcentajeHomestate) / 100
+      const valorBienesRaices = (comisionValor * porcentajeBienesRaices) / 100
+      const valorAdminEdificio = (comisionValor * porcentajeAdminEdificio) / 100
+
+      queryParams = [
+        data.departamento_id,
+        data.agente_id,
+        data.tipo_transaccion,
+        data.valor_transaccion,
+        data.precio_original || null,
+        comisionValor,
+        comisionPorcentaje,
+        comisionValor,
+        porcentajeHomestate,
+        porcentajeBienesRaices,
+        porcentajeAdminEdificio,
+        valorHomestate,
+        valorBienesRaices,
+        valorAdminEdificio,
+        data.cliente_nombre,
+        data.cliente_email || null,
+        data.cliente_telefono || null,
+        data.notas || null,
+        data.currentUserUid
+      ]
+    } else {
+      // Usar la tabla antigua
+      sql = `
+        INSERT INTO transacciones_ventas_arriendos (
+          departamento_id, agente_id, tipo_transaccion, valor_transaccion, 
+          comision_porcentaje, fecha_transaccion, fecha_firma_contrato,
+          cliente_nombre, cliente_email, cliente_telefono, cliente_cedula, cliente_tipo_documento,
+          duracion_contrato_meses, deposito_garantia, valor_administracion,
+          forma_pago, entidad_financiera, valor_credito, valor_inicial,
+          estado, notas, referido_por, canal_captacion, fecha_primer_contacto, observaciones
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25)
+        RETURNING *
+      `
+
+      queryParams = [
+        data.departamento_id,
+        data.agente_id,
+        data.tipo_transaccion,
+        data.valor_transaccion,
+        data.comision_porcentaje || 3.0,
+        data.fecha_transaccion,
+        data.fecha_firma_contrato || null,
+        data.cliente_nombre,
+        data.cliente_email || null,
+        data.cliente_telefono || null,
+        data.cliente_cedula || null,
+        data.cliente_tipo_documento || 'CC',
+        data.duracion_contrato_meses || null,
+        data.deposito_garantia || null,
+        data.valor_administracion || null,
+        data.forma_pago || null,
+        data.entidad_financiera || null,
+        data.valor_credito || null,
+        data.valor_inicial || null,
+        data.estado || 'pendiente',
+        data.notas || null,
+        data.referido_por || null,
+        data.canal_captacion || null,
+        data.fecha_primer_contacto || null,
+        data.observaciones || null
+      ]
+    }
+
+    console.log('Ejecutando inserción en tabla:', tableName)
+    const result = await query(sql, queryParams)
 
     // Si la transacción está completada, actualizar el estado del departamento
     if (data.estado === 'completada') {
@@ -239,7 +309,7 @@ export async function POST(request: Request) {
       )
     }
 
-    // Obtener información para registrar la actividad
+    // Registrar la actividad
     try {
       const hasEsAgenteColumn = await checkColumnExists()
       const agentFilter = hasEsAgenteColumn ? 'AND a.es_agente = true' : ''
@@ -295,7 +365,11 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error('Error al crear transacción:', error)
     return NextResponse.json(
-      { success: false, error: 'Error al crear la transacción' },
+      { 
+        success: false, 
+        error: 'Error al crear la transacción',
+        details: process.env.NODE_ENV === 'development' ? error : undefined
+      },
       { status: 500 }
     )
   }
