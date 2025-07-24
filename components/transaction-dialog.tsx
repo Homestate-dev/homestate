@@ -73,7 +73,7 @@ export default function TransactionDialog({
   }, [formData])
 
   const calculateValues = () => {
-    const precioFinal = parseFloat(formData.precio_final.toString()) || 0
+    const precioFinal = parseFloat((formData.precio_final || 0).toString()) || 0
     const porcentajeHomestate = parseFloat(formData.porcentaje_homestate) || 0
     const porcentajeBienesRaices = parseFloat(formData.porcentaje_bienes_raices) || 0
     const porcentajeAdminEdificio = parseFloat(formData.porcentaje_admin_edificio) || 0
@@ -123,7 +123,7 @@ export default function TransactionDialog({
       setFormData(prev => ({ 
         ...prev, 
         tipo_transaccion: value,
-        comision_valor: prev.precio_final.toString()
+        comision_valor: (prev.precio_final || 0).toString()
       }))
     }
   }

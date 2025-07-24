@@ -405,9 +405,9 @@ export function SalesRentalsManagement() {
     
     if (department) {
       if (formData.tipo_transaccion === "venta" && department.valor_venta) {
-        suggestedValue = department.valor_venta.toString()
+        suggestedValue = (department.valor_venta || 0).toString()
       } else if (formData.tipo_transaccion === "arriendo" && department.valor_arriendo) {
-        suggestedValue = department.valor_arriendo.toString()
+        suggestedValue = (department.valor_arriendo || 0).toString()
       }
     }
     
@@ -480,7 +480,7 @@ export function SalesRentalsManagement() {
     
     const matchesType = filterType === 'all' || transaction.tipo_transaccion === filterType
     const matchesStatus = filterStatus === 'all' || transaction.estado === filterStatus
-    const matchesAgent = filterAgent === 'all' || transaction.agente_id.toString() === filterAgent
+    const matchesAgent = filterAgent === 'all' || (transaction.agente_id || 0).toString() === filterAgent
     
     return matchesSearch && matchesType && matchesStatus && matchesAgent
   })
