@@ -131,7 +131,7 @@ export async function GET(request: Request) {
       LEFT JOIN departamentos d ON ${tableAlias}.departamento_id = d.id
       LEFT JOIN edificios e ON d.edificio_id = e.id
       WHERE ${whereConditions.join(' AND ')}
-      ORDER BY ${tableAlias}.fecha_registro DESC
+      ORDER BY ${tableAlias}.fecha_transaccion DESC
     `
 
     console.log('Ejecutando query de transacciones:', sql, 'con parámetros:', queryParams)
