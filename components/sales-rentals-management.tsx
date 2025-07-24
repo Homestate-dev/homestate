@@ -151,9 +151,8 @@ export function SalesRentalsManagement() {
   })
 
   // Departamentos filtrados por edificio seleccionado
-  const filteredDepartmentsByBuilding = departments.filter(dept => 
-    !formData.edificio_id || dept.edificio_id.toString() === formData.edificio_id
-  )
+  // Ahora departments ya contiene los departamentos correctos según la selección
+  const filteredDepartmentsByBuilding = departments
 
   // Información del departamento seleccionado
   const selectedDepartment = departments.find(dept => 
@@ -283,7 +282,7 @@ export function SalesRentalsManagement() {
     }
   }
 
-  const resetForm = () => {
+  const resetForm = async () => {
     setFormData({
       edificio_id: "",
       departamento_id: "",
@@ -312,16 +311,56 @@ export function SalesRentalsManagement() {
       fecha_primer_contacto: "",
       observaciones: ""
     })
+
+    // Recargar departamentos disponibles al resetear
+    try {
+      const response = await fetch('/api/sales-rentals/departments')
+      const data = await response.json()
+      
+      if (data.success) {
+        setDepartments(data.data || [])
+      }
+    } catch (error) {
+      console.error('Error al recargar departamentos:', error)
+    }
   }
 
   // Función para manejar cambio de edificio
-  const handleBuildingChange = (buildingId: string) => {
+  const handleBuildingChange = async (buildingId: string) => {
     setFormData(prev => ({ 
       ...prev, 
       edificio_id: buildingId,
       departamento_id: "", // Reset department selection
       valor_transaccion: "" // Reset transaction value
     }))
+
+    // Si se selecciona un edificio, cargar todos los departamentos de ese edificio
+    if (buildingId) {
+      try {
+        const response = await fetch(`/api/sales-rentals/departments?edificio_id=${buildingId}`)
+        const data = await response.json()
+        
+        if (data.success) {
+          setDepartments(data.data || [])
+        } else {
+          console.error('Error al cargar departamentos del edificio:', data.error)
+        }
+      } catch (error) {
+        console.error('Error al cargar departamentos del edificio:', error)
+      }
+    } else {
+      // Si no hay edificio seleccionado, cargar solo los departamentos disponibles
+      try {
+        const response = await fetch('/api/sales-rentals/departments')
+        const data = await response.json()
+        
+        if (data.success) {
+          setDepartments(data.data || [])
+        }
+      } catch (error) {
+        console.error('Error al cargar departamentos:', error)
+      }
+    }
   }
 
   // Función para manejar cambio de departamento y pre-llenar valor

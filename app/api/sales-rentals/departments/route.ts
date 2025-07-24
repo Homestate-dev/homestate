@@ -1,9 +1,12 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { query } from '@/lib/database'
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const sql = `
+    const { searchParams } = new URL(request.url)
+    const edificio_id = searchParams.get('edificio_id')
+
+    let sql = `
       SELECT 
         d.id,
         d.numero,
@@ -21,11 +24,22 @@ export async function GET() {
         e.direccion as edificio_direccion
       FROM departamentos d
       JOIN edificios e ON d.edificio_id = e.id
-      WHERE d.disponible = true
-      ORDER BY e.nombre, d.piso, d.numero
     `
 
-    const result = await query(sql)
+    const params: any[] = []
+
+    if (edificio_id) {
+      // Si se especifica un edificio, mostrar todos los departamentos de ese edificio
+      sql += ` WHERE d.edificio_id = $1`
+      params.push(edificio_id)
+    } else {
+      // Si no se especifica edificio, mostrar solo los disponibles
+      sql += ` WHERE d.disponible = true`
+    }
+
+    sql += ` ORDER BY e.nombre, d.piso, d.numero`
+
+    const result = await query(sql, params)
 
     return NextResponse.json({
       success: true,
