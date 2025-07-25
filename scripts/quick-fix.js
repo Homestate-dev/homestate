@@ -1,13 +1,12 @@
 #!/usr/bin/env node
 
 /**
- * Script de resolución rápida para errores comunes
- * Aplica correcciones automáticas a problemas identificados
+ * Script rápido para diagnosticar y corregir problemas de transacciones
  */
 
 const { Client } = require('pg')
 
-// Configuración de la base de datos
+// Configuración de la base de datos (misma que Heroku)
 const dbConfig = {
   host: 'c2hbg00ac72j9d.cluster-czrs8kj4isg7.us-east-1.rds.amazonaws.com',
   database: 'dauaho3sghau5i',
@@ -23,196 +22,107 @@ async function quickFix() {
   const client = new Client(dbConfig)
   
   try {
-    console.log('🔧 APLICANDO CORRECCIONES RÁPIDAS')
-    console.log('================================\n')
+    console.log('🔧 DIAGNÓSTICO RÁPIDO - PROBLEMA DE TRANSACCIONES')
+    console.log('================================================\n')
     
     await client.connect()
     console.log('✅ Conexión a base de datos establecida\n')
 
-    // 1. Verificar y corregir estructura de departamentos
-    console.log('1. 🏢 Corrigiendo estructura de departamentos...')
+    // 1. Verificar estructura de transacciones_departamentos
+    console.log('1. 📋 ESTRUCTURA DE transacciones_departamentos')
+    console.log('----------------------------------------------')
     
-    const deptColumnsResult = await client.query(`
-      SELECT column_name 
+    const transStructureResult = await client.query(`
+      SELECT 
+        column_name, 
+        data_type, 
+        is_nullable,
+        ordinal_position
       FROM information_schema.columns 
-      WHERE table_name = 'departamentos'
-      AND column_name IN ('area_total', 'area')
+      WHERE table_name = 'transacciones_departamentos'
+      ORDER BY ordinal_position
     `)
     
-    const hasAreaTotal = deptColumnsResult.rows.some(col => col.column_name === 'area_total')
-    const hasArea = deptColumnsResult.rows.some(col => col.column_name === 'area')
+    console.log('Columnas encontradas:')
+    transStructureResult.rows.forEach(col => {
+      console.log(`   ${col.ordinal_position}. ${col.column_name}: ${col.data_type} (${col.is_nullable === 'YES' ? 'nullable' : 'not null'})`)
+    })
+
+    // 2. Verificar si existe fecha_registro o fecha_transaccion
+    const hasFechaRegistro = transStructureResult.rows.some(col => col.column_name === 'fecha_registro')
+    const hasFechaTransaccion = transStructureResult.rows.some(col => col.column_name === 'fecha_transaccion')
+    const hasCreatedAt = transStructureResult.rows.some(col => col.column_name === 'created_at')
+    const hasUpdatedAt = transStructureResult.rows.some(col => col.column_name === 'updated_at')
+
+    console.log('\n2. 📅 COLUMNAS DE FECHA')
+    console.log('----------------------')
+    console.log(`fecha_registro: ${hasFechaRegistro ? '✅ Existe' : '❌ No existe'}`)
+    console.log(`fecha_transaccion: ${hasFechaTransaccion ? '✅ Existe' : '❌ No existe'}`)
+    console.log(`created_at: ${hasCreatedAt ? '✅ Existe' : '❌ No existe'}`)
+    console.log(`updated_at: ${hasUpdatedAt ? '✅ Existe' : '❌ No existe'}`)
+
+    // 3. Probar query con la columna correcta
+    console.log('\n3. 🧪 PROBANDO QUERY CORREGIDA')
+    console.log('-----------------------------')
     
-    if (!hasAreaTotal && !hasArea) {
-      console.log('   ❌ No se encontró columna de área, agregando area_total...')
-      await client.query('ALTER TABLE departamentos ADD COLUMN IF NOT EXISTS area_total DECIMAL(10,2)')
-      console.log('   ✅ Columna area_total agregada')
-    } else {
-      console.log(`   ✅ Columna de área encontrada: ${hasAreaTotal ? 'area_total' : 'area'}`)
+    let orderByColumn = 'id' // fallback
+    if (hasFechaRegistro) {
+      orderByColumn = 'fecha_registro'
+    } else if (hasFechaTransaccion) {
+      orderByColumn = 'fecha_transaccion'
+    } else if (hasCreatedAt) {
+      orderByColumn = 'created_at'
+    } else if (hasUpdatedAt) {
+      orderByColumn = 'updated_at'
     }
 
-    // 2. Verificar y crear tabla de transacciones si no existe
-    console.log('\n2. 💰 Verificando tabla de transacciones...')
-    
-    const tablesResult = await client.query(`
-      SELECT table_name 
-      FROM information_schema.tables 
-      WHERE table_schema = 'public' 
-      AND table_name IN ('transacciones_departamentos', 'transacciones_ventas_arriendos')
-    `)
-    
-    const existingTables = tablesResult.rows.map(row => row.table_name)
-    
-    if (existingTables.length === 0) {
-      console.log('   ❌ No se encontró tabla de transacciones, creando transacciones_departamentos...')
-      
-      await client.query(`
-        CREATE TABLE IF NOT EXISTS transacciones_departamentos (
-          id SERIAL PRIMARY KEY,
-          departamento_id INTEGER REFERENCES departamentos(id),
-          agente_id INTEGER REFERENCES administradores(id),
-          tipo_transaccion VARCHAR(20) NOT NULL,
-          precio_final DECIMAL(15,2) NOT NULL,
-          precio_original DECIMAL(15,2),
-          comision_agente DECIMAL(15,2) DEFAULT 0,
-          comision_porcentaje DECIMAL(5,2) DEFAULT 0,
-          comision_valor DECIMAL(12,2) DEFAULT 0,
-          porcentaje_homestate DECIMAL(5,2) DEFAULT 60,
-          porcentaje_bienes_raices DECIMAL(5,2) DEFAULT 30,
-          porcentaje_admin_edificio DECIMAL(5,2) DEFAULT 10,
-          valor_homestate DECIMAL(12,2) DEFAULT 0,
-          valor_bienes_raices DECIMAL(12,2) DEFAULT 0,
-          valor_admin_edificio DECIMAL(12,2) DEFAULT 0,
-          cliente_nombre VARCHAR(255) NOT NULL,
-          cliente_email VARCHAR(255),
-          cliente_telefono VARCHAR(50),
-          notas TEXT,
-          creado_por VARCHAR(255),
-          fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-      `)
-      
-      console.log('   ✅ Tabla transacciones_departamentos creada')
-    } else {
-      console.log(`   ✅ Tabla de transacciones encontrada: ${existingTables.join(', ')}`)
-    }
+    console.log(`Usando columna para ORDER BY: ${orderByColumn}`)
 
-    // 3. Verificar y agregar índices si faltan
-    console.log('\n3. 📊 Verificando índices...')
-    
-    const indexesResult = await client.query(`
-      SELECT indexname 
-      FROM pg_indexes 
-      WHERE tablename = 'departamentos'
-      AND indexname LIKE 'idx_departamentos_%'
-    `)
-    
-    const existingIndexes = indexesResult.rows.map(row => row.indexname)
-    
-    if (!existingIndexes.includes('idx_departamentos_edificio')) {
-      console.log('   ❌ Índice de edificio faltante, agregando...')
-      await client.query('CREATE INDEX IF NOT EXISTS idx_departamentos_edificio ON departamentos(edificio_id)')
-      console.log('   ✅ Índice de edificio agregado')
-    } else {
-      console.log('   ✅ Índices de departamentos verificados')
-    }
-
-    // 4. Verificar datos de ejemplo
-    console.log('\n4. 📋 Verificando datos de ejemplo...')
-    
-    const deptCountResult = await client.query('SELECT COUNT(*) as count FROM departamentos')
-    const buildingCountResult = await client.query('SELECT COUNT(*) as count FROM edificios')
-    const adminCountResult = await client.query('SELECT COUNT(*) as count FROM administradores')
-    
-    console.log(`   Departamentos: ${deptCountResult.rows[0].count}`)
-    console.log(`   Edificios: ${buildingCountResult.rows[0].count}`)
-    console.log(`   Administradores: ${adminCountResult.rows[0].count}`)
-    
-    if (deptCountResult.rows[0].count === 0) {
-      console.log('   ⚠️  No hay departamentos en la base de datos')
-    }
-    
-    if (buildingCountResult.rows[0].count === 0) {
-      console.log('   ⚠️  No hay edificios en la base de datos')
-    }
-    
-    if (adminCountResult.rows[0].count === 0) {
-      console.log('   ⚠️  No hay administradores en la base de datos')
-    }
-
-    // 5. Probar queries problemáticas
-    console.log('\n5. 🧪 Probando queries corregidas...')
-    
     try {
-      const testResult = await client.query(`
+      const testQuery = `
         SELECT 
-          d.id,
-          d.numero,
-          d.nombre,
-          d.piso,
-          COALESCE(d.area_total, d.area) as area,
-          d.edificio_id,
-          d.valor_venta,
-          d.valor_arriendo,
-          d.estado,
-          d.disponible,
-          d.tipo,
-          d.cantidad_habitaciones,
+          td.*,
+          a.nombre as agente_nombre,
           e.nombre as edificio_nombre,
-          e.direccion as edificio_direccion
-        FROM departamentos d
-        JOIN edificios e ON d.edificio_id = e.id
-        WHERE d.disponible = true
+          d.numero as departamento_numero
+        FROM transacciones_departamentos td
+        LEFT JOIN administradores a ON td.agente_id = a.id
+        LEFT JOIN departamentos d ON td.departamento_id = d.id
+        LEFT JOIN edificios e ON d.edificio_id = e.id
+        WHERE 1=1
+        ORDER BY td.${orderByColumn} DESC
         LIMIT 5
-      `)
-      console.log(`   ✅ Query de departamentos exitosa: ${testResult.rows.length} resultados`)
+      `
+
+      const testResult = await client.query(testQuery)
+      console.log(`✅ Query exitosa: ${testResult.rows.length} resultados`)
+      
+      if (testResult.rows.length > 0) {
+        console.log('Primer resultado:', testResult.rows[0])
+      }
     } catch (error) {
-      console.log(`   ❌ Error en query de departamentos: ${error.message}`)
+      console.log(`❌ Error en query: ${error.message}`)
     }
+
+    // 4. Mostrar la corrección necesaria
+    console.log('\n4. 🔧 CORRECCIÓN NECESARIA')
+    console.log('-------------------------')
+    console.log('En el archivo app/api/sales-rentals/transactions/route.ts:')
+    console.log(`Cambiar: ORDER BY td.fecha_registro DESC`)
+    console.log(`Por: ORDER BY td.${orderByColumn} DESC`)
+
+    console.log('\n🎉 Diagnóstico completado')
     
-    try {
-      const filterResult = await client.query(`
-        SELECT 
-          d.id,
-          d.numero,
-          d.nombre,
-          d.piso,
-          COALESCE(d.area_total, d.area) as area,
-          d.edificio_id,
-          d.valor_venta,
-          d.valor_arriendo,
-          d.estado,
-          d.disponible,
-          d.tipo,
-          d.cantidad_habitaciones,
-          e.nombre as edificio_nombre,
-          e.direccion as edificio_direccion
-        FROM departamentos d
-        JOIN edificios e ON d.edificio_id = e.id
-        WHERE d.edificio_id = $1
-        LIMIT 5
-      `, [1])
-      console.log(`   ✅ Query con filtro de edificio exitosa: ${filterResult.rows.length} resultados`)
-    } catch (error) {
-      console.log(`   ❌ Error en query con filtro: ${error.message}`)
-    }
-
-    console.log('\n🎉 Correcciones aplicadas exitosamente')
-    console.log('\n📋 Resumen de correcciones:')
-    console.log('   ✅ Estructura de departamentos verificada')
-    console.log('   ✅ Tabla de transacciones verificada')
-    console.log('   ✅ Índices verificados')
-    console.log('   ✅ Queries probadas')
-    console.log('\n🚀 La aplicación debería funcionar correctamente ahora')
-
   } catch (error) {
-    console.error('❌ Error durante las correcciones:', error.message)
+    console.error('❌ Error durante el diagnóstico:', error.message)
+    console.error('Stack trace:', error.stack)
     process.exit(1)
   } finally {
     await client.end()
   }
 }
 
-// Ejecutar correcciones
+// Ejecutar diagnóstico
 quickFix().catch(error => {
   console.error('❌ Error fatal:', error)
   process.exit(1)

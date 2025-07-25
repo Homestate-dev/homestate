@@ -32,6 +32,7 @@ import {
   BarChart3,
   AlertTriangle
 } from "lucide-react"
+import { TransactionStateManager } from "./transaction-state-manager"
 import { useIsMobile } from "@/hooks/use-mobile"
 
 interface Transaction {
@@ -51,7 +52,7 @@ interface Transaction {
   cliente_email?: string
   cliente_telefono?: string
   cliente_cedula?: string
-  estado: 'pendiente' | 'en_proceso' | 'completada' | 'cancelada'
+  estado_actual: string
   duracion_contrato_meses?: number
   deposito_garantia?: number
   forma_pago?: string
@@ -479,7 +480,7 @@ export function SalesRentalsManagement() {
       transaction.agente_nombre?.toLowerCase().includes(searchTerm.toLowerCase())
     
     const matchesType = filterType === 'all' || transaction.tipo_transaccion === filterType
-    const matchesStatus = filterStatus === 'all' || transaction.estado === filterStatus
+    const matchesStatus = filterStatus === 'all' || transaction.estado_actual === filterStatus
     const matchesAgent = filterAgent === 'all' || (transaction.agente_id || 0).toString() === filterAgent
     
     return matchesSearch && matchesType && matchesStatus && matchesAgent
@@ -487,13 +488,15 @@ export function SalesRentalsManagement() {
 
   const getStatusBadge = (status: string) => {
     const statusConfig = {
-      pendiente: { variant: "secondary" as const, text: "Pendiente", className: "" },
-      en_proceso: { variant: "default" as const, text: "En Proceso", className: "" },
-      completada: { variant: "default" as const, text: "Completada", className: "bg-green-100 text-green-800" },
-      cancelada: { variant: "destructive" as const, text: "Cancelada", className: "" }
+      reservado: { variant: "default" as const, text: "Reservado", className: "bg-blue-100 text-blue-800" },
+      promesa_compra_venta: { variant: "default" as const, text: "Promesa de Compra Venta", className: "bg-yellow-100 text-yellow-800" },
+      firma_escrituras: { variant: "default" as const, text: "Firma de Escrituras", className: "bg-green-100 text-green-800" },
+      firma_y_pago: { variant: "default" as const, text: "Firma y Pago", className: "bg-green-100 text-green-800" },
+      desistimiento: { variant: "destructive" as const, text: "Desistimiento", className: "" },
+      completada: { variant: "default" as const, text: "Completada", className: "bg-green-100 text-green-800" }
     }
     
-    const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.pendiente
+    const config = statusConfig[status as keyof typeof statusConfig] || { variant: "secondary" as const, text: status, className: "bg-gray-100 text-gray-800" }
     return (
       <Badge variant={config.variant} className={config.className}>
         {config.text}
@@ -716,7 +719,7 @@ export function SalesRentalsManagement() {
                       {formatCurrency(transaction.valor_transaccion)}
                     </TableCell>
                     <TableCell>{transaction.agente_nombre}</TableCell>
-                    <TableCell>{getStatusBadge(transaction.estado)}</TableCell>
+                    <TableCell>{getStatusBadge(transaction.estado_actual)}</TableCell>
                     <TableCell>
                       {new Date(transaction.fecha_transaccion).toLocaleDateString('es-CO')}
                     </TableCell>
@@ -729,21 +732,14 @@ export function SalesRentalsManagement() {
                         >
                           <Eye className="h-4 w-4" />
                         </Button>
-                        {transaction.estado !== 'completada' && transaction.estado !== 'cancelada' && (
-                          <Select
-                            value={transaction.estado}
-                            onValueChange={(value) => handleUpdateTransactionStatus(transaction.id, value)}
+                        {transaction.estado_actual !== 'completada' && transaction.estado_actual !== 'desistimiento' && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setSelectedTransaction(transaction)}
                           >
-                            <SelectTrigger className="w-[120px]">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="pendiente">Pendiente</SelectItem>
-                              <SelectItem value="en_proceso">En Proceso</SelectItem>
-                              <SelectItem value="completada">Completada</SelectItem>
-                              <SelectItem value="cancelada">Cancelada</SelectItem>
-                            </SelectContent>
-                          </Select>
+                            <Eye className="h-4 w-4" />
+                          </Button>
                         )}
                       </div>
                     </TableCell>
@@ -767,9 +763,8 @@ export function SalesRentalsManagement() {
           
           <div className="grid gap-4 py-4">
             <Tabs defaultValue="basic" className="w-full">
-              <TabsList className="grid w-full grid-cols-3">
+              <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="basic">Básico</TabsTrigger>
-                <TabsTrigger value="details">Detalles</TabsTrigger>
                 <TabsTrigger value="additional">Adicional</TabsTrigger>
               </TabsList>
               
@@ -1105,114 +1100,7 @@ export function SalesRentalsManagement() {
                 </div>
               </TabsContent>
 
-              <TabsContent value="details" className="space-y-4">
-                {formData.tipo_transaccion === 'arriendo' ? (
-                  <div className="space-y-4">
-                    <h4 className="font-medium">Detalles del Arriendo</h4>
-                    <div className="grid grid-cols-3 gap-4">
-                      <div>
-                        <Label htmlFor="duracion_contrato_meses">Duración (meses)</Label>
-                        <Input
-                          id="duracion_contrato_meses"
-                          type="number"
-                          placeholder="12"
-                          value={formData.duracion_contrato_meses}
-                          onChange={(e) => setFormData(prev => ({ ...prev, duracion_contrato_meses: e.target.value }))}
-                        />
-                      </div>
-                      
-                      <div>
-                        <Label htmlFor="deposito_garantia">Depósito de Garantía</Label>
-                        <Input
-                          id="deposito_garantia"
-                          type="number"
-                          placeholder="2500000"
-                          value={formData.deposito_garantia}
-                          onChange={(e) => setFormData(prev => ({ ...prev, deposito_garantia: e.target.value }))}
-                        />
-                      </div>
 
-                      <div>
-                        <Label htmlFor="valor_administracion">Valor Administración</Label>
-                        <Input
-                          id="valor_administracion"
-                          type="number"
-                          placeholder="350000"
-                          value={formData.valor_administracion}
-                          onChange={(e) => setFormData(prev => ({ ...prev, valor_administracion: e.target.value }))}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    <h4 className="font-medium">Detalles de la Venta</h4>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <Label htmlFor="forma_pago">Forma de Pago</Label>
-                        <Select 
-                          value={formData.forma_pago} 
-                          onValueChange={(value) => setFormData(prev => ({ ...prev, forma_pago: value }))}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Seleccionar" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="contado">Contado</SelectItem>
-                            <SelectItem value="financiacion">Financiación</SelectItem>
-                            <SelectItem value="mixto">Mixto</SelectItem>
-                            <SelectItem value="leasing">Leasing</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      
-                      <div>
-                        <Label htmlFor="entidad_financiera">Entidad Financiera</Label>
-                        <Input
-                          id="entidad_financiera"
-                          placeholder="Banco o entidad"
-                          value={formData.entidad_financiera}
-                          onChange={(e) => setFormData(prev => ({ ...prev, entidad_financiera: e.target.value }))}
-                        />
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <Label htmlFor="valor_credito">Valor del Crédito</Label>
-                        <Input
-                          id="valor_credito"
-                          type="number"
-                          placeholder="200000000"
-                          value={formData.valor_credito}
-                          onChange={(e) => setFormData(prev => ({ ...prev, valor_credito: e.target.value }))}
-                        />
-                      </div>
-                      
-                      <div>
-                        <Label htmlFor="valor_inicial">Valor Inicial</Label>
-                        <Input
-                          id="valor_inicial"
-                          type="number"
-                          placeholder="50000000"
-                          value={formData.valor_inicial}
-                          onChange={(e) => setFormData(prev => ({ ...prev, valor_inicial: e.target.value }))}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                <div>
-                  <Label htmlFor="fecha_firma_contrato">Fecha Firma Contrato</Label>
-                  <Input
-                    id="fecha_firma_contrato"
-                    type="date"
-                    value={formData.fecha_firma_contrato}
-                    onChange={(e) => setFormData(prev => ({ ...prev, fecha_firma_contrato: e.target.value }))}
-                  />
-                </div>
-              </TabsContent>
 
               <TabsContent value="additional" className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
@@ -1312,7 +1200,7 @@ export function SalesRentalsManagement() {
                 </div>
                 <div>
                   <Label className="text-sm font-medium text-gray-500">Estado</Label>
-                  <div className="mt-1">{getStatusBadge(selectedTransaction.estado)}</div>
+                  <div className="mt-1">{getStatusBadge(selectedTransaction.estado_actual)}</div>
                 </div>
               </div>
 
@@ -1366,6 +1254,17 @@ export function SalesRentalsManagement() {
                   <p className="mt-1 p-3 bg-gray-50 rounded-lg text-sm">{selectedTransaction.notas}</p>
                 </div>
               )}
+
+              {/* Estado de Transacción */}
+              <div className="mt-6">
+                <TransactionStateManager 
+                  transactionId={selectedTransaction.id}
+                  onStateChange={() => {
+                    fetchTransactions()
+                    fetchInitialData()
+                  }}
+                />
+              </div>
             </div>
             
             <DialogFooter>
