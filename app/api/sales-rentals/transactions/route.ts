@@ -86,7 +86,7 @@ export async function GET(request: Request) {
     // Filtro de estado
     if (status && status !== 'all') {
       paramCount++
-      whereConditions.push(`${tableAlias}.estado = $${paramCount}`)
+      whereConditions.push(`${tableAlias}.estado_actual = $${paramCount}`)
       queryParams.push(status)
     }
 
@@ -211,8 +211,8 @@ export async function POST(request: Request) {
 
     // Verificar que el departamento no tenga una transacción activa del mismo tipo
     const existingTransaction = await query(
-      `SELECT id FROM ${tableName} WHERE departamento_id = $1 AND tipo_transaccion = $2 AND estado IN ($3, $4)`,
-      [data.departamento_id, data.tipo_transaccion, 'pendiente', 'en_proceso']
+      `SELECT id FROM ${tableName} WHERE departamento_id = $1 AND tipo_transaccion = $2 AND estado_actual IN ($3, $4)`,
+      [data.departamento_id, data.tipo_transaccion, 'reservado', 'promesa_compra_venta']
     )
 
     if (existingTransaction.rows.length > 0) {
@@ -282,7 +282,7 @@ export async function POST(request: Request) {
           cliente_nombre, cliente_email, cliente_telefono, cliente_cedula, cliente_tipo_documento,
           duracion_contrato_meses, deposito_garantia, valor_administracion,
           forma_pago, entidad_financiera, valor_credito, valor_inicial,
-          estado, notas, referido_por, canal_captacion, fecha_primer_contacto, observaciones
+          estado_actual, notas, referido_por, canal_captacion, fecha_primer_contacto, observaciones
         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25)
         RETURNING *
       `
@@ -307,7 +307,7 @@ export async function POST(request: Request) {
         data.entidad_financiera || null,
         data.valor_credito || null,
         data.valor_inicial || null,
-        data.estado || 'pendiente',
+        data.estado_actual || 'reservado',
         data.notas || null,
         data.referido_por || null,
         data.canal_captacion || null,
@@ -320,7 +320,7 @@ export async function POST(request: Request) {
     const result = await query(sql, queryParams)
 
     // Si la transacción está completada, actualizar el estado del departamento
-    if (data.estado === 'completada') {
+    if (data.estado_actual === 'completada') {
       const newStatus = data.tipo_transaccion === 'venta' ? 'vendido' : 'arrendado'
       await query(
         'UPDATE departamentos SET estado = $1 WHERE id = $2',

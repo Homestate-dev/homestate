@@ -64,7 +64,7 @@ export async function PATCH(
     const result = await query(sql, updateValues)
 
     // Si se cambia el estado a completada, actualizar el departamento
-    if (data.estado === 'completada' && transaction.estado !== 'completada') {
+    if (data.estado_actual === 'completada' && transaction.estado_actual !== 'completada') {
       const newStatus = transaction.tipo_transaccion === 'venta' ? 'vendido' : 'arrendado'
       await query(
         'UPDATE departamentos SET estado = $1 WHERE id = $2',

@@ -149,7 +149,7 @@ export function SalesRentalsManagement() {
     entidad_financiera: "",
     valor_credito: "",
     valor_inicial: "",
-    estado: "pendiente" as "pendiente" | "en_proceso" | "completada" | "cancelada",
+    estado_actual: "reservado",
     notas: "",
     referido_por: "",
     canal_captacion: "",
@@ -340,7 +340,7 @@ export function SalesRentalsManagement() {
       entidad_financiera: "",
       valor_credito: "",
       valor_inicial: "",
-      estado: "pendiente",
+      estado_actual: "reservado",
       notas: "",
       referido_por: "",
       canal_captacion: "",
@@ -643,10 +643,12 @@ export function SalesRentalsManagement() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos los estados</SelectItem>
-                <SelectItem value="pendiente">Pendiente</SelectItem>
-                <SelectItem value="en_proceso">En Proceso</SelectItem>
+                <SelectItem value="reservado">Reservado</SelectItem>
+                <SelectItem value="promesa_compra_venta">Promesa de Compra Venta</SelectItem>
+                <SelectItem value="firma_escrituras">Firma de Escrituras</SelectItem>
+                <SelectItem value="firma_y_pago">Firma y Pago</SelectItem>
+                <SelectItem value="desistimiento">Desistimiento</SelectItem>
                 <SelectItem value="completada">Completada</SelectItem>
-                <SelectItem value="cancelada">Cancelada</SelectItem>
               </SelectContent>
             </Select>
 
@@ -1017,17 +1019,19 @@ export function SalesRentalsManagement() {
                   <div>
                     <Label htmlFor="estado">Estado</Label>
                     <Select 
-                      value={formData.estado} 
-                      onValueChange={(value: "pendiente" | "en_proceso" | "completada" | "cancelada") => setFormData(prev => ({ ...prev, estado: value }))}
+                      value={formData.estado_actual} 
+                                              onValueChange={(value: "reservado" | "promesa_compra_venta" | "firma_escrituras" | "firma_y_pago" | "desistimiento" | "completada") => setFormData(prev => ({ ...prev, estado_actual: value }))}
                     >
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="pendiente">Pendiente</SelectItem>
-                        <SelectItem value="en_proceso">En Proceso</SelectItem>
+                        <SelectItem value="reservado">Reservado</SelectItem>
+                        <SelectItem value="promesa_compra_venta">Promesa de Compra Venta</SelectItem>
+                        <SelectItem value="firma_escrituras">Firma de Escrituras</SelectItem>
+                        <SelectItem value="firma_y_pago">Firma y Pago</SelectItem>
+                        <SelectItem value="desistimiento">Desistimiento</SelectItem>
                         <SelectItem value="completada">Completada</SelectItem>
-                        <SelectItem value="cancelada">Cancelada</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
