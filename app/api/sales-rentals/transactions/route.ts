@@ -203,23 +203,9 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const data = await request.json()
-    
-    console.log('📥 Datos recibidos en POST:', {
-      departamento_id: data.departamento_id,
-      agente_id: data.agente_id,
-      tipo_transaccion: data.tipo_transaccion,
-      valor_transaccion: data.valor_transaccion,
-      cliente_nombre: data.cliente_nombre
-    })
 
     // Validaciones básicas
     if (!data.departamento_id || !data.agente_id || !data.tipo_transaccion || !data.valor_transaccion) {
-      console.log('❌ Campos faltantes:', {
-        departamento_id: !!data.departamento_id,
-        agente_id: !!data.agente_id,
-        tipo_transaccion: !!data.tipo_transaccion,
-        valor_transaccion: !!data.valor_transaccion
-      })
       return NextResponse.json(
         { success: false, error: 'Faltan campos obligatorios' },
         { status: 400 }
@@ -245,16 +231,16 @@ export async function POST(request: Request) {
       }, { status: 500 })
     }
 
-    // Validar cliente_nombre solo si se usa la tabla antigua
-    if (hasTransaccionesVentasArriendos && !data.cliente_nombre) {
+    // Usar la tabla que existe
+    const tableName = hasTransaccionesDepartamentos ? 'transacciones_departamentos' : 'transacciones_ventas_arriendos'
+    
+    // Validar cliente_nombre solo si se usa la tabla antigua (transacciones_ventas_arriendos)
+    if (tableName === 'transacciones_ventas_arriendos' && !data.cliente_nombre) {
       return NextResponse.json(
         { success: false, error: 'Falta el nombre del cliente' },
         { status: 400 }
       )
     }
-
-    // Usar la tabla que existe
-    const tableName = hasTransaccionesDepartamentos ? 'transacciones_departamentos' : 'transacciones_ventas_arriendos'
 
     // Verificar que el departamento no tenga una transacción activa del mismo tipo
     const existingTransaction = await query(
@@ -281,8 +267,8 @@ export async function POST(request: Request) {
           comision_agente, comision_porcentaje, comision_valor,
           porcentaje_homestate, porcentaje_bienes_raices, porcentaje_admin_edificio,
           valor_homestate, valor_bienes_raices, valor_admin_edificio,
-          notas, fecha_transaccion, estado_actual, datos_estado, fecha_ultimo_estado, fecha_registro
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20)
+          notas, fecha_transaccion, estado_actual, datos_estado, fecha_ultimo_estado, fecha_registro, creado_por
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21)
         RETURNING *
       `
       
@@ -320,7 +306,8 @@ export async function POST(request: Request) {
         data.estado_actual || 'reservado',
         data.datos_estado || '{}',
         new Date().toISOString(),
-        data.fecha_registro || new Date().toISOString().split('T')[0]
+        data.fecha_registro || new Date().toISOString().split('T')[0],
+        data.currentUserUid || 'system'
       ]
     } else {
       // Usar la tabla antigua
@@ -366,7 +353,6 @@ export async function POST(request: Request) {
       ]
     }
 
-    console.log('Ejecutando inserción en tabla:', tableName)
     const result = await query(sql, queryParams)
 
     // Si la transacción está completada, actualizar el estado del departamento
