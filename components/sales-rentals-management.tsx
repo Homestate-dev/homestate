@@ -261,17 +261,22 @@ export function SalesRentalsManagement() {
         return
       }
 
+      // Asegurar que el valor de la transacción se envíe como número
+      const valorTransaccion = parseFloat(formData.valor_transaccion) || 0
+      const transactionData = {
+        ...formData,
+        valor_transaccion: valorTransaccion,
+        currentUserUid: user.uid,
+        // Incluir valores calculados
+        valor_homestate: calculatedValues.valor_homestate,
+        valor_bienes_raices: calculatedValues.valor_bienes_raices,
+        valor_admin_edificio: calculatedValues.valor_admin_edificio
+      }
+
       const response = await fetch('/api/sales-rentals/transactions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...formData,
-          currentUserUid: user.uid,
-          // Incluir valores calculados
-          valor_homestate: calculatedValues.valor_homestate,
-          valor_bienes_raices: calculatedValues.valor_bienes_raices,
-          valor_admin_edificio: calculatedValues.valor_admin_edificio
-        })
+        body: JSON.stringify(transactionData)
       })
 
       const data = await response.json()
@@ -425,7 +430,7 @@ export function SalesRentalsManagement() {
       ...prev, 
       tipo_transaccion: value,
       comision_porcentaje: value === "venta" ? "3.0" : "",
-      comision_valor: value === "arriendo" ? prev.valor_transaccion : ""
+      comision_valor: value === "arriendo" ? "" : prev.comision_valor
     }))
   }
 
@@ -452,7 +457,7 @@ export function SalesRentalsManagement() {
       valorComision = (valorTransaccion * comisionPorcentaje) / 100
     } else if (formData.tipo_transaccion === 'arriendo') {
       // Para arriendos: usar comisión en valor
-      valorComision = parseFloat(formData.comision_valor) || valorTransaccion
+      valorComision = parseFloat(formData.comision_valor) || 0
     }
 
     const valorHomestate = (valorComision * porcentajeHomestate) / 100
@@ -513,6 +518,9 @@ export function SalesRentalsManagement() {
   }
 
   const formatCurrency = (amount: number) => {
+    if (isNaN(amount) || amount === 0) {
+      return '$0'
+    }
     return new Intl.NumberFormat('es-CO', {
       style: 'currency',
       currency: 'COP',
@@ -723,7 +731,7 @@ export function SalesRentalsManagement() {
                     <TableCell>{transaction.agente_nombre}</TableCell>
                     <TableCell>{getStatusBadge(transaction.estado_actual)}</TableCell>
                     <TableCell>
-                      {new Date(transaction.fecha_transaccion).toLocaleDateString('es-CO')}
+                      {transaction.fecha_transaccion ? new Date(transaction.fecha_transaccion).toLocaleDateString('es-CO') : 'N/A'}
                     </TableCell>
                     <TableCell>
                       <div className="flex gap-2">
@@ -920,6 +928,7 @@ export function SalesRentalsManagement() {
                         id="comision_valor"
                         type="number"
                         step="0.01"
+                        placeholder="Ej: 9600"
                         value={formData.comision_valor}
                         onChange={(e) => setFormData(prev => ({ ...prev, comision_valor: e.target.value }))}
                       />
@@ -999,7 +1008,7 @@ export function SalesRentalsManagement() {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="fecha_transaccion">Fecha de Transacción</Label>
+                    <Label htmlFor="fecha_transaccion">Fecha de Reserva</Label>
                     <Input
                       id="fecha_transaccion"
                       type="date"
@@ -1217,7 +1226,7 @@ export function SalesRentalsManagement() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label className="text-sm font-medium text-gray-500">Fecha Transacción</Label>
-                  <p>{new Date(selectedTransaction.fecha_transaccion).toLocaleDateString('es-CO')}</p>
+                                          <p>{selectedTransaction.fecha_transaccion ? new Date(selectedTransaction.fecha_transaccion).toLocaleDateString('es-CO') : 'N/A'}</p>
                 </div>
                 <div>
                   <Label className="text-sm font-medium text-gray-500">Fecha Registro</Label>
