@@ -154,6 +154,11 @@ export async function GET(request: Request) {
         }
       })
       
+      // Mapear precio_final a valor_transaccion para compatibilidad con el frontend
+      if (row.precio_final !== undefined) {
+        safeRow.valor_transaccion = row.precio_final
+      }
+      
       return safeRow
     })
 
@@ -235,8 +240,8 @@ export async function POST(request: Request) {
           porcentaje_homestate, porcentaje_bienes_raices, porcentaje_admin_edificio,
           valor_homestate, valor_bienes_raices, valor_admin_edificio,
           cliente_nombre, cliente_email, cliente_telefono, notas, creado_por,
-          estado_actual, datos_estado, fecha_ultimo_estado
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22)
+          estado_actual, datos_estado, fecha_ultimo_estado, fecha_registro
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23)
         RETURNING *
       `
       
@@ -244,7 +249,9 @@ export async function POST(request: Request) {
       const valorTransaccion = parseFloat(data.valor_transaccion) || 0
       const comisionValor = data.tipo_transaccion === 'venta' 
         ? (valorTransaccion * comisionPorcentaje) / 100 
-        : (data.comision_valor || valorTransaccion)
+        : (parseFloat(data.comision_valor) || 0)
+      
+      // Debug logs removidos para producción
       
       const porcentajeHomestate = data.porcentaje_homestate || 60
       const porcentajeBienesRaices = data.porcentaje_bienes_raices || 30
@@ -258,7 +265,7 @@ export async function POST(request: Request) {
         data.departamento_id,
         data.agente_id,
         data.tipo_transaccion,
-        valorTransaccion,
+        valorTransaccion, // Este es el valor de la transacción
         data.precio_original || null,
         comisionValor,
         comisionPorcentaje,
@@ -276,7 +283,8 @@ export async function POST(request: Request) {
         data.currentUserUid,
         data.estado_actual || 'reservado',
         data.datos_estado || '{}',
-        new Date().toISOString()
+        new Date().toISOString(),
+        data.fecha_registro || new Date().toISOString().split('T')[0]
       ]
     } else {
       // Usar la tabla antigua
