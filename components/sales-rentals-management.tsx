@@ -136,6 +136,7 @@ export function SalesRentalsManagement() {
     porcentaje_bienes_raices: "30",
     porcentaje_admin_edificio: "10",
     fecha_transaccion: new Date().toISOString().split('T')[0],
+    fecha_registro: new Date().toISOString().split('T')[0],
     fecha_firma_contrato: "",
     cliente_nombre: "",
     cliente_email: "",
@@ -332,6 +333,7 @@ export function SalesRentalsManagement() {
       porcentaje_bienes_raices: "30",
       porcentaje_admin_edificio: "10",
       fecha_transaccion: new Date().toISOString().split('T')[0],
+      fecha_registro: new Date().toISOString().split('T')[0],
       fecha_firma_contrato: "",
       cliente_nombre: "",
       cliente_email: "",
@@ -1016,7 +1018,15 @@ export function SalesRentalsManagement() {
                       onChange={(e) => setFormData(prev => ({ ...prev, fecha_transaccion: e.target.value }))}
                     />
                   </div>
-                  
+                  <div>
+                    <Label htmlFor="fecha_registro">Fecha de Registro</Label>
+                    <Input
+                      id="fecha_registro"
+                      type="date"
+                      value={formData.fecha_registro}
+                      onChange={(e) => setFormData(prev => ({ ...prev, fecha_registro: e.target.value }))}
+                    />
+                  </div>
                 </div>
 
                 <div className="space-y-4">
@@ -1192,12 +1202,17 @@ export function SalesRentalsManagement() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label className="text-sm font-medium text-gray-500">Valor</Label>
+                  <Label className="text-sm font-medium text-gray-500">Valor de la Transacción</Label>
                   <p className="text-lg font-semibold">{formatCurrency(selectedTransaction.valor_transaccion)}</p>
                 </div>
                 <div>
                   <Label className="text-sm font-medium text-gray-500">Comisión</Label>
-                  <p className="text-lg font-semibold">{formatCurrency(selectedTransaction.comision_valor)} ({selectedTransaction.comision_porcentaje}%)</p>
+                  <p className="text-lg font-semibold">
+                    {formatCurrency(selectedTransaction.comision_valor)}
+                    {selectedTransaction.tipo_transaccion === 'venta' && selectedTransaction.comision_porcentaje > 0 && (
+                      <span className="text-sm text-gray-500 ml-2">({selectedTransaction.comision_porcentaje}%)</span>
+                    )}
+                  </p>
                 </div>
               </div>
 
@@ -1230,7 +1245,7 @@ export function SalesRentalsManagement() {
                 </div>
                 <div>
                   <Label className="text-sm font-medium text-gray-500">Fecha Registro</Label>
-                  <p>{new Date(selectedTransaction.fecha_registro).toLocaleDateString('es-CO')}</p>
+                  <p>{selectedTransaction.fecha_registro ? new Date(selectedTransaction.fecha_registro).toLocaleDateString('es-CO') : 'N/A'}</p>
                 </div>
               </div>
 

@@ -283,12 +283,12 @@ export async function POST(request: Request) {
       sql = `
         INSERT INTO transacciones_ventas_arriendos (
           departamento_id, agente_id, tipo_transaccion, valor_transaccion, 
-          comision_porcentaje, fecha_transaccion, fecha_firma_contrato,
+          comision_porcentaje, fecha_transaccion, fecha_registro, fecha_firma_contrato,
           cliente_nombre, cliente_email, cliente_telefono, cliente_cedula, cliente_tipo_documento,
           duracion_contrato_meses, deposito_garantia, valor_administracion,
           forma_pago, entidad_financiera, valor_credito, valor_inicial,
           estado_actual, notas, referido_por, canal_captacion, fecha_primer_contacto, observaciones
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25)
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26)
         RETURNING *
       `
 
@@ -299,6 +299,7 @@ export async function POST(request: Request) {
         valorTransaccion,
         data.comision_porcentaje || 3.0,
         data.fecha_transaccion,
+        data.fecha_registro || new Date().toISOString().split('T')[0],
         data.fecha_firma_contrato || null,
         data.cliente_nombre,
         data.cliente_email || null,
