@@ -111,6 +111,7 @@ export function SalesRentalsManagement() {
   const [stats, setStats] = useState<SalesRentalsStats | null>(null)
   const [loading, setLoading] = useState(true)
   const [transactionsLoading, setTransactionsLoading] = useState(false)
+  const [initialLoadComplete, setInitialLoadComplete] = useState(false)
   const [showCreateDialog, setShowCreateDialog] = useState(false)
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null)
   const [searchTerm, setSearchTerm] = useState("")
@@ -184,36 +185,35 @@ export function SalesRentalsManagement() {
   }, [])
 
   useEffect(() => {
-    // Solo cargar transacciones si ya se cargaron los datos iniciales
-    if (!loading) {
+    // Cargar transacciones iniciales después de que se complete la carga inicial
+    if (!loading && !initialLoadComplete) {
+      fetchTransactions()
+      setInitialLoadComplete(true)
+    }
+  }, [loading, initialLoadComplete])
+
+  useEffect(() => {
+    // Solo cargar transacciones si ya se cargaron los datos iniciales y no estamos en la carga inicial
+    if (initialLoadComplete && !transactionsLoading && !loading) {
       fetchTransactions()
     }
-  }, [filterType, filterStatus, filterAgent, filterBuilding, dateRange, loading])
+  }, [filterType, filterStatus, filterAgent, filterBuilding, dateRange, searchTerm])
 
   const fetchInitialData = async () => {
     try {
-      const [transactionsRes, agentsRes, buildingsRes, departmentsRes, statsRes] = await Promise.all([
-        fetch('/api/sales-rentals/transactions'),
+      const [agentsRes, buildingsRes, departmentsRes, statsRes] = await Promise.all([
         fetch('/api/admins'),
         fetch('/api/buildings'),
         fetch('/api/sales-rentals/departments'),
         fetch('/api/sales-rentals/stats')
       ])
 
-      const [transactionsData, agentsData, buildingsData, departmentsData, statsData] = await Promise.all([
-        transactionsRes.json(),
+      const [agentsData, buildingsData, departmentsData, statsData] = await Promise.all([
         agentsRes.json(),
         buildingsRes.json(),
         departmentsRes.json(),
         statsRes.json()
       ])
-
-      if (transactionsData.success) {
-        setTransactions(transactionsData.data || [])
-      } else {
-        console.error('Error al cargar transacciones:', transactionsData.error)
-        toast.error('Error al cargar transacciones')
-      }
       
       if (agentsData.success) {
         setAgents(agentsData.data || [])
@@ -724,58 +724,75 @@ export function SalesRentalsManagement() {
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Cliente</TableHead>
-                  <TableHead>Propiedad</TableHead>
-                  <TableHead>Tipo</TableHead>
-                  <TableHead>Valor</TableHead>
-                  <TableHead>Agente</TableHead>
-                  <TableHead>Estado</TableHead>
-                  <TableHead>Fecha</TableHead>
-                  <TableHead>Acciones</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredTransactions.map((transaction) => (
-                  <TableRow key={transaction.id}>
-                    <TableCell>
-                      <div>
-                        <p className="font-medium">{transaction.cliente_nombre}</p>
-                        <p className="text-sm text-gray-500">{transaction.cliente_email}</p>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div>
-                        <p className="font-medium">{transaction.edificio_nombre}</p>
-                        <p className="text-sm text-gray-500">Depto. {transaction.departamento_numero}</p>
-                      </div>
-                    </TableCell>
-                    <TableCell>{getTypeBadge(transaction.tipo_transaccion)}</TableCell>
-                    <TableCell className="font-medium">
-                      {formatCurrency(transaction.valor_transaccion)}
-                    </TableCell>
-                    <TableCell>{transaction.agente_nombre}</TableCell>
-                    <TableCell>{getStatusBadge(transaction.estado_actual)}</TableCell>
-                    <TableCell>
-                      {transaction.fecha_transaccion ? new Date(transaction.fecha_transaccion).toLocaleDateString('es-CO') : 'N/A'}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setSelectedTransaction(transaction)}
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
+            {transactionsLoading ? (
+              <div className="flex items-center justify-center p-8">
+                <div className="text-center">
+                  <DollarSign className="h-8 w-8 text-green-600 mx-auto mb-2 animate-spin" />
+                  <p className="text-gray-600">Cargando transacciones...</p>
+                </div>
+              </div>
+            ) : filteredTransactions.length === 0 ? (
+              <div className="flex items-center justify-center p-8">
+                <div className="text-center">
+                  <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <p className="text-gray-600">No se encontraron transacciones</p>
+                  <p className="text-sm text-gray-500 mt-1">Intenta ajustar los filtros de búsqueda</p>
+                </div>
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Cliente</TableHead>
+                    <TableHead>Propiedad</TableHead>
+                    <TableHead>Tipo</TableHead>
+                    <TableHead>Valor</TableHead>
+                    <TableHead>Agente</TableHead>
+                    <TableHead>Estado</TableHead>
+                    <TableHead>Fecha</TableHead>
+                    <TableHead>Acciones</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {filteredTransactions.map((transaction) => (
+                    <TableRow key={transaction.id}>
+                      <TableCell>
+                        <div>
+                          <p className="font-medium">{transaction.cliente_nombre}</p>
+                          <p className="text-sm text-gray-500">{transaction.cliente_email}</p>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div>
+                          <p className="font-medium">{transaction.edificio_nombre}</p>
+                          <p className="text-sm text-gray-500">Depto. {transaction.departamento_numero}</p>
+                        </div>
+                      </TableCell>
+                      <TableCell>{getTypeBadge(transaction.tipo_transaccion)}</TableCell>
+                      <TableCell className="font-medium">
+                        {formatCurrency(transaction.valor_transaccion)}
+                      </TableCell>
+                      <TableCell>{transaction.agente_nombre}</TableCell>
+                      <TableCell>{getStatusBadge(transaction.estado_actual)}</TableCell>
+                      <TableCell>
+                        {transaction.fecha_transaccion ? new Date(transaction.fecha_transaccion).toLocaleDateString('es-CO') : 'N/A'}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setSelectedTransaction(transaction)}
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
           </div>
         </CardContent>
       </Card>
