@@ -110,6 +110,7 @@ export function SalesRentalsManagement() {
   const [departments, setDepartments] = useState<Department[]>([])
   const [stats, setStats] = useState<SalesRentalsStats | null>(null)
   const [loading, setLoading] = useState(true)
+  const [transactionsLoading, setTransactionsLoading] = useState(false)
   const [showCreateDialog, setShowCreateDialog] = useState(false)
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null)
   const [searchTerm, setSearchTerm] = useState("")
@@ -183,8 +184,11 @@ export function SalesRentalsManagement() {
   }, [])
 
   useEffect(() => {
-    fetchTransactions()
-  }, [filterType, filterStatus, filterAgent, filterBuilding, dateRange])
+    // Solo cargar transacciones si ya se cargaron los datos iniciales
+    if (!loading) {
+      fetchTransactions()
+    }
+  }, [filterType, filterStatus, filterAgent, filterBuilding, dateRange, loading])
 
   const fetchInitialData = async () => {
     try {
@@ -204,14 +208,28 @@ export function SalesRentalsManagement() {
         statsRes.json()
       ])
 
-      if (transactionsData.success) setTransactions(transactionsData.data || [])
+      if (transactionsData.success) {
+        setTransactions(transactionsData.data || [])
+      } else {
+        console.error('Error al cargar transacciones:', transactionsData.error)
+        toast.error('Error al cargar transacciones')
+      }
+      
       if (agentsData.success) {
-        // Incluir todos los administradores (independientemente de la bandera es_agente)
         setAgents(agentsData.data || [])
       }
-      if (buildingsData.success) setBuildings(buildingsData.data || [])
-      if (departmentsData.success) setDepartments(departmentsData.data || [])
-      if (statsData.success) setStats(statsData.data)
+      
+      if (buildingsData.success) {
+        setBuildings(buildingsData.data || [])
+      }
+      
+      if (departmentsData.success) {
+        setDepartments(departmentsData.data || [])
+      }
+      
+      if (statsData.success) {
+        setStats(statsData.data)
+      }
       
     } catch (error) {
       console.error('Error al cargar datos:', error)
@@ -223,6 +241,8 @@ export function SalesRentalsManagement() {
 
   const fetchTransactions = async () => {
     try {
+      setTransactionsLoading(true)
+      
       const params = new URLSearchParams({
         search: searchTerm,
         type: filterType,
@@ -238,9 +258,15 @@ export function SalesRentalsManagement() {
       
       if (data.success) {
         setTransactions(data.data || [])
+      } else {
+        console.error('Error al cargar transacciones filtradas:', data.error)
+        toast.error('Error al cargar transacciones')
       }
     } catch (error) {
       console.error('Error al cargar transacciones:', error)
+      toast.error('Error al cargar transacciones')
+    } finally {
+      setTransactionsLoading(false)
     }
   }
 
