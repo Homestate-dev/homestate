@@ -185,18 +185,18 @@ export function SalesRentalsManagement() {
   }, [])
 
   useEffect(() => {
-    // Cargar transacciones cuando se complete la carga inicial
+    // Cargar transacciones inmediatamente después de que se complete la carga inicial
     if (!loading) {
       fetchTransactions()
     }
   }, [loading])
 
   useEffect(() => {
-    // Recargar transacciones cuando cambien los filtros
-    if (!loading && initialLoadComplete) {
+    // Recargar transacciones cuando cambien los filtros (solo si ya se completó la carga inicial)
+    if (!loading && initialLoadComplete && !transactionsLoading) {
       fetchTransactions()
     }
-  }, [filterType, filterStatus, filterAgent, filterBuilding, dateRange, searchTerm])
+  }, [filterType, filterStatus, filterAgent, filterBuilding, searchTerm])
 
   const fetchInitialData = async () => {
     try {
@@ -248,9 +248,10 @@ export function SalesRentalsManagement() {
         type: filterType,
         status: filterStatus,
         agent: filterAgent,
-        building: filterBuilding,
-        from: dateRange.from,
-        to: dateRange.to
+        building: filterBuilding
+        // Remover temporalmente los filtros de fecha
+        // from: dateRange.from,
+        // to: dateRange.to
       })
 
       const response = await fetch(`/api/sales-rentals/transactions?${params}`)

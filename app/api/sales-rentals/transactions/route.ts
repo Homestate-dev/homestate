@@ -107,13 +107,13 @@ export async function GET(request: Request) {
     // Filtro de fechas
     if (from) {
       paramCount++
-      whereConditions.push(`${tableAlias}.fecha_transaccion >= $${paramCount}`)
+      whereConditions.push(`CAST(${tableAlias}.fecha_transaccion AS DATE) >= $${paramCount}`)
       queryParams.push(from)
     }
 
     if (to) {
       paramCount++
-      whereConditions.push(`${tableAlias}.fecha_transaccion <= $${paramCount}`)
+      whereConditions.push(`CAST(${tableAlias}.fecha_transaccion AS DATE) <= $${paramCount}`)
       queryParams.push(to)
     }
 
