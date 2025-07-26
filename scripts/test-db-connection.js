@@ -1,42 +1,37 @@
 const { Pool } = require('pg');
 
-// Configuración de la base de datos
 const pool = new Pool({
-  host: process.env.DB_HOST || 'localhost',
-  port: process.env.DB_PORT || 5432,
-  database: process.env.DB_NAME || 'homestate',
-  user: process.env.DB_USER || 'postgres',
-  password: process.env.DB_PASSWORD || 'password',
+  host: 'c2hbg00ac72j9d.cluster-czrs8kj4isg7.us-east-1.rds.amazonaws.com',
+  database: 'dauaho3sghau5i',
+  user: 'ufcmrjr46j97t8',
+  port: 5432,
+  password: 'p70abb1114a5ec3d4d98dc2afc768f855cf22ad2fc64f2f3aa005f6e773e0defd',
+  ssl: {
+    rejectUnauthorized: false
+  }
 });
 
 async function testConnection() {
-  console.log('🔍 Probando conexión a la base de datos...\n');
-  
-  console.log('Configuración actual:');
-  console.log(`Host: ${process.env.DB_HOST || 'localhost'}`);
-  console.log(`Port: ${process.env.DB_PORT || 5432}`);
-  console.log(`Database: ${process.env.DB_NAME || 'homestate'}`);
-  console.log(`User: ${process.env.DB_USER || 'postgres'}`);
-  console.log(`Password: ${process.env.DB_PASSWORD ? '***' : 'password'}\n`);
-  
   try {
+    console.log('🔌 Probando conexión a la base de datos...');
+    
     const client = await pool.connect();
-    console.log('✅ Conexión exitosa a PostgreSQL!');
+    console.log('✅ Conexión exitosa');
     
-    // Probar consulta simple
-    const result = await client.query('SELECT version()');
-    console.log('✅ Consulta exitosa');
-    console.log(`Versión de PostgreSQL: ${result.rows[0].version}`);
-    
-    // Verificar si la base de datos homestate existe
-    const dbExists = await client.query(`
-      SELECT datname FROM pg_database WHERE datname = 'homestate'
+    // Verificar tablas de transacciones
+    const result = await client.query(`
+      SELECT table_name 
+      FROM information_schema.tables 
+      WHERE table_name IN ('transacciones_departamentos', 'transacciones_ventas_arriendos')
+      AND table_schema = 'public'
     `);
     
-    if (dbExists.rows.length > 0) {
-      console.log('✅ Base de datos "homestate" existe');
-    } else {
-      console.log('❌ Base de datos "homestate" no existe');
+    console.log('📋 Tablas de transacciones encontradas:', result.rows.map(r => r.table_name));
+    
+    // Contar registros en cada tabla
+    for (const row of result.rows) {
+      const count = await client.query(`SELECT COUNT(*) as total FROM "${row.table_name}"`);
+      console.log(`📊 ${row.table_name}: ${count.rows[0].total} registros`);
     }
     
     client.release();
@@ -44,12 +39,7 @@ async function testConnection() {
     
   } catch (error) {
     console.error('❌ Error de conexión:', error.message);
-    console.log('\n💡 Posibles soluciones:');
-    console.log('1. Verifica que PostgreSQL esté ejecutándose');
-    console.log('2. Verifica las credenciales en tu archivo .env');
-    console.log('3. Verifica que la base de datos "homestate" exista');
-    console.log('4. Si usas Heroku, verifica la variable DATABASE_URL');
   }
 }
 
-testConnection().catch(console.error); 
+testConnection(); 

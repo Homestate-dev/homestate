@@ -185,16 +185,15 @@ export function SalesRentalsManagement() {
   }, [])
 
   useEffect(() => {
-    // Cargar transacciones iniciales después de que se complete la carga inicial
-    if (!loading && !initialLoadComplete) {
+    // Cargar transacciones cuando se complete la carga inicial
+    if (!loading) {
       fetchTransactions()
-      setInitialLoadComplete(true)
     }
-  }, [loading, initialLoadComplete])
+  }, [loading])
 
   useEffect(() => {
-    // Solo cargar transacciones si ya se cargaron los datos iniciales y no estamos en la carga inicial
-    if (initialLoadComplete && !transactionsLoading && !loading) {
+    // Recargar transacciones cuando cambien los filtros
+    if (!loading && initialLoadComplete) {
       fetchTransactions()
     }
   }, [filterType, filterStatus, filterAgent, filterBuilding, dateRange, searchTerm])
@@ -236,6 +235,7 @@ export function SalesRentalsManagement() {
       toast.error('Error al cargar datos iniciales')
     } finally {
       setLoading(false)
+      setInitialLoadComplete(true)
     }
   }
 

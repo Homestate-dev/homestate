@@ -159,6 +159,26 @@ export async function GET(request: Request) {
         safeRow.valor_transaccion = row.precio_final
       }
       
+      // Agregar campos faltantes para compatibilidad con el frontend
+      if (!safeRow.cliente_nombre) {
+        safeRow.cliente_nombre = 'Cliente no especificado'
+      }
+      if (!safeRow.cliente_email) {
+        safeRow.cliente_email = null
+      }
+      if (!safeRow.cliente_telefono) {
+        safeRow.cliente_telefono = null
+      }
+      if (!safeRow.cliente_cedula) {
+        safeRow.cliente_cedula = null
+      }
+      if (!safeRow.fecha_transaccion) {
+        safeRow.fecha_transaccion = row.fecha_registro || null
+      }
+      if (!safeRow.comision_valor) {
+        safeRow.comision_valor = row.comision_agente || 0
+      }
+      
       return safeRow
     })
 
@@ -183,9 +203,23 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const data = await request.json()
+    
+    console.log('📥 Datos recibidos en POST:', {
+      departamento_id: data.departamento_id,
+      agente_id: data.agente_id,
+      tipo_transaccion: data.tipo_transaccion,
+      valor_transaccion: data.valor_transaccion,
+      cliente_nombre: data.cliente_nombre
+    })
 
     // Validaciones básicas
-    if (!data.departamento_id || !data.agente_id || !data.tipo_transaccion || !data.valor_transaccion || !data.cliente_nombre) {
+    if (!data.departamento_id || !data.agente_id || !data.tipo_transaccion || !data.valor_transaccion) {
+      console.log('❌ Campos faltantes:', {
+        departamento_id: !!data.departamento_id,
+        agente_id: !!data.agente_id,
+        tipo_transaccion: !!data.tipo_transaccion,
+        valor_transaccion: !!data.valor_transaccion
+      })
       return NextResponse.json(
         { success: false, error: 'Faltan campos obligatorios' },
         { status: 400 }
@@ -209,6 +243,14 @@ export async function POST(request: Request) {
         success: false,
         error: 'No se encontró tabla de transacciones'
       }, { status: 500 })
+    }
+
+    // Validar cliente_nombre solo si se usa la tabla antigua
+    if (hasTransaccionesVentasArriendos && !data.cliente_nombre) {
+      return NextResponse.json(
+        { success: false, error: 'Falta el nombre del cliente' },
+        { status: 400 }
+      )
     }
 
     // Usar la tabla que existe
@@ -239,9 +281,8 @@ export async function POST(request: Request) {
           comision_agente, comision_porcentaje, comision_valor,
           porcentaje_homestate, porcentaje_bienes_raices, porcentaje_admin_edificio,
           valor_homestate, valor_bienes_raices, valor_admin_edificio,
-          cliente_nombre, cliente_email, cliente_telefono, notas, creado_por,
-          estado_actual, datos_estado, fecha_ultimo_estado, fecha_registro
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23)
+          notas, fecha_transaccion, estado_actual, datos_estado, fecha_ultimo_estado, fecha_registro
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20)
         RETURNING *
       `
       
@@ -250,8 +291,6 @@ export async function POST(request: Request) {
       const comisionValor = data.tipo_transaccion === 'venta' 
         ? (valorTransaccion * comisionPorcentaje) / 100 
         : (parseFloat(data.comision_valor) || 0)
-      
-      // Debug logs removidos para producción
       
       const porcentajeHomestate = data.porcentaje_homestate || 60
       const porcentajeBienesRaices = data.porcentaje_bienes_raices || 30
@@ -276,11 +315,8 @@ export async function POST(request: Request) {
         valorHomestate,
         valorBienesRaices,
         valorAdminEdificio,
-        data.cliente_nombre,
-        data.cliente_email || null,
-        data.cliente_telefono || null,
         data.notas || null,
-        data.currentUserUid,
+        data.fecha_transaccion || new Date().toISOString(),
         data.estado_actual || 'reservado',
         data.datos_estado || '{}',
         new Date().toISOString(),
