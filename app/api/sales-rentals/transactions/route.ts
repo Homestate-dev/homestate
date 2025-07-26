@@ -234,15 +234,17 @@ export async function POST(request: Request) {
           comision_agente, comision_porcentaje, comision_valor,
           porcentaje_homestate, porcentaje_bienes_raices, porcentaje_admin_edificio,
           valor_homestate, valor_bienes_raices, valor_admin_edificio,
-          cliente_nombre, cliente_email, cliente_telefono, notas, creado_por
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)
+          cliente_nombre, cliente_email, cliente_telefono, notas, creado_por,
+          estado_actual, datos_estado, fecha_ultimo_estado
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22)
         RETURNING *
       `
       
       const comisionPorcentaje = data.comision_porcentaje || 3.0
+      const valorTransaccion = parseFloat(data.valor_transaccion) || 0
       const comisionValor = data.tipo_transaccion === 'venta' 
-        ? (data.valor_transaccion * comisionPorcentaje) / 100 
-        : (data.comision_valor || data.valor_transaccion)
+        ? (valorTransaccion * comisionPorcentaje) / 100 
+        : (data.comision_valor || valorTransaccion)
       
       const porcentajeHomestate = data.porcentaje_homestate || 60
       const porcentajeBienesRaices = data.porcentaje_bienes_raices || 30
@@ -256,7 +258,7 @@ export async function POST(request: Request) {
         data.departamento_id,
         data.agente_id,
         data.tipo_transaccion,
-        data.valor_transaccion,
+        valorTransaccion,
         data.precio_original || null,
         comisionValor,
         comisionPorcentaje,
@@ -271,7 +273,10 @@ export async function POST(request: Request) {
         data.cliente_email || null,
         data.cliente_telefono || null,
         data.notas || null,
-        data.currentUserUid
+        data.currentUserUid,
+        data.estado_actual || 'reservado',
+        data.datos_estado || '{}',
+        new Date().toISOString()
       ]
     } else {
       // Usar la tabla antigua
@@ -291,7 +296,7 @@ export async function POST(request: Request) {
         data.departamento_id,
         data.agente_id,
         data.tipo_transaccion,
-        data.valor_transaccion,
+        valorTransaccion,
         data.comision_porcentaje || 3.0,
         data.fecha_transaccion,
         data.fecha_firma_contrato || null,

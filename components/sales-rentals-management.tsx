@@ -734,15 +734,6 @@ export function SalesRentalsManagement() {
                         >
                           <Eye className="h-4 w-4" />
                         </Button>
-                        {transaction.estado_actual !== 'completada' && transaction.estado_actual !== 'desistimiento' && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setSelectedTransaction(transaction)}
-                          >
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                        )}
                       </div>
                     </TableCell>
                   </TableRow>
@@ -1016,25 +1007,7 @@ export function SalesRentalsManagement() {
                       onChange={(e) => setFormData(prev => ({ ...prev, fecha_transaccion: e.target.value }))}
                     />
                   </div>
-                  <div>
-                    <Label htmlFor="estado">Estado</Label>
-                    <Select 
-                      value={formData.estado_actual} 
-                                              onValueChange={(value: "reservado" | "promesa_compra_venta" | "firma_escrituras" | "firma_y_pago" | "desistimiento" | "completada") => setFormData(prev => ({ ...prev, estado_actual: value }))}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="reservado">Reservado</SelectItem>
-                        <SelectItem value="promesa_compra_venta">Promesa de Compra Venta</SelectItem>
-                        <SelectItem value="firma_escrituras">Firma de Escrituras</SelectItem>
-                        <SelectItem value="firma_y_pago">Firma y Pago</SelectItem>
-                        <SelectItem value="desistimiento">Desistimiento</SelectItem>
-                        <SelectItem value="completada">Completada</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+                  
                 </div>
 
                 <div className="space-y-4">
