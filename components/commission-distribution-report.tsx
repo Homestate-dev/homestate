@@ -73,6 +73,14 @@ export function CommissionDistributionReport() {
     agentId: 'all'
   })
 
+  // Función auxiliar para manejar valores numéricos de forma segura
+  const safeNumberFormat = (value: any, decimals: number = 1): string => {
+    if (typeof value === 'number' && !isNaN(value)) {
+      return value.toFixed(decimals)
+    }
+    return '0.0'
+  }
+
   useEffect(() => {
     fetchAgents()
     fetchCommissionData()
@@ -259,15 +267,15 @@ export function CommissionDistributionReport() {
               <div className="text-sm">
                 <div className="flex items-center justify-between">
                   <span>HomeState:</span>
-                  <span className="font-semibold">{summary.promedio_porcentaje_homestate.toFixed(1)}%</span>
+                  <span className="font-semibold">{safeNumberFormat(summary.promedio_porcentaje_homestate)}%</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span>Bienes Raíces:</span>
-                  <span className="font-semibold">{summary.promedio_porcentaje_bienes_raices.toFixed(1)}%</span>
+                  <span className="font-semibold">{safeNumberFormat(summary.promedio_porcentaje_bienes_raices)}%</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span>Admin Edificio:</span>
-                  <span className="font-semibold">{summary.promedio_porcentaje_admin_edificio.toFixed(1)}%</span>
+                  <span className="font-semibold">{safeNumberFormat(summary.promedio_porcentaje_admin_edificio)}%</span>
                 </div>
               </div>
             </CardContent>
@@ -298,9 +306,9 @@ export function CommissionDistributionReport() {
                     value={summary.total_comisiones > 0 ? summary.porcentaje_total_homestate : 0} 
                     className="flex-1 h-3"
                   />
-                  <span className="text-sm font-semibold text-blue-600">
-                    {summary.porcentaje_total_homestate.toFixed(1)}%
-                  </span>
+                                     <span className="text-sm font-semibold text-blue-600">
+                     {safeNumberFormat(summary.porcentaje_total_homestate)}%
+                   </span>
                 </div>
               </div>
               
@@ -316,9 +324,9 @@ export function CommissionDistributionReport() {
                     value={summary.total_comisiones > 0 ? summary.porcentaje_total_bienes_raices : 0} 
                     className="flex-1 h-3"
                   />
-                  <span className="text-sm font-semibold text-green-600">
-                    {summary.porcentaje_total_bienes_raices.toFixed(1)}%
-                  </span>
+                                     <span className="text-sm font-semibold text-green-600">
+                     {safeNumberFormat(summary.porcentaje_total_bienes_raices)}%
+                   </span>
                 </div>
               </div>
               
@@ -334,9 +342,9 @@ export function CommissionDistributionReport() {
                     value={summary.total_comisiones > 0 ? summary.porcentaje_total_admin_edificio : 0} 
                     className="flex-1 h-3"
                   />
-                  <span className="text-sm font-semibold text-purple-600">
-                    {summary.porcentaje_total_admin_edificio.toFixed(1)}%
-                  </span>
+                                     <span className="text-sm font-semibold text-purple-600">
+                     {safeNumberFormat(summary.porcentaje_total_admin_edificio)}%
+                   </span>
                 </div>
               </div>
             </div>

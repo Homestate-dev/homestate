@@ -1212,9 +1212,9 @@ export async function getBuildingIncomeReport(buildingId?: number) {
       COALESCE(SUM(t.valor_homestate), 0) as total_homestate,
       COALESCE(SUM(t.valor_bienes_raices), 0) as total_bienes_raices,
       COALESCE(SUM(t.valor_admin_edificio), 0) as total_admin_edificio,
-      COALESCE(AVG(t.porcentaje_homestate), 0) as promedio_porcentaje_homestate,
-      COALESCE(AVG(t.porcentaje_bienes_raices), 0) as promedio_porcentaje_bienes_raices,
-      COALESCE(AVG(t.porcentaje_admin_edificio), 0) as promedio_porcentaje_admin_edificio
+      CAST(COALESCE(AVG(t.porcentaje_homestate), 0) AS NUMERIC(10,2)) as promedio_porcentaje_homestate,
+      CAST(COALESCE(AVG(t.porcentaje_bienes_raices), 0) AS NUMERIC(10,2)) as promedio_porcentaje_bienes_raices,
+      CAST(COALESCE(AVG(t.porcentaje_admin_edificio), 0) AS NUMERIC(10,2)) as promedio_porcentaje_admin_edificio
     FROM edificios e
     LEFT JOIN departamentos d ON e.id = d.edificio_id
     LEFT JOIN transacciones_departamentos t ON d.id = t.departamento_id
@@ -1317,25 +1317,25 @@ export async function getCommissionDistributionSummary(startDate?: string, endDa
       COALESCE(SUM(t.valor_homestate), 0) as total_homestate,
       COALESCE(SUM(t.valor_bienes_raices), 0) as total_bienes_raices,
       COALESCE(SUM(t.valor_admin_edificio), 0) as total_admin_edificio,
-      COALESCE(AVG(t.porcentaje_homestate), 0) as promedio_porcentaje_homestate,
-      COALESCE(AVG(t.porcentaje_bienes_raices), 0) as promedio_porcentaje_bienes_raices,
-      COALESCE(AVG(t.porcentaje_admin_edificio), 0) as promedio_porcentaje_admin_edificio,
+      CAST(COALESCE(AVG(t.porcentaje_homestate), 0) AS NUMERIC(10,2)) as promedio_porcentaje_homestate,
+      CAST(COALESCE(AVG(t.porcentaje_bienes_raices), 0) AS NUMERIC(10,2)) as promedio_porcentaje_bienes_raices,
+      CAST(COALESCE(AVG(t.porcentaje_admin_edificio), 0) AS NUMERIC(10,2)) as promedio_porcentaje_admin_edificio,
       -- Porcentajes de distribución
-      CASE 
+      CAST(CASE 
         WHEN SUM(t.comision_valor) > 0 
         THEN (SUM(t.valor_homestate) / SUM(t.comision_valor)) * 100 
         ELSE 0 
-      END as porcentaje_total_homestate,
-      CASE 
+      END AS NUMERIC(10,2)) as porcentaje_total_homestate,
+      CAST(CASE 
         WHEN SUM(t.comision_valor) > 0 
         THEN (SUM(t.valor_bienes_raices) / SUM(t.comision_valor)) * 100 
         ELSE 0 
-      END as porcentaje_total_bienes_raices,
-      CASE 
+      END AS NUMERIC(10,2)) as porcentaje_total_bienes_raices,
+      CAST(CASE 
         WHEN SUM(t.comision_valor) > 0 
         THEN (SUM(t.valor_admin_edificio) / SUM(t.comision_valor)) * 100 
         ELSE 0 
-      END as porcentaje_total_admin_edificio
+      END AS NUMERIC(10,2)) as porcentaje_total_admin_edificio
     FROM transacciones_departamentos t
     WHERE ${whereConditions.join(' AND ')}
   `

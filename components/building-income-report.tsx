@@ -47,6 +47,14 @@ export function BuildingIncomeReport() {
   const [selectedBuilding, setSelectedBuilding] = useState<string>("all")
   const [loading, setLoading] = useState(true)
 
+  // Función auxiliar para manejar valores numéricos de forma segura
+  const safeNumberFormat = (value: any, decimals: number = 1): string => {
+    if (typeof value === 'number' && !isNaN(value)) {
+      return value.toFixed(decimals)
+    }
+    return '0.0'
+  }
+
   useEffect(() => {
     fetchBuildings()
     fetchIncomeData()
@@ -268,7 +276,7 @@ export function BuildingIncomeReport() {
                               className="flex-1 h-2"
                             />
                             <span className="text-xs text-blue-600">
-                              {building.promedio_porcentaje_homestate.toFixed(1)}%
+                              {safeNumberFormat(building.promedio_porcentaje_homestate)}%
                             </span>
                           </div>
                         </div>
@@ -286,7 +294,7 @@ export function BuildingIncomeReport() {
                               className="flex-1 h-2"
                             />
                             <span className="text-xs text-green-600">
-                              {building.promedio_porcentaje_bienes_raices.toFixed(1)}%
+                              {safeNumberFormat(building.promedio_porcentaje_bienes_raices)}%
                             </span>
                           </div>
                         </div>
@@ -304,7 +312,7 @@ export function BuildingIncomeReport() {
                               className="flex-1 h-2"
                             />
                             <span className="text-xs text-purple-600">
-                              {building.promedio_porcentaje_admin_edificio.toFixed(1)}%
+                              {safeNumberFormat(building.promedio_porcentaje_admin_edificio)}%
                             </span>
                           </div>
                         </div>
