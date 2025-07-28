@@ -33,6 +33,7 @@ import {
   AlertTriangle
 } from "lucide-react"
 import { TransactionStateManager } from "./transaction-state-manager"
+import { ReportsSection } from "./reports-section"
 import { useIsMobile } from "@/hooks/use-mobile"
 
 interface Transaction {
@@ -649,6 +650,9 @@ export function SalesRentalsManagement() {
           </div>
         )}
       </div>
+
+      {/* Sección de Reportes */}
+      <ReportsSection />
 
       {/* Filtros y búsqueda */}
       <Card>

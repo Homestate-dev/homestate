@@ -1149,3 +1149,197 @@ export async function getSalesReport(startDate: string, endDate: string, agentId
   const result = await executeQuery(query, params)
   return result.rows
 } 
+
+// =================== FUNCIONES PARA REPORTES ===================
+
+// Reporte de transacciones por edificio
+export async function getBuildingTransactionsReport(buildingId?: number) {
+  const whereClause = buildingId ? 'WHERE e.id = $1' : ''
+  const params = buildingId ? [buildingId] : []
+  
+  const query = `
+    SELECT 
+      e.id as edificio_id,
+      e.nombre as edificio_nombre,
+      e.direccion as edificio_direccion,
+      d.id as departamento_id,
+      d.numero as departamento_numero,
+      d.nombre as departamento_nombre,
+      t.tipo_transaccion,
+      t.precio_final,
+      t.fecha_transaccion,
+      t.cliente_nombre,
+      t.cliente_email,
+      t.cliente_telefono,
+      a.nombre as agente_nombre,
+      t.estado_actual,
+      t.comision_valor,
+      t.porcentaje_homestate,
+      t.porcentaje_bienes_raices,
+      t.porcentaje_admin_edificio,
+      t.valor_homestate,
+      t.valor_bienes_raices,
+      t.valor_admin_edificio
+    FROM transacciones_departamentos t
+    JOIN departamentos d ON t.departamento_id = d.id
+    JOIN edificios e ON d.edificio_id = e.id
+    JOIN administradores a ON t.agente_id = a.id
+    ${whereClause}
+    ORDER BY e.nombre, t.fecha_transaccion DESC
+  `
+  
+  const result = await executeQuery(query, params)
+  return result.rows
+}
+
+// Reporte de ingresos por edificio
+export async function getBuildingIncomeReport(buildingId?: number) {
+  const whereClause = buildingId ? 'WHERE e.id = $1' : ''
+  const params = buildingId ? [buildingId] : []
+  
+  const query = `
+    SELECT 
+      e.id as edificio_id,
+      e.nombre as edificio_nombre,
+      e.direccion as edificio_direccion,
+      COUNT(t.id) as total_transacciones,
+      COUNT(CASE WHEN t.tipo_transaccion = 'venta' THEN 1 END) as total_ventas,
+      COUNT(CASE WHEN t.tipo_transaccion = 'arriendo' THEN 1 END) as total_arriendos,
+      COALESCE(SUM(t.precio_final), 0) as valor_total_transacciones,
+      COALESCE(SUM(CASE WHEN t.tipo_transaccion = 'venta' THEN t.precio_final ELSE 0 END), 0) as valor_total_ventas,
+      COALESCE(SUM(CASE WHEN t.tipo_transaccion = 'arriendo' THEN t.precio_final ELSE 0 END), 0) as valor_total_arriendos,
+      COALESCE(SUM(t.comision_valor), 0) as total_comisiones,
+      COALESCE(SUM(t.valor_homestate), 0) as total_homestate,
+      COALESCE(SUM(t.valor_bienes_raices), 0) as total_bienes_raices,
+      COALESCE(SUM(t.valor_admin_edificio), 0) as total_admin_edificio,
+      COALESCE(AVG(t.porcentaje_homestate), 0) as promedio_porcentaje_homestate,
+      COALESCE(AVG(t.porcentaje_bienes_raices), 0) as promedio_porcentaje_bienes_raices,
+      COALESCE(AVG(t.porcentaje_admin_edificio), 0) as promedio_porcentaje_admin_edificio
+    FROM edificios e
+    LEFT JOIN departamentos d ON e.id = d.edificio_id
+    LEFT JOIN transacciones_departamentos t ON d.id = t.departamento_id
+    ${whereClause}
+    GROUP BY e.id, e.nombre, e.direccion
+    ORDER BY total_comisiones DESC, e.nombre
+  `
+  
+  const result = await executeQuery(query, params)
+  return result.rows
+}
+
+// Reporte de comisiones distribuidas
+export async function getCommissionDistributionReport(startDate?: string, endDate?: string, agentId?: number) {
+  let whereConditions = ['1=1']
+  let params: any[] = []
+  let paramCount = 0
+  
+  if (startDate) {
+    paramCount++
+    whereConditions.push(`t.fecha_transaccion >= $${paramCount}`)
+    params.push(startDate)
+  }
+  
+  if (endDate) {
+    paramCount++
+    whereConditions.push(`t.fecha_transaccion <= $${paramCount}`)
+    params.push(endDate)
+  }
+  
+  if (agentId) {
+    paramCount++
+    whereConditions.push(`t.agente_id = $${paramCount}`)
+    params.push(agentId)
+  }
+  
+  const query = `
+    SELECT 
+      t.id as transaccion_id,
+      t.tipo_transaccion,
+      t.precio_final,
+      t.comision_valor,
+      t.porcentaje_homestate,
+      t.porcentaje_bienes_raices,
+      t.porcentaje_admin_edificio,
+      t.valor_homestate,
+      t.valor_bienes_raices,
+      t.valor_admin_edificio,
+      t.fecha_transaccion,
+      t.cliente_nombre,
+      a.nombre as agente_nombre,
+      e.nombre as edificio_nombre,
+      d.numero as departamento_numero,
+      -- Totales por transacción
+      (t.valor_homestate + t.valor_bienes_raices + t.valor_admin_edificio) as total_distribuido,
+      -- Verificar si la distribución suma 100%
+      (t.porcentaje_homestate + t.porcentaje_bienes_raices + t.porcentaje_admin_edificio) as total_porcentajes
+    FROM transacciones_departamentos t
+    JOIN administradores a ON t.agente_id = a.id
+    JOIN departamentos d ON t.departamento_id = d.id
+    JOIN edificios e ON d.edificio_id = e.id
+    WHERE ${whereConditions.join(' AND ')}
+    ORDER BY t.fecha_transaccion DESC
+  `
+  
+  const result = await executeQuery(query, params)
+  return result.rows
+}
+
+// Resumen de comisiones distribuidas (totales)
+export async function getCommissionDistributionSummary(startDate?: string, endDate?: string, agentId?: number) {
+  let whereConditions = ['1=1']
+  let params: any[] = []
+  let paramCount = 0
+  
+  if (startDate) {
+    paramCount++
+    whereConditions.push(`t.fecha_transaccion >= $${paramCount}`)
+    params.push(startDate)
+  }
+  
+  if (endDate) {
+    paramCount++
+    whereConditions.push(`t.fecha_transaccion <= $${paramCount}`)
+    params.push(endDate)
+  }
+  
+  if (agentId) {
+    paramCount++
+    whereConditions.push(`t.agente_id = $${paramCount}`)
+    params.push(agentId)
+  }
+  
+  const query = `
+    SELECT 
+      COUNT(t.id) as total_transacciones,
+      COUNT(CASE WHEN t.tipo_transaccion = 'venta' THEN 1 END) as total_ventas,
+      COUNT(CASE WHEN t.tipo_transaccion = 'arriendo' THEN 1 END) as total_arriendos,
+      COALESCE(SUM(t.comision_valor), 0) as total_comisiones,
+      COALESCE(SUM(t.valor_homestate), 0) as total_homestate,
+      COALESCE(SUM(t.valor_bienes_raices), 0) as total_bienes_raices,
+      COALESCE(SUM(t.valor_admin_edificio), 0) as total_admin_edificio,
+      COALESCE(AVG(t.porcentaje_homestate), 0) as promedio_porcentaje_homestate,
+      COALESCE(AVG(t.porcentaje_bienes_raices), 0) as promedio_porcentaje_bienes_raices,
+      COALESCE(AVG(t.porcentaje_admin_edificio), 0) as promedio_porcentaje_admin_edificio,
+      -- Porcentajes de distribución
+      CASE 
+        WHEN SUM(t.comision_valor) > 0 
+        THEN (SUM(t.valor_homestate) / SUM(t.comision_valor)) * 100 
+        ELSE 0 
+      END as porcentaje_total_homestate,
+      CASE 
+        WHEN SUM(t.comision_valor) > 0 
+        THEN (SUM(t.valor_bienes_raices) / SUM(t.comision_valor)) * 100 
+        ELSE 0 
+      END as porcentaje_total_bienes_raices,
+      CASE 
+        WHEN SUM(t.comision_valor) > 0 
+        THEN (SUM(t.valor_admin_edificio) / SUM(t.comision_valor)) * 100 
+        ELSE 0 
+      END as porcentaje_total_admin_edificio
+    FROM transacciones_departamentos t
+    WHERE ${whereConditions.join(' AND ')}
+  `
+  
+  const result = await executeQuery(query, params)
+  return result.rows[0]
+} 
