@@ -203,6 +203,20 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const data = await request.json()
+    
+    // Debug: Log de los datos recibidos
+    console.log('Datos recibidos en API:', {
+      cliente_nombre: data.cliente_nombre,
+      cliente_email: data.cliente_email,
+      cliente_telefono: data.cliente_telefono,
+      cliente_cedula: data.cliente_cedula,
+      cliente_tipo_documento: data.cliente_tipo_documento,
+      valor_transaccion: data.valor_transaccion,
+      tipo_transaccion: data.tipo_transaccion
+    })
+    
+    // Debug: Log completo de los datos
+    console.log('Datos completos recibidos:', JSON.stringify(data, null, 2))
 
     // Validaciones básicas
     if (!data.departamento_id || !data.agente_id || !data.tipo_transaccion || !data.valor_transaccion) {
@@ -211,6 +225,15 @@ export async function POST(request: Request) {
         { status: 400 }
       )
     }
+
+    // Debug: Log de validación
+    console.log('Validación de datos del cliente:', {
+      cliente_nombre: data.cliente_nombre,
+      cliente_email: data.cliente_email,
+      cliente_telefono: data.cliente_telefono,
+      cliente_cedula: data.cliente_cedula,
+      cliente_tipo_documento: data.cliente_tipo_documento
+    })
 
     // Validar autenticación
     if (!data.currentUserUid) {
@@ -267,8 +290,9 @@ export async function POST(request: Request) {
           comision_agente, comision_porcentaje, comision_valor,
           porcentaje_homestate, porcentaje_bienes_raices, porcentaje_admin_edificio,
           valor_homestate, valor_bienes_raices, valor_admin_edificio,
+          cliente_nombre, cliente_email, cliente_telefono, cliente_cedula, cliente_tipo_documento,
           notas, fecha_transaccion, estado_actual, datos_estado, fecha_ultimo_estado, fecha_registro, creado_por
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21)
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26)
         RETURNING *
       `
       
@@ -286,6 +310,13 @@ export async function POST(request: Request) {
       const valorBienesRaices = (comisionValor * porcentajeBienesRaices) / 100
       const valorAdminEdificio = (comisionValor * porcentajeAdminEdificio) / 100
 
+      // Asegurar que los datos del cliente se procesen correctamente
+      const clienteNombre = data.cliente_nombre || null
+      const clienteEmail = data.cliente_email || null
+      const clienteTelefono = data.cliente_telefono || null
+      const clienteCedula = data.cliente_cedula || null
+      const clienteTipoDocumento = data.cliente_tipo_documento || 'CC'
+      
       queryParams = [
         data.departamento_id,
         data.agente_id,
@@ -301,6 +332,11 @@ export async function POST(request: Request) {
         valorHomestate,
         valorBienesRaices,
         valorAdminEdificio,
+        clienteNombre,
+        clienteEmail,
+        clienteTelefono,
+        clienteCedula,
+        clienteTipoDocumento,
         data.notas || null,
         data.fecha_transaccion || new Date().toISOString(),
         data.estado_actual || 'reservado',
@@ -309,6 +345,33 @@ export async function POST(request: Request) {
         data.fecha_registro || new Date().toISOString().split('T')[0],
         data.currentUserUid || 'system'
       ]
+      
+      // Debug: Log de los parámetros que se van a insertar
+      console.log('Parámetros de inserción (datos del cliente):', {
+        cliente_nombre: data.cliente_nombre || null,
+        cliente_email: data.cliente_email || null,
+        cliente_telefono: data.cliente_telefono || null,
+        cliente_cedula: data.cliente_cedula || null,
+        cliente_tipo_documento: data.cliente_tipo_documento || 'CC'
+      })
+      
+      // Debug: Log de todos los parámetros
+      console.log('Todos los parámetros de inserción:', queryParams)
+      
+      // Debug: Log de las variables explícitas
+      console.log('Variables explícitas del cliente:', {
+        clienteNombre,
+        clienteEmail,
+        clienteTelefono,
+        clienteCedula,
+        clienteTipoDocumento
+      })
+      
+      // Debug: Log de la consulta SQL
+      console.log('🔍 Consulta SQL a ejecutar:')
+      console.log(sql)
+      console.log('📋 Parámetros de la consulta:')
+      console.log(queryParams.map((param, index) => `${index + 1}: ${param}`).join('\n'))
     } else {
       // Usar la tabla antigua
       sql = `
@@ -419,11 +482,18 @@ export async function POST(request: Request) {
 
   } catch (error) {
     console.error('Error al crear transacción:', error)
+    console.error('Stack trace:', error.stack)
+    console.error('Error details:', {
+      message: error.message,
+      code: error.code,
+      detail: error.detail,
+      hint: error.hint
+    })
     return NextResponse.json(
       { 
         success: false, 
         error: 'Error al crear la transacción',
-        details: process.env.NODE_ENV === 'development' ? error : undefined
+        details: process.env.NODE_ENV === 'development' ? error.message : undefined
       },
       { status: 500 }
     )
