@@ -1,5 +1,42 @@
 import { NextResponse } from 'next/server'
-import { query } from '@/lib/database'
+import { query, getTransactionById } from '@/lib/database'
+
+export async function GET(
+  request: Request,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const transactionId = parseInt(params.id)
+
+    if (!transactionId || isNaN(transactionId)) {
+      return NextResponse.json(
+        { success: false, error: 'ID de transacción inválido' },
+        { status: 400 }
+      )
+    }
+
+    const transaction = await getTransactionById(transactionId)
+
+    if (!transaction) {
+      return NextResponse.json(
+        { success: false, error: 'Transacción no encontrada' },
+        { status: 404 }
+      )
+    }
+
+    return NextResponse.json({
+      success: true,
+      data: transaction
+    })
+
+  } catch (error) {
+    console.error('Error al obtener detalles de transacción:', error)
+    return NextResponse.json(
+      { success: false, error: 'Error interno del servidor' },
+      { status: 500 }
+    )
+  }
+}
 
 export async function PATCH(
   request: Request,

@@ -1069,6 +1069,33 @@ export async function getTransactionsByAgent(agentId: number) {
   return result.rows
 }
 
+// Obtener transacción por ID con todos los detalles
+export async function getTransactionById(transactionId: number) {
+  const query = `
+    SELECT 
+      t.*,
+      d.nombre as departamento_nombre,
+      d.numero as departamento_numero,
+      e.nombre as edificio_nombre,
+      e.direccion as edificio_direccion,
+      a.nombre as agente_nombre,
+      a.email as agente_email,
+      a.telefono as agente_telefono
+    FROM transacciones_departamentos t
+    JOIN departamentos d ON t.departamento_id = d.id
+    JOIN edificios e ON d.edificio_id = e.id
+    JOIN administradores a ON t.agente_id = a.id
+    WHERE t.id = $1
+  `
+  const result = await executeQuery(query, [transactionId])
+  
+  if (result.rows.length === 0) {
+    return null
+  }
+  
+  return result.rows[0]
+}
+
 // Obtener estadísticas de ventas por agente
 export async function getAgentStats(agentId?: number) {
   const whereClause = agentId ? 'WHERE t.agente_id = $1' : ''

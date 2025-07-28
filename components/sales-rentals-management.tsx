@@ -46,6 +46,13 @@ interface Transaction {
   valor_transaccion: number
   comision_porcentaje: number
   comision_valor: number
+  // Campos de distribución de comisiones
+  porcentaje_homestate?: number
+  porcentaje_bienes_raices?: number
+  porcentaje_admin_edificio?: number
+  valor_homestate?: number
+  valor_bienes_raices?: number
+  valor_admin_edificio?: number
   fecha_transaccion: string
   fecha_firma_contrato?: string
   cliente_nombre: string
@@ -1257,6 +1264,37 @@ export function SalesRentalsManagement() {
                       <span className="text-sm text-gray-500 ml-2">({selectedTransaction.comision_porcentaje}%)</span>
                     )}
                   </p>
+                </div>
+              </div>
+
+              {/* Información de Comisiones */}
+              <div className="border-t pt-4">
+                <Label className="text-sm font-medium text-gray-500 mb-3 block">Distribución de Comisiones</Label>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="p-3 bg-blue-50 rounded-lg">
+                    <Label className="text-xs font-medium text-blue-600">HomeState</Label>
+                    <p className="text-sm font-semibold text-blue-800">
+                      {selectedTransaction.porcentaje_homestate || 0}% - {formatCurrency(selectedTransaction.valor_homestate || 0)}
+                    </p>
+                  </div>
+                  <div className="p-3 bg-green-50 rounded-lg">
+                    <Label className="text-xs font-medium text-green-600">Bienes Raíces</Label>
+                    <p className="text-sm font-semibold text-green-800">
+                      {selectedTransaction.porcentaje_bienes_raices || 0}% - {formatCurrency(selectedTransaction.valor_bienes_raices || 0)}
+                    </p>
+                  </div>
+                  <div className="p-3 bg-purple-50 rounded-lg">
+                    <Label className="text-xs font-medium text-purple-600">Admin Edificio</Label>
+                    <p className="text-sm font-semibold text-purple-800">
+                      {selectedTransaction.porcentaje_admin_edificio || 0}% - {formatCurrency(selectedTransaction.valor_admin_edificio || 0)}
+                    </p>
+                  </div>
+                  <div className="p-3 bg-gray-50 rounded-lg">
+                    <Label className="text-xs font-medium text-gray-600">Total Comisión</Label>
+                    <p className="text-sm font-semibold text-gray-800">
+                      {formatCurrency(selectedTransaction.comision_valor || 0)}
+                    </p>
+                  </div>
                 </div>
               </div>
 
