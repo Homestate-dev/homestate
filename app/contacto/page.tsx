@@ -20,13 +20,7 @@ export default function ContactoPage() {
     <div className="min-h-screen bg-gray-50">
       <Header />
 
-      {/* Volver al inicio */}
-      <div className="max-w-7xl mx-auto px-6 py-6">
-        <Link href="/" className="inline-flex items-center text-orange-600 hover:text-orange-700 font-medium transition-colors">
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Volver al inicio
-        </Link>
-      </div>
+     
 
       <div className="max-w-screen-lg mx-auto px-6 py-12 space-y-24">
         {/* Sección de Introducción */}
