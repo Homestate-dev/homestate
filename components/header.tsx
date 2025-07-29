@@ -20,7 +20,7 @@ export function Header() {
           <Link href="/edificios-en-la-zona" className="text-gray-700 hover:text-orange-600 font-medium">
             Edificios y Departamentos
           </Link>
-          <Link href="#" className="text-gray-700 hover:text-orange-600 font-medium">
+          <Link href="/contacto" className="text-gray-700 hover:text-orange-600 font-medium">
             Contacto
           </Link>
         </nav>
