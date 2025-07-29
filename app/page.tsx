@@ -81,7 +81,7 @@ export default function BackOfficePage() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <Building2 className="h-12 w-12 text-orange-600 mx-auto mb-4 animate-spin" />
+          <Logo size={48} className="text-orange-600 mx-auto mb-4 animate-spin" />
           <p className="text-gray-600">Verificando autenticación...</p>
         </div>
       </div>
@@ -196,12 +196,12 @@ export default function BackOfficePage() {
 
       {/* Contenido principal */}
       <div className="max-w-7xl mx-auto p-4 sm:p-6">
-        {loadingBuildings ? (
-          <div className="text-center py-8">
-            <Building2 className="h-12 w-12 text-orange-600 mx-auto mb-4 animate-spin" />
-            <p className="text-gray-600">Cargando edificios...</p>
-          </div>
-        ) : selectedBuilding ? (
+                 {loadingBuildings ? (
+           <div className="text-center py-8">
+             <Logo size={48} className="text-orange-600 mx-auto mb-4 animate-spin" />
+             <p className="text-gray-600">Cargando edificios...</p>
+           </div>
+         ) : selectedBuilding ? (
           <BuildingDetail building={selectedBuildingData!} initialTab={selectedTab} onBuildingDeleted={handleBackToList} />
         ) : (
                       <BuildingList 
