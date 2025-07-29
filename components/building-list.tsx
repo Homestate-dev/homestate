@@ -1,7 +1,8 @@
 "use client"
 
 import { useState } from "react"
-import { Plus, Building2, MapPin, Car, Users, Eye, Edit, QrCode, Trash2, UserCog, Activity, ExternalLink, Search, Briefcase, DollarSign } from "lucide-react"
+import { Plus, MapPin, Car, Users, Eye, Edit, QrCode, Trash2, UserCog, Activity, ExternalLink, Search, Briefcase, DollarSign } from "lucide-react"
+import { Logo } from "@/components/ui/logo"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -107,7 +108,7 @@ export function BuildingList({ buildings, onSelectBuilding, onBuildingCreated, o
       <Tabs defaultValue="buildings" className="w-full">
         <TabsList className={`${isMobile ? 'grid w-full' : 'grid w-full lg:w-[1000px]'} ${isMainAdmin ? 'grid-cols-4' : 'grid-cols-2'}`}>
           <TabsTrigger value="buildings" className={`flex items-center gap-2 ${isMobile ? 'text-xs' : ''}`}>
-            <Building2 className="h-4 w-4" />
+            <Logo size={16} />
             {isMobile ? 'Edificios' : 'Edificios'}
           </TabsTrigger>
           <TabsTrigger value="admins" className={`flex items-center gap-2 ${isMobile ? 'text-xs' : ''}`}>
@@ -152,7 +153,7 @@ export function BuildingList({ buildings, onSelectBuilding, onBuildingCreated, o
         <Card>
           <CardContent className={`${isMobile ? 'p-3' : 'p-4'}`}>
             <div className="flex items-center gap-2">
-              <Building2 className={`${isMobile ? 'h-4 w-4' : 'h-5 w-5'} text-orange-600`} />
+              <Logo size={isMobile ? 16 : 20} className="text-orange-600" />
               <div>
                 <p className={`${isMobile ? 'text-xs' : 'text-sm'} text-gray-600`}>Total Edificios</p>
                 <p className={`${isMobile ? 'text-lg' : 'text-2xl'} font-bold`}>{filteredBuildings.length}</p>

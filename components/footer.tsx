@@ -1,6 +1,7 @@
 import Link from "next/link"
 import Image from "next/image"
 import { Facebook, Instagram, Twitter } from "lucide-react"
+import { Logo } from "@/components/ui/logo"
 
 export function Footer() {
   return (
@@ -9,7 +10,7 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div>
             <div className="flex items-center space-x-2 mb-4">
-              <Image src="/favicon.ico" alt="HomEstate Logo" width={32} height={32} className="w-8 h-8" />
+              <Logo size={32} className="text-orange-600" />
               <span className="font-bold text-xl text-orange-600">HomEstate</span>
             </div>
             <p className="text-gray-600 mb-4">

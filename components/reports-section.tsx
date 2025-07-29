@@ -5,8 +5,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { 
-  Building2, 
+import { Logo } from "@/components/ui/logo"
+import {
   DollarSign, 
   TrendingUp, 
   FileText,
@@ -40,7 +40,7 @@ export function ReportsSection() {
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="building-transactions" className="flex items-center gap-2">
-            <Building2 className="h-4 w-4" />
+            <Logo size={16} />
             Por Edificio
           </TabsTrigger>
           <TabsTrigger value="financial" className="flex items-center gap-2">

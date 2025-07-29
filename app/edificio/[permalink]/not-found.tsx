@@ -1,12 +1,13 @@
 import Link from 'next/link'
-import { Building2, Home } from 'lucide-react'
+import { Home } from 'lucide-react'
+import { Logo } from '@/components/ui/logo'
 
 export default function NotFound() {
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
       <div className="max-w-md w-full text-center">
         <div className="mb-6">
-          <Building2 className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+          <Logo size={64} className="text-gray-400 mx-auto mb-4" />
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
             Edificio no encontrado
           </h1>

@@ -1,6 +1,7 @@
 "use client"
 import { useState } from "react"
-import { Building2, Eye, EyeOff, AlertTriangle } from "lucide-react"
+import { Eye, EyeOff, AlertTriangle } from "lucide-react"
+import { Logo } from "@/components/ui/logo"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -69,13 +70,13 @@ export function LoginForm({ onLoginSuccess }: LoginFormProps) {
   return (
     <div className={`min-h-screen bg-gray-50 flex items-center justify-center ${isMobile ? 'p-4' : 'p-8'}`}>
       <Card className={`w-full ${isMobile ? 'max-w-sm' : 'max-w-md'}`}>
-        <CardHeader className="text-center">
-          <div className="flex justify-center mb-4">
-            <Building2 className={`${isMobile ? 'h-10 w-10' : 'h-12 w-12'} text-orange-600`} />
-          </div>
-          <CardTitle className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold text-gray-900`}>
-            HomEstate
-          </CardTitle>
+                  <CardHeader className="text-center">
+            <div className="flex justify-center mb-4">
+              <Logo size={isMobile ? 40 : 48} className="text-orange-600" />
+            </div>
+            <CardTitle className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold text-gray-900`}>
+              HomEstate
+            </CardTitle>
           <CardDescription className={`text-gray-600 ${isMobile ? 'text-sm' : ''}`}>
             Panel de Administración
           </CardDescription>

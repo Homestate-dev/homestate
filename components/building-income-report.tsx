@@ -8,8 +8,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Progress } from "@/components/ui/progress"
 import { toast } from "sonner"
-import { 
-  Building2, 
+import { Logo } from "@/components/ui/logo"
+import {
+ 
   DollarSign, 
   TrendingUp,
   Download,
@@ -132,7 +133,7 @@ export function BuildingIncomeReport() {
       {/* Filtros */}
       <div className="flex items-center gap-4">
         <div className="flex items-center gap-2">
-          <Building2 className="h-4 w-4 text-gray-500" />
+          <Logo size={16} className="text-gray-500" />
           <span className="text-sm font-medium">Edificio:</span>
         </div>
         <Select value={selectedBuilding} onValueChange={setSelectedBuilding}>

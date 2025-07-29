@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { Logo } from "@/components/ui/logo"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -145,7 +146,7 @@ export function BuildingTransactionsReport() {
       {/* Filtros */}
       <div className="flex items-center gap-4">
         <div className="flex items-center gap-2">
-          <Building2 className="h-4 w-4 text-gray-500" />
+          <Logo size={16} className="text-gray-500" />
           <span className="text-sm font-medium">Edificio:</span>
         </div>
         <Select value={selectedBuilding} onValueChange={setSelectedBuilding}>
