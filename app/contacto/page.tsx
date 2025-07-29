@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import Image from "next/image"
-import { ArrowLeft, MessageCircle } from "lucide-react"
+import { ArrowLeft } from "lucide-react"
 import { FaWhatsapp } from "react-icons/fa"
 import { Button } from "@/components/ui/button"
 import { Logo } from "@/components/ui/logo"
@@ -10,7 +10,7 @@ import { Header } from "@/components/header"
 
 export default function ContactoPage() {
   const handleWhatsAppClick = () => {
-    const phoneNumber = "+5491112345678" // Reemplazar con el número real
+    const phoneNumber = "+5491112345678"
     const message = "Hola! Me interesa formar parte de HomEState. ¿Podrían darme más información?"
     const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`
     window.open(whatsappUrl, "_blank")
@@ -19,130 +19,102 @@ export default function ContactoPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
-      
-      {/* Botón de volver atrás */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <Link href="/" className="inline-flex items-center text-orange-600 hover:text-orange-700 font-medium">
+
+      {/* Volver al inicio */}
+      <div className="max-w-7xl mx-auto px-6 py-6">
+        <Link href="/" className="inline-flex items-center text-orange-600 hover:text-orange-700 font-medium transition-colors">
           <ArrowLeft className="h-4 w-4 mr-2" />
           Volver al inicio
         </Link>
       </div>
 
-      {/* Contenido principal */}
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="text-center mb-12">
-          {/* Logo grande */}
-          <div className="flex justify-center mb-8">
-            <Logo size={120} className="text-orange-600" />
+      <div className="max-w-screen-lg mx-auto px-6 py-12 space-y-24">
+        {/* Sección de Introducción */}
+        <section className="text-center">
+          <div className="flex justify-center mb-6">
+            <Logo size={100} className="text-orange-600" />
           </div>
-          
-          <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6">
+          <h1 className="text-4xl md:text-6xl font-bold text-gray-900">
             ¿Qué es <span className="text-orange-600">HomEState</span>?
           </h1>
-          
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
+          <p className="mt-6 text-lg text-gray-600 max-w-2xl mx-auto">
             HomEState es la plataforma inmobiliaria más innovadora que conecta a propietarios, 
-            inquilinos y profesionales del sector inmobiliario en una experiencia digital única.
+            inquilinos y profesionales en una experiencia digital única.
           </p>
-        </div>
+        </section>
 
-        {/* Sección de características */}
-        <div className="grid md:grid-cols-2 gap-8 mb-16">
-          <div className="bg-white rounded-lg p-8 shadow-lg">
-            <h3 className="text-2xl font-bold text-gray-900 mb-4">🏠 Tu Nuevo Sitio</h3>
-            <p className="text-gray-600 leading-relaxed">
-              Encuentra tu hogar ideal con nuestra tecnología avanzada de búsqueda y 
-              visualización de propiedades en tiempo real.
-            </p>
-          </div>
-          
-          <div className="bg-white rounded-lg p-8 shadow-lg">
-            <h3 className="text-2xl font-bold text-gray-900 mb-4">📱 Experiencia Digital</h3>
-            <p className="text-gray-600 leading-relaxed">
-              Micrositios personalizados para cada edificio, tours virtuales y 
-              gestión inteligente de propiedades.
-            </p>
-          </div>
-        </div>
-
-        {/* Sección de unirse */}
-        <div className="bg-gradient-to-r from-orange-500 to-orange-600 rounded-2xl p-8 md:p-12 text-white text-center mb-12">
-          <div className="max-w-2xl mx-auto">
-            <h2 className="text-3xl md:text-4xl font-bold mb-6">
-              ¡Únete a HomEState!
-            </h2>
-            
-            <p className="text-xl mb-8 leading-relaxed">
-              Forma parte de la revolución inmobiliaria. Somos una empresa en crecimiento 
-              que busca profesionales apasionados por la tecnología y el sector inmobiliario.
-            </p>
-            
-            <div className="flex justify-center mb-8">
-              <Image
-                src="/placeholder-user.jpg"
-                alt="Persona invitando a unirse a HomEState"
-                width={200}
-                height={200}
-                className="rounded-full border-4 border-white shadow-lg"
-              />
-            </div>
-            
-            <p className="text-lg mb-8">
-              "Estamos buscando personas talentosas que quieran cambiar la forma en que 
-              se vive la experiencia inmobiliaria. Si te apasiona la innovación y quieres 
-              ser parte de algo grande, ¡HomEState es tu lugar!"
-            </p>
-          </div>
-        </div>
-
-        {/* Beneficios de unirse */}
-        <div className="grid md:grid-cols-3 gap-6 mb-12">
-          <div className="text-center">
-            <div className="bg-orange-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
-              <span className="text-2xl">🚀</span>
-            </div>
-            <h3 className="text-xl font-bold text-gray-900 mb-2">Crecimiento Profesional</h3>
+        {/* Características */}
+        <section className="grid md:grid-cols-2 gap-8">
+          <div className="bg-white rounded-2xl p-8 shadow-lg transition hover:shadow-xl">
+            <h3 className="text-2xl font-semibold text-gray-900 mb-3">🏠 Tu Nuevo Sitio</h3>
             <p className="text-gray-600">
-              Oportunidades de desarrollo en una empresa en expansión
+              Encuentra tu hogar ideal con nuestra tecnología avanzada de búsqueda y visualización en tiempo real.
             </p>
           </div>
-          
-          <div className="text-center">
-            <div className="bg-orange-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
-              <span className="text-2xl">💡</span>
-            </div>
-            <h3 className="text-xl font-bold text-gray-900 mb-2">Innovación Constante</h3>
+          <div className="bg-white rounded-2xl p-8 shadow-lg transition hover:shadow-xl">
+            <h3 className="text-2xl font-semibold text-gray-900 mb-3">📱 Experiencia Digital</h3>
             <p className="text-gray-600">
-              Trabaja con las últimas tecnologías del sector inmobiliario
+              Micrositios únicos para cada edificio, tours virtuales y gestión inteligente de propiedades.
             </p>
           </div>
-          
-          <div className="text-center">
-            <div className="bg-orange-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
-              <span className="text-2xl">🤝</span>
-            </div>
-            <h3 className="text-xl font-bold text-gray-900 mb-2">Equipo Dinámico</h3>
-            <p className="text-gray-600">
-              Ambiente colaborativo y cultura de trabajo flexible
-            </p>
-          </div>
-        </div>
+        </section>
 
-        {/* Botón de WhatsApp */}
-        <div className="text-center">
-          <Button 
+        {/* Sección Únete */}
+        <section className="bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-3xl p-10 text-center shadow-xl">
+          <h2 className="text-3xl md:text-4xl font-bold mb-4">
+            ¡Únete a HomEState!
+          </h2>
+          <p className="text-lg md:text-xl mb-8 max-w-2xl mx-auto">
+            Forma parte de la revolución inmobiliaria. Buscamos profesionales apasionados por la tecnología y el sector.
+          </p>
+
+          <div className="flex justify-center mb-8">
+            <Image
+              src="https://firebasestorage.googleapis.com/v0/b/homestate-web.firebasestorage.app/o/WhatsApp%20Image%202025-07-29%20at%2016.14.07.jpeg?alt=media&token=3c224812-498b-4156-800a-9f4ed1491a99"
+              alt="Miembro HomEState"
+              width={220}
+              height={220}
+              className="rounded-xl border-4 border-white shadow-lg object-cover"
+            />
+          </div>
+
+          <p className="text-lg italic max-w-2xl mx-auto mb-6">
+            "Estamos buscando personas talentosas que quieran transformar la experiencia inmobiliaria. 
+            Si te apasiona la innovación, ¡este es tu lugar!"
+          </p>
+        </section>
+
+        {/* Beneficios */}
+        <section className="grid md:grid-cols-3 gap-8">
+          {[
+            { icon: "🚀", title: "Crecimiento Profesional", desc: "Desarrolla tu carrera en una empresa en expansión." },
+            { icon: "💡", title: "Innovación Constante", desc: "Trabaja con tecnología de vanguardia en el sector." },
+            { icon: "🤝", title: "Equipo Dinámico", desc: "Ambiente colaborativo con cultura flexible." },
+          ].map((item, index) => (
+            <div key={index} className="text-center p-6 bg-white rounded-2xl shadow-md hover:shadow-xl transition">
+              <div className="bg-orange-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4 text-2xl">
+                {item.icon}
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">{item.title}</h3>
+              <p className="text-gray-600">{item.desc}</p>
+            </div>
+          ))}
+        </section>
+
+        {/* CTA WhatsApp */}
+        <section className="text-center">
+          <Button
             onClick={handleWhatsAppClick}
-            className="bg-green-500 hover:bg-green-600 text-white text-xl px-8 py-4 rounded-full shadow-lg transform hover:scale-105 transition-all duration-200"
+            className="bg-green-500 hover:bg-green-600 text-white text-lg px-10 py-4 rounded-full shadow-md hover:scale-105 transition-transform"
           >
-            <FaWhatsapp className="h-6 w-6 mr-3" />
+            <FaWhatsapp className="mr-3 h-5 w-5" />
             ¡Contáctanos por WhatsApp!
           </Button>
-          
-          <p className="text-gray-500 mt-4 text-sm">
-            Responde en minutos • Consulta sin compromiso
+          <p className="mt-3 text-sm text-gray-500">
+            Respuesta rápida • Consulta sin compromiso
           </p>
-        </div>
+        </section>
       </div>
     </div>
   )
-} 
+}

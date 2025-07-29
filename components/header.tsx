@@ -21,7 +21,7 @@ export function Header() {
             Edificios y Departamentos
           </Link>
           <Link href="/contacto" className="text-gray-700 hover:text-orange-600 font-medium">
-            Contacto
+            ¡Unete a nosotros!
           </Link>
         </nav>
 
