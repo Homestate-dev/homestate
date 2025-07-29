@@ -710,7 +710,7 @@ export function ApartmentManagement({ buildingId, buildingName, buildingPermalin
                   <div className="relative">
                     <div className="aspect-video relative bg-gray-100 rounded-lg overflow-hidden">
                       <Image
-                        src={selectedDepartment.imagenes[currentImageIndex] || "/placeholder.jpg"}
+                        src={selectedDepartment.imagenes[currentImageIndex] || "/favicon-32x32.png"}
                         alt={`${selectedDepartment.nombre} - Imagen ${currentImageIndex + 1}`}
                         fill
                         className="object-cover"

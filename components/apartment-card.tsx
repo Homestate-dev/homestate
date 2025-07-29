@@ -92,7 +92,7 @@ export function ApartmentCard({ departamento }: ApartmentCardProps) {
     <Card className="overflow-hidden hover:shadow-lg transition-shadow">
       <div className="relative h-48 w-full">
         <Image
-          src={departamento.imagenes[currentImageIndex] || "/placeholder.svg"}
+          src={departamento.imagenes[currentImageIndex] || "/favicon-32x32.png"}
           alt={departamento.nombre}
           fill
           className="object-cover"
