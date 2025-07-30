@@ -11,6 +11,7 @@ import { DatabaseStatus } from "@/components/database-status"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { toast } from "sonner"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
+import { WhatsAppFloatButton } from "@/components/whatsapp-float-button"
 
 
 interface Building {
@@ -211,6 +212,7 @@ export default function BackOfficePage() {
             />
         )}
       </div>
+      <WhatsAppFloatButton />
     </div>
   )
 }

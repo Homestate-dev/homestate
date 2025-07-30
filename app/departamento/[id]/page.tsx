@@ -11,6 +11,7 @@ import { ImageGallery } from "@/components/image-gallery"
 import { DepartmentShareButton } from "@/components/department-share-button"
 import { getDepartmentById, getBuildings } from "@/lib/database"
 import DepartmentClientWrapper from "@/components/department-client-wrapper"
+import { WhatsAppFloatButton } from "@/components/whatsapp-float-button"
 import React from "react"
 
 interface PageProps {
@@ -345,6 +346,7 @@ export default async function DepartamentoPage({ params }: PageProps) {
           />
         </main>
         <Footer />
+        <WhatsAppFloatButton />
       </div>
     )
   } catch (error) {

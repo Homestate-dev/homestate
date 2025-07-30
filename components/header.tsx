@@ -1,7 +1,6 @@
 import Image from "next/image"
 import Link from "next/link"
 import { MessageCircle } from "lucide-react"
-import { FaWhatsapp } from "react-icons/fa"
 import { Button } from "@/components/ui/button"
 import { Logo } from "@/components/ui/logo"
 
@@ -25,10 +24,7 @@ export function Header() {
           </Link>
         </nav>
 
-        <Button className="bg-green-500 hover:bg-green-600 text-white flex items-center gap-2">
-          <FaWhatsapp className="h-10 w-10" />
-          <span className="hidden sm:inline">Respuesta inmediata</span>
-        </Button>
+
       </div>
     </header>
   )

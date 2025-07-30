@@ -18,6 +18,7 @@ import { Building2 } from 'lucide-react'
 // import { DebugRerenderDetector } from '@/components/debug-rerender-detector'
 // import { ProductionErrorBoundary } from '@/components/production-error-boundary'
 import { Header } from '@/components/header'
+import { WhatsAppFloatButton } from '@/components/whatsapp-float-button'
 
 interface Department {
   id: number
@@ -434,6 +435,7 @@ export function MicrositeContent({ building, departments }: MicrositeContentProp
         </div>
 
         <Footer />
+        <WhatsAppFloatButton />
       </div>
     )
 }
