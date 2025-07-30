@@ -206,27 +206,28 @@ showpage
       epsLink.click()
       document.body.removeChild(epsLink)
       URL.revokeObjectURL(epsLink.href)
-
-      // Descargar el archivo AI (logo)
-      try {
-        const response = await fetch('/logo-homestate.ai')
-        if (response.ok) {
-          const aiBlob = await response.blob()
-          const aiLink = document.createElement('a')
-          aiLink.href = URL.createObjectURL(aiBlob)
-          aiLink.download = `logo-homestate.ai`
-          document.body.appendChild(aiLink)
-          aiLink.click()
-          document.body.removeChild(aiLink)
-          URL.revokeObjectURL(aiLink.href)
-        } else {
-          console.warn('No se pudo descargar el archivo logo-homestate.ai')
-        }
-      } catch (error) {
-        console.error('Error descargando logo AI:', error)
-      }
     } catch (error) {
       console.error('Error generando/descargando QR en EPS:', error)
+    }
+  }
+
+  const downloadLogoAI = async () => {
+    try {
+      const response = await fetch('/logo-homestate.ai')
+      if (response.ok) {
+        const aiBlob = await response.blob()
+        const aiLink = document.createElement('a')
+        aiLink.href = URL.createObjectURL(aiBlob)
+        aiLink.download = `logo-homestate.ai`
+        document.body.appendChild(aiLink)
+        aiLink.click()
+        document.body.removeChild(aiLink)
+        URL.revokeObjectURL(aiLink.href)
+      } else {
+        console.warn('No se pudo descargar el archivo logo-homestate.ai')
+      }
+    } catch (error) {
+      console.error('Error descargando logo AI:', error)
     }
   }
 
@@ -260,16 +261,16 @@ showpage
             {/* Información sobre el logo */}
             <div className="bg-blue-50 p-4 rounded-lg">
               <p className="text-sm text-blue-800 mb-2">
-                <strong>Descarga EPS:</strong> Al descargar el formato EPS se generarán dos archivos: el código QR con espacio blanco para el diseñador y el logo de HomEstate en formato AI.
+                <strong>Formatos disponibles:</strong> PNG con logo integrado, EPS con espacio blanco para diseñador, y logo AI separado.
               </p>
               <p className="text-xs text-blue-600">
-                El diseñador de la imprenta podrá colocar el logo en el espacio blanco del centro del QR.
+                El diseñador de la imprenta puede usar el EPS con espacio blanco y el logo AI por separado.
               </p>
               <p className="text-xs text-orange-600 mt-1">
                 <strong>Color:</strong> El QR se genera en color naranja mandarina (#FF6B35)
               </p>
               <p className="text-xs text-green-600 mt-1">
-                <strong>Formato AI:</strong> El logo se descarga automáticamente en formato Adobe Illustrator (.ai) para uso profesional.
+                <strong>Logo AI:</strong> Descarga el logo de HomEstate en formato Adobe Illustrator (.ai) para uso profesional.
               </p>
             </div>
 
@@ -320,6 +321,14 @@ showpage
                   >
                     <Download className="h-4 w-4 mr-2" />
                     EPS para Adobe (vectorizado)
+                  </Button>
+
+                  <Button 
+                    onClick={downloadLogoAI} 
+                    className="w-full bg-purple-600 hover:bg-purple-700 text-white"
+                  >
+                    <Download className="h-4 w-4 mr-2" />
+                    Logo AI (solo logo)
                   </Button>
                 </div>
               </div>
@@ -373,7 +382,7 @@ showpage
           <CardTitle>Información sobre formatos de descarga</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
             <div>
               <h4 className="font-semibold text-blue-600 mb-2">PNG con Logo</h4>
               <p className="text-gray-600">
@@ -383,7 +392,13 @@ showpage
             <div>
               <h4 className="font-semibold text-red-600 mb-2">EPS</h4>
               <p className="text-gray-600">
-                Descarga dos archivos: el código QR en formato PostScript vectorial con área circular blanca en el centro (para que el diseñador coloque el logo) y el logo de HomEstate en formato Adobe Illustrator (.ai). Compatible con Adobe Illustrator, InDesign y software de diseño profesional.
+                Código QR en formato PostScript vectorial con área circular blanca en el centro (para que el diseñador coloque el logo). Compatible con Adobe Illustrator, InDesign y software de diseño profesional.
+              </p>
+            </div>
+            <div>
+              <h4 className="font-semibold text-purple-600 mb-2">Logo AI</h4>
+              <p className="text-gray-600">
+                Logo de HomEstate en formato Adobe Illustrator (.ai) para uso profesional. El diseñador puede usar este archivo junto con el EPS para crear el QR final.
               </p>
             </div>
           </div>
