@@ -82,7 +82,7 @@ export default function BackOfficePage() {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <Logo size={48} className="text-orange-600 mx-auto mb-4 animate-spin" />
-          <p className="text-gray-600">Verificando autenticación...</p>
+          <p className="text-gray-600">Verificando autenticación</p>
         </div>
       </div>
     )
