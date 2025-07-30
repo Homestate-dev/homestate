@@ -14,10 +14,10 @@ export function WhatsAppFloatButton() {
   return (
     <button
       onClick={handleWhatsAppClick}
-      className="fixed bottom-6 right-6 z-50 bg-green-500 hover:bg-green-600 text-white rounded-full p-4 shadow-lg transition-all duration-300 hover:scale-110 hover:shadow-xl animate-pulse"
+      className="fixed bottom-8 right-6 z-50 bg-green-500 hover:bg-green-600 text-white rounded-full p-5 shadow-lg transition-all duration-300 hover:scale-110 hover:shadow-xl"
       aria-label="Contactar por WhatsApp"
     >
-      <FaWhatsapp className="h-8 w-8" />
+      <FaWhatsapp className="h-10 w-10" />
     </button>
   )
 } 

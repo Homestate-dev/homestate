@@ -132,8 +132,33 @@ export function QRGenerator({ building }: QRGeneratorProps) {
     }
   }
 
+  // Función para verificar si el logo existe
+  const checkLogoExists = async (): Promise<boolean> => {
+    try {
+      const response = await fetch('/logo-qr.png', { method: 'HEAD' })
+      return response.ok
+    } catch {
+      return false
+    }
+  }
+
   // Función para generar SVG con logo
   const generateSVGWithLogo = async (): Promise<string> => {
+    const logoExists = await checkLogoExists()
+    
+    if (!logoExists) {
+      console.warn('Logo no encontrado, generando SVG sin logo')
+      return QRCodeLib.toString(qrUrl, {
+        type: 'svg',
+        width: 256,
+        margin: 2,
+        color: {
+          dark: '#FF6B35',
+          light: '#ffffff'
+        }
+      })
+    }
+
     return new Promise((resolve, reject) => {
       const logoImage = new Image()
       
@@ -223,6 +248,9 @@ export function QRGenerator({ building }: QRGeneratorProps) {
 
   const downloadEPS = async () => {
     try {
+      // Verificar si el logo existe
+      const logoExists = await checkLogoExists()
+      
       // Generar estructura QR y acceder a la matriz de módulos (bit matrix)
       const qr = QRCodeLib.create(qrUrl, {
         errorCorrectionLevel: 'M'
@@ -270,40 +298,43 @@ gsave
         }
       }
 
-      // Calcular posición del logo en EPS
-      const logoSize = Math.floor(moduleCount * 0.25) // 25% del tamaño del QR
-      const logoStartX = Math.floor((moduleCount - logoSize) / 2)
-      const logoStartY = Math.floor((moduleCount - logoSize) / 2)
+      // Solo agregar logo si existe
+      if (logoExists) {
+        // Calcular posición del logo en EPS
+        const logoSize = Math.floor(moduleCount * 0.25) // 25% del tamaño del QR
+        const logoStartX = Math.floor((moduleCount - logoSize) / 2)
+        const logoStartY = Math.floor((moduleCount - logoSize) / 2)
 
-      // Crear fondo circular blanco para el logo
-      const centerX = quietZone + moduleCount / 2
-      const centerY = total - (quietZone + moduleCount / 2)
-      const circleRadius = logoSize / 2 + 2
+        // Crear fondo circular blanco para el logo
+        const centerX = quietZone + moduleCount / 2
+        const centerY = total - (quietZone + moduleCount / 2)
+        const circleRadius = logoSize / 2 + 2
 
-      epsBody += `\n% Logo background circle (white)\n`
-      epsBody += `1 1 1 setrgbcolor\n` // Color blanco
-      epsBody += `${centerX} ${centerY} ${circleRadius} 0 360 arc\n`
-      epsBody += `fill\n`
+        epsBody += `\n% Logo background circle (white)\n`
+        epsBody += `1 1 1 setrgbcolor\n` // Color blanco
+        epsBody += `${centerX} ${centerY} ${circleRadius} 0 360 arc\n`
+        epsBody += `fill\n`
 
-      // Crear área cuadrada blanca para el logo
-      const logoX = quietZone + logoStartX
-      const logoY = total - (quietZone + logoStartY + logoSize)
-      epsBody += `\n% Logo area (white square)\n`
-      epsBody += `${logoX} ${logoY} ${logoSize} ${logoSize} rectfill\n`
+        // Crear área cuadrada blanca para el logo
+        const logoX = quietZone + logoStartX
+        const logoY = total - (quietZone + logoStartY + logoSize)
+        epsBody += `\n% Logo area (white square)\n`
+        epsBody += `${logoX} ${logoY} ${logoSize} ${logoSize} rectfill\n`
 
-      // Convertir logo PNG a EPS usando un patrón simple
-      // Como no podemos incrustar PNG directamente en EPS, creamos un patrón vectorial
-      epsBody += `\n% Logo pattern (simplified vector representation)\n`
-      epsBody += `0 0 0 setrgbcolor\n` // Color negro para el logo
-      
-      // Crear un patrón simple para representar el logo
-      const logoCenterX = logoX + logoSize / 2
-      const logoCenterY = logoY + logoSize / 2
-      const logoRadius = logoSize / 4
-      
-      // Dibujar un círculo simple como representación del logo
-      epsBody += `${logoCenterX} ${logoCenterY} ${logoRadius} 0 360 arc\n`
-      epsBody += `fill\n`
+        // Convertir logo PNG a EPS usando un patrón simple
+        // Como no podemos incrustar PNG directamente en EPS, creamos un patrón vectorial
+        epsBody += `\n% Logo pattern (simplified vector representation)\n`
+        epsBody += `0 0 0 setrgbcolor\n` // Color negro para el logo
+        
+        // Crear un patrón simple para representar el logo
+        const logoCenterX = logoX + logoSize / 2
+        const logoCenterY = logoY + logoSize / 2
+        const logoRadius = logoSize / 4
+        
+        // Dibujar un círculo simple como representación del logo
+        epsBody += `${logoCenterX} ${logoCenterY} ${logoRadius} 0 360 arc\n`
+        epsBody += `fill\n`
+      }
 
       const epsFooter = `grestore
 showpage
@@ -351,7 +382,21 @@ showpage
               </p>
             </div>
 
-           
+            {/* Información sobre el logo */}
+            <div className="bg-blue-50 p-4 rounded-lg">
+              <p className="text-sm text-blue-800 mb-2">
+                <strong>Logo:</strong> El código QR incluirá automáticamente el logo de HomEstate en el centro (64x64 píxeles)
+              </p>
+              <p className="text-xs text-blue-600">
+                Para cambiar el logo, reemplaza el archivo: <code>/public/logo-qr.png</code>
+              </p>
+              <p className="text-xs text-orange-600 mt-1">
+                <strong>Color:</strong> El QR se genera en color naranja mandarina (#FF6B35)
+              </p>
+              <p className="text-xs text-red-600 mt-1">
+                <strong>Importante:</strong> Asegúrate de que el archivo <code>/public/logo-qr.png</code> existe para que el logo aparezca en todos los formatos.
+              </p>
+            </div>
 
             <Button onClick={generateQR} className="w-full bg-orange-600 hover:bg-orange-700 text-white">
               <QrCode className="h-4 w-4 mr-2" />
