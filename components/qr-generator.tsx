@@ -213,7 +213,7 @@ showpage
 
   const downloadLogoAI = async () => {
     try {
-      const response = await fetch('/logo-homestate.ai')
+      const response = await fetch('https://firebasestorage.googleapis.com/v0/b/homestate-web.firebasestorage.app/o/logo%20Homestate.ai?alt=media&token=47b43834-b82f-4666-b10d-4da6fcc07f07')
       if (response.ok) {
         const aiBlob = await response.blob()
         const aiLink = document.createElement('a')
@@ -224,10 +224,10 @@ showpage
         document.body.removeChild(aiLink)
         URL.revokeObjectURL(aiLink.href)
       } else {
-        console.warn('No se pudo descargar el archivo logo-homestate.ai')
+        console.warn('No se pudo descargar el archivo logo-homestate.ai desde Firebase Storage')
       }
     } catch (error) {
-      console.error('Error descargando logo AI:', error)
+      console.error('Error descargando logo AI desde Firebase Storage:', error)
     }
   }
 
