@@ -213,21 +213,30 @@ showpage
 
   const downloadLogoAI = async () => {
     try {
-      const response = await fetch('https://firebasestorage.googleapis.com/v0/b/homestate-web.firebasestorage.app/o/logo%20Homestate.ai?alt=media&token=47b43834-b82f-4666-b10d-4da6fcc07f07')
-      if (response.ok) {
-        const aiBlob = await response.blob()
-        const aiLink = document.createElement('a')
-        aiLink.href = URL.createObjectURL(aiBlob)
-        aiLink.download = `logo-homestate.ai`
-        document.body.appendChild(aiLink)
-        aiLink.click()
-        document.body.removeChild(aiLink)
-        URL.revokeObjectURL(aiLink.href)
-      } else {
-        console.warn('No se pudo descargar el archivo logo-homestate.ai desde Firebase Storage')
-      }
+      // Abrir la URL directamente en una nueva pestaña para evitar problemas de CORS
+      const logoUrl = 'https://firebasestorage.googleapis.com/v0/b/homestate-web.firebasestorage.app/o/logo%20Homestate.ai?alt=media&token=47b43834-b82f-4666-b10d-4da6fcc07f07'
+      
+      // Crear un enlace temporal y abrirlo en nueva pestaña
+      const link = document.createElement('a')
+      link.href = logoUrl
+      link.target = '_blank'
+      link.rel = 'noopener noreferrer'
+      link.download = 'logo-homestate.ai'
+      
+      // Agregar el enlace al DOM, hacer clic y remover
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      
     } catch (error) {
-      console.error('Error descargando logo AI desde Firebase Storage:', error)
+      console.error('Error abriendo logo AI desde Firebase Storage:', error)
+      
+      // Fallback: abrir directamente en nueva pestaña
+      try {
+        window.open('https://firebasestorage.googleapis.com/v0/b/homestate-web.firebasestorage.app/o/logo%20Homestate.ai?alt=media&token=47b43834-b82f-4666-b10d-4da6fcc07f07', '_blank')
+      } catch (fallbackError) {
+        console.error('Error en fallback:', fallbackError)
+      }
     }
   }
 
