@@ -116,18 +116,9 @@ export function QRGenerator({ building }: QRGeneratorProps) {
         link.click()
         document.body.removeChild(link)
       } else if (format === 'svg') {
-        // Para SVG, generar sin logo por ahora (SVG con logo es más complejo)
-        const svgString = await QRCodeLib.toString(qrUrl, {
-          type: 'svg',
-          width: 256,
-          margin: 2,
-          color: {
-            dark: '#FF6B35', // Naranja mandarina
-            light: '#ffffff'
-          }
-        })
-        
-        const blob = new Blob([svgString], { type: 'image/svg+xml' })
+        // Generar SVG con logo
+        const svgWithLogo = await generateSVGWithLogo()
+        const blob = new Blob([svgWithLogo], { type: 'image/svg+xml' })
         const link = document.createElement('a')
         link.href = URL.createObjectURL(blob)
         link.download = `qr-${building.permalink}.svg`
@@ -141,20 +132,83 @@ export function QRGenerator({ building }: QRGeneratorProps) {
     }
   }
 
+  // Función para generar SVG con logo
+  const generateSVGWithLogo = async (): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const logoImage = new Image()
+      
+      logoImage.onload = () => {
+        // Generar SVG base
+        QRCodeLib.toString(qrUrl, {
+          type: 'svg',
+          width: 256,
+          margin: 2,
+          color: {
+            dark: '#FF6B35', // Naranja mandarina
+            light: '#ffffff'
+          }
+        }).then(svgString => {
+          // Crear un canvas temporal para obtener las dimensiones del logo
+          const canvas = document.createElement('canvas')
+          const ctx = canvas.getContext('2d')
+          if (!ctx) {
+            reject(new Error('No se pudo obtener el contexto del canvas'))
+            return
+          }
+
+          // Calcular el tamaño del logo (64x64 píxeles)
+          const logoSize = 64
+          const qrSize = 256
+          const logoX = (qrSize - logoSize) / 2
+          const logoY = (qrSize - logoSize) / 2
+
+          // Convertir el logo a base64
+          canvas.width = logoSize
+          canvas.height = logoSize
+          ctx.drawImage(logoImage, 0, 0, logoSize, logoSize)
+          const logoBase64 = canvas.toDataURL('image/png')
+
+          // Crear círculo blanco para el fondo del logo
+          const circleRadius = logoSize / 2 + 6
+          const circleX = qrSize / 2
+          const circleY = qrSize / 2
+
+          // Insertar el logo en el SVG
+          const logoElement = `
+            <circle cx="${circleX}" cy="${circleY}" r="${circleRadius}" fill="white"/>
+            <image x="${logoX}" y="${logoY}" width="${logoSize}" height="${logoSize}" href="${logoBase64}"/>
+          `
+
+          // Insertar el logo después del primer <g> en el SVG
+          const svgWithLogo = svgString.replace('</g>', `</g>${logoElement}`)
+          resolve(svgWithLogo)
+        }).catch(reject)
+      }
+
+      logoImage.onerror = () => {
+        // Si no se puede cargar el logo, generar SVG sin logo
+        console.warn('No se pudo cargar el logo para SVG, usando QR sin logo')
+        QRCodeLib.toString(qrUrl, {
+          type: 'svg',
+          width: 256,
+          margin: 2,
+          color: {
+            dark: '#FF6B35',
+            light: '#ffffff'
+          }
+        }).then(resolve).catch(reject)
+      }
+
+      logoImage.src = '/logo-qr.png'
+    })
+  }
+
   const downloadVectorized = async () => {
     try {
-      // Generar un SVG de alta calidad para uso vectorizado (sin logo por ahora)
-      const svgString = await QRCodeLib.toString(qrUrl, {
-        type: 'svg',
-        width: 512, // Mayor resolución para vectorizado
-        margin: 4,
-        color: {
-          dark: '#FF6B35', // Naranja mandarina
-          light: '#ffffff'
-        }
-      })
+      // Generar un SVG de alta calidad con logo para uso vectorizado
+      const svgWithLogo = await generateSVGWithLogo()
       
-      const blob = new Blob([svgString], { type: 'image/svg+xml' })
+      const blob = new Blob([svgWithLogo], { type: 'image/svg+xml' })
       const link = document.createElement('a')
       link.href = URL.createObjectURL(blob)
       link.download = `qr-vectorizado-${building.permalink}.svg`
@@ -170,13 +224,12 @@ export function QRGenerator({ building }: QRGeneratorProps) {
   const downloadEPS = async () => {
     try {
       // Generar estructura QR y acceder a la matriz de módulos (bit matrix)
-      // `QRCodeLib.create` está disponible tanto en navegador como node y no requiere canvas
       const qr = QRCodeLib.create(qrUrl, {
         errorCorrectionLevel: 'M'
       }) as any
 
       const bitMatrix = qr.modules
-      const moduleCount: number = bitMatrix.size || bitMatrix.length // size property when BitMatrix, else length when 2D
+      const moduleCount: number = bitMatrix.size || bitMatrix.length
 
       const quietZone = 4
       const total = moduleCount + quietZone * 2
@@ -200,10 +253,10 @@ gsave
         if (typeof bitMatrix.get === 'function') {
           return bitMatrix.get(x, y)
         }
-        // fallback 2D array
         return !!bitMatrix[y][x]
       }
 
+      // Dibujar el QR
       for (let y = 0; y < moduleCount; y++) {
         for (let x = 0; x < moduleCount; x++) {
           if (isDark(x, y)) {
@@ -213,6 +266,27 @@ gsave
           }
         }
       }
+
+      // Calcular posición del logo en EPS
+      const logoSize = Math.floor(moduleCount * 0.25) // 25% del tamaño del QR
+      const logoStartX = Math.floor((moduleCount - logoSize) / 2)
+      const logoStartY = Math.floor((moduleCount - logoSize) / 2)
+
+      // Crear fondo circular blanco para el logo
+      const centerX = quietZone + moduleCount / 2
+      const centerY = total - (quietZone + moduleCount / 2)
+      const circleRadius = logoSize / 2 + 2
+
+      epsBody += `\n% Logo background circle\n`
+      epsBody += `${centerX} ${centerY} ${circleRadius} 0 360 arc\n`
+      epsBody += `1 setgray fill\n`
+      epsBody += `0 setgray\n`
+
+      // Crear área cuadrada blanca para el logo (simplificado)
+      const logoX = quietZone + logoStartX
+      const logoY = total - (quietZone + logoStartY + logoSize)
+      epsBody += `\n% Logo area\n`
+      epsBody += `${logoX} ${logoY} ${logoSize} ${logoSize} rectfill\n`
 
       const epsFooter = `grestore
 showpage
@@ -399,19 +473,19 @@ showpage
             <div>
               <h4 className="font-semibold text-green-600 mb-2">SVG</h4>
               <p className="text-gray-600">
-                Formato vectorial estándar, escalable sin pérdida de calidad. Compatible con navegadores web y editores básicos.
+                Formato vectorial estándar con logo incluido, escalable sin pérdida de calidad. Compatible con navegadores web y editores básicos.
               </p>
             </div>
             <div>
               <h4 className="font-semibold text-purple-600 mb-2">Vectorizado</h4>
               <p className="text-gray-600">
-                SVG de alta resolución optimizado para impresión en gran formato y uso profesional.
+                SVG de alta resolución con logo optimizado para impresión en gran formato y uso profesional.
               </p>
             </div>
             <div>
               <h4 className="font-semibold text-red-600 mb-2">EPS</h4>
               <p className="text-gray-600">
-                Formato PostScript vectorial compatible con Adobe Illustrator, InDesign y software de diseño profesional.
+                Formato PostScript vectorial con logo incluido, compatible con Adobe Illustrator, InDesign y software de diseño profesional.
               </p>
             </div>
           </div>

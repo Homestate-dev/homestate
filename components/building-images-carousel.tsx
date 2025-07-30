@@ -25,7 +25,7 @@ export function BuildingImagesCarousel({ images, buildingName }: BuildingImagesC
     return (
       <div className="mb-8">
         <div className="bg-white rounded-lg border border-gray-200 overflow-hidden shadow-md">
-          <div className="relative h-[400px] w-full bg-gray-100 flex items-center justify-center">
+          <div className="relative aspect-[9/16] w-full max-w-sm mx-auto bg-gray-100 flex items-center justify-center">
             <span className="text-gray-400">No hay imágenes disponibles</span>
           </div>
         </div>
@@ -36,7 +36,7 @@ export function BuildingImagesCarousel({ images, buildingName }: BuildingImagesC
   return (
     <div className="mb-8">
       <div className="bg-white rounded-lg border border-gray-200 overflow-hidden shadow-md">
-        <div className="relative h-[400px] w-full">
+        <div className="relative aspect-[9/16] w-full max-w-sm mx-auto">
           <Image
             src={images[currentImageIndex] || "/placeholder.svg"}
             alt={`${buildingName} - Imagen ${currentImageIndex + 1}`}
