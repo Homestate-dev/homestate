@@ -197,14 +197,34 @@ showpage
 
       const epsContent = epsHeader + epsBody + epsFooter
 
-      const blob = new Blob([epsContent], { type: 'application/postscript' })
-      const link = document.createElement('a')
-      link.href = URL.createObjectURL(blob)
-      link.download = `qr-${building.permalink}.eps`
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
-      URL.revokeObjectURL(link.href)
+      // Descargar el archivo EPS
+      const epsBlob = new Blob([epsContent], { type: 'application/postscript' })
+      const epsLink = document.createElement('a')
+      epsLink.href = URL.createObjectURL(epsBlob)
+      epsLink.download = `qr-${building.permalink}.eps`
+      document.body.appendChild(epsLink)
+      epsLink.click()
+      document.body.removeChild(epsLink)
+      URL.revokeObjectURL(epsLink.href)
+
+      // Descargar el archivo AI (logo)
+      try {
+        const response = await fetch('/logo-homestate.ai')
+        if (response.ok) {
+          const aiBlob = await response.blob()
+          const aiLink = document.createElement('a')
+          aiLink.href = URL.createObjectURL(aiBlob)
+          aiLink.download = `logo-homestate.ai`
+          document.body.appendChild(aiLink)
+          aiLink.click()
+          document.body.removeChild(aiLink)
+          URL.revokeObjectURL(aiLink.href)
+        } else {
+          console.warn('No se pudo descargar el archivo logo-homestate.ai')
+        }
+      } catch (error) {
+        console.error('Error descargando logo AI:', error)
+      }
     } catch (error) {
       console.error('Error generando/descargando QR en EPS:', error)
     }
@@ -240,16 +260,16 @@ showpage
             {/* Información sobre el logo */}
             <div className="bg-blue-50 p-4 rounded-lg">
               <p className="text-sm text-blue-800 mb-2">
-                <strong>Logo:</strong> El código QR incluirá automáticamente el logo de HomEstate en el centro (64x64 píxeles)
+                <strong>Descarga EPS:</strong> Al descargar el formato EPS se generarán dos archivos: el código QR con espacio blanco para el diseñador y el logo de HomEstate en formato AI.
               </p>
               <p className="text-xs text-blue-600">
-                Para cambiar el logo, reemplaza el archivo: <code>/public/logo-qr.png</code>
+                El diseñador de la imprenta podrá colocar el logo en el espacio blanco del centro del QR.
               </p>
               <p className="text-xs text-orange-600 mt-1">
                 <strong>Color:</strong> El QR se genera en color naranja mandarina (#FF6B35)
               </p>
-              <p className="text-xs text-red-600 mt-1">
-                <strong>Importante:</strong> Asegúrate de que el archivo <code>/public/logo-qr.png</code> existe para que el logo aparezca en el formato PNG.
+              <p className="text-xs text-green-600 mt-1">
+                <strong>Formato AI:</strong> El logo se descarga automáticamente en formato Adobe Illustrator (.ai) para uso profesional.
               </p>
             </div>
 
@@ -363,7 +383,7 @@ showpage
             <div>
               <h4 className="font-semibold text-red-600 mb-2">EPS</h4>
               <p className="text-gray-600">
-                Formato PostScript vectorial con QR en color naranja y área circular blanca en el centro (sin logo), compatible con Adobe Illustrator, InDesign y software de diseño profesional.
+                Descarga dos archivos: el código QR en formato PostScript vectorial con área circular blanca en el centro (para que el diseñador coloque el logo) y el logo de HomEstate en formato Adobe Illustrator (.ai). Compatible con Adobe Illustrator, InDesign y software de diseño profesional.
               </p>
             </div>
           </div>
