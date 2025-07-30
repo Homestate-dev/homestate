@@ -142,7 +142,95 @@ export function QRGenerator({ building }: QRGeneratorProps) {
     }
   }
 
-  // Función para generar SVG con logo
+  // Función para vectorizar el logo PNG de manera más robusta
+  const vectorizeLogo = async (): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const logoImage = new Image()
+      
+      logoImage.onload = () => {
+        // Crear canvas para analizar el logo
+        const canvas = document.createElement('canvas')
+        const ctx = canvas.getContext('2d')
+        if (!ctx) {
+          reject(new Error('No se pudo obtener el contexto del canvas'))
+          return
+        }
+
+        // Configurar canvas con el tamaño del logo
+        canvas.width = logoImage.width
+        canvas.height = logoImage.height
+        
+        // Dibujar el logo en el canvas
+        ctx.drawImage(logoImage, 0, 0)
+        
+        // Obtener los datos de imagen
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
+        const data = imageData.data
+        
+        // Crear un patrón vectorial más inteligente
+        let svgPaths = ''
+        let hasContent = false
+        
+        // Analizar el logo de manera más inteligente
+        const step = Math.max(1, Math.floor(canvas.width / 32)) // Muestrear de manera más inteligente
+        
+        for (let y = 0; y < canvas.height; y += step) {
+          for (let x = 0; x < canvas.width; x += step) {
+            const index = (y * canvas.width + x) * 4
+            const r = data[index]
+            const g = data[index + 1]
+            const b = data[index + 2]
+            const a = data[index + 3]
+            
+            // Si el píxel no es transparente y no es blanco
+            if (a > 128 && (r < 250 || g < 250 || b < 250)) {
+              hasContent = true
+              
+              // Calcular el tamaño del rectángulo basado en la intensidad
+              const intensity = (r + g + b) / 3
+              const size = Math.max(2, Math.min(6, 8 - (intensity / 40)))
+              
+              // Escalar las coordenadas
+              const scaledX = (x / canvas.width) * 64
+              const scaledY = (y / canvas.height) * 64
+              
+              // Crear un rectángulo más pequeño y preciso
+              svgPaths += `<rect x="${scaledX}" y="${scaledY}" width="${size}" height="${size}" fill="rgb(${r},${g},${b})"/>`
+            }
+          }
+        }
+        
+        if (!hasContent) {
+          // Si no hay contenido, crear un patrón más elaborado
+          svgPaths = `
+            <circle cx="32" cy="32" r="20" fill="#FF6B35"/>
+            <circle cx="32" cy="32" r="16" fill="white"/>
+            <circle cx="32" cy="32" r="12" fill="#FF6B35"/>
+            <circle cx="32" cy="32" r="8" fill="white"/>
+            <circle cx="32" cy="32" r="4" fill="#FF6B35"/>
+          `
+        }
+        
+        resolve(svgPaths)
+      }
+      
+      logoImage.onerror = () => {
+        // Si no se puede cargar el logo, crear un patrón por defecto más elaborado
+        const defaultPattern = `
+          <circle cx="32" cy="32" r="20" fill="#FF6B35"/>
+          <circle cx="32" cy="32" r="16" fill="white"/>
+          <circle cx="32" cy="32" r="12" fill="#FF6B35"/>
+          <circle cx="32" cy="32" r="8" fill="white"/>
+          <circle cx="32" cy="32" r="4" fill="#FF6B35"/>
+        `
+        resolve(defaultPattern)
+      }
+      
+      logoImage.src = '/logo-qr.png'
+    })
+  }
+
+  // Función para generar SVG con logo vectorizado mejorado
   const generateSVGWithLogo = async (): Promise<string> => {
     const logoExists = await checkLogoExists()
     
@@ -159,73 +247,56 @@ export function QRGenerator({ building }: QRGeneratorProps) {
       })
     }
 
-    return new Promise((resolve, reject) => {
-      const logoImage = new Image()
+    try {
+      // Generar SVG base
+      const svgString = await QRCodeLib.toString(qrUrl, {
+        type: 'svg',
+        width: 256,
+        margin: 2,
+        color: {
+          dark: '#FF6B35', // Naranja mandarina
+          light: '#ffffff'
+        }
+      })
+
+      // Vectorizar el logo
+      const vectorizedLogo = await vectorizeLogo()
       
-      logoImage.onload = () => {
-        // Generar SVG base
-        QRCodeLib.toString(qrUrl, {
-          type: 'svg',
-          width: 256,
-          margin: 2,
-          color: {
-            dark: '#FF6B35', // Naranja mandarina
-            light: '#ffffff'
-          }
-        }).then(svgString => {
-          // Crear un canvas temporal para obtener las dimensiones del logo
-          const canvas = document.createElement('canvas')
-          const ctx = canvas.getContext('2d')
-          if (!ctx) {
-            reject(new Error('No se pudo obtener el contexto del canvas'))
-            return
-          }
+      // Calcular el tamaño del logo (64x64 píxeles)
+      const logoSize = 64
+      const qrSize = 256
+      const logoX = (qrSize - logoSize) / 2
+      const logoY = (qrSize - logoSize) / 2
 
-          // Calcular el tamaño del logo (64x64 píxeles)
-          const logoSize = 64
-          const qrSize = 256
-          const logoX = (qrSize - logoSize) / 2
-          const logoY = (qrSize - logoSize) / 2
+      // Crear círculo blanco para el fondo del logo
+      const circleRadius = logoSize / 2 + 6
+      const circleX = qrSize / 2
+      const circleY = qrSize / 2
 
-          // Convertir el logo a base64
-          canvas.width = logoSize
-          canvas.height = logoSize
-          ctx.drawImage(logoImage, 0, 0, logoSize, logoSize)
-          const logoBase64 = canvas.toDataURL('image/png')
+      // Insertar el logo vectorizado en el SVG con mejor posicionamiento
+      const logoElement = `
+        <circle cx="${circleX}" cy="${circleY}" r="${circleRadius}" fill="white"/>
+        <g transform="translate(${logoX}, ${logoY})" width="${logoSize}" height="${logoSize}" viewBox="0 0 64 64">
+          ${vectorizedLogo}
+        </g>
+      `
 
-          // Crear círculo blanco para el fondo del logo
-          const circleRadius = logoSize / 2 + 6
-          const circleX = qrSize / 2
-          const circleY = qrSize / 2
-
-          // Insertar el logo en el SVG - posición corregida
-          const logoElement = `
-            <circle cx="${circleX}" cy="${circleY}" r="${circleRadius}" fill="white"/>
-            <image x="${logoX}" y="${logoY}" width="${logoSize}" height="${logoSize}" href="${logoBase64}" preserveAspectRatio="xMidYMid meet"/>
-          `
-
-          // Insertar el logo después del primer <g> en el SVG
-          const svgWithLogo = svgString.replace('</g>', `</g>${logoElement}`)
-          resolve(svgWithLogo)
-        }).catch(reject)
-      }
-
-      logoImage.onerror = () => {
-        // Si no se puede cargar el logo, generar SVG sin logo
-        console.warn('No se pudo cargar el logo para SVG, usando QR sin logo')
-        QRCodeLib.toString(qrUrl, {
-          type: 'svg',
-          width: 256,
-          margin: 2,
-          color: {
-            dark: '#FF6B35',
-            light: '#ffffff'
-          }
-        }).then(resolve).catch(reject)
-      }
-
-      logoImage.src = '/logo-qr.png'
-    })
+      // Insertar el logo después del primer <g> en el SVG
+      const svgWithLogo = svgString.replace('</g>', `</g>${logoElement}`)
+      return svgWithLogo
+    } catch (error) {
+      console.error('Error generando SVG con logo:', error)
+      // Fallback: generar SVG sin logo
+      return QRCodeLib.toString(qrUrl, {
+        type: 'svg',
+        width: 256,
+        margin: 2,
+        color: {
+          dark: '#FF6B35',
+          light: '#ffffff'
+        }
+      })
+    }
   }
 
   const downloadVectorized = async () => {
@@ -315,25 +386,93 @@ gsave
         epsBody += `${centerX} ${centerY} ${circleRadius} 0 360 arc\n`
         epsBody += `fill\n`
 
-        // Crear área cuadrada blanca para el logo
-        const logoX = quietZone + logoStartX
-        const logoY = total - (quietZone + logoStartY + logoSize)
-        epsBody += `\n% Logo area (white square)\n`
-        epsBody += `${logoX} ${logoY} ${logoSize} ${logoSize} rectfill\n`
-
-        // Convertir logo PNG a EPS usando un patrón simple
-        // Como no podemos incrustar PNG directamente en EPS, creamos un patrón vectorial
-        epsBody += `\n% Logo pattern (simplified vector representation)\n`
-        epsBody += `0 0 0 setrgbcolor\n` // Color negro para el logo
-        
-        // Crear un patrón simple para representar el logo
-        const logoCenterX = logoX + logoSize / 2
-        const logoCenterY = logoY + logoSize / 2
-        const logoRadius = logoSize / 4
-        
-        // Dibujar un círculo simple como representación del logo
-        epsBody += `${logoCenterX} ${logoCenterY} ${logoRadius} 0 360 arc\n`
-        epsBody += `fill\n`
+        // Generar logo vectorizado para EPS
+        try {
+          const vectorizedLogo = await vectorizeLogo()
+          
+          // Calcular posición del logo en EPS
+          const logoX = quietZone + logoStartX
+          const logoY = total - (quietZone + logoStartY + logoSize)
+          
+          // Convertir el SVG del logo a comandos PostScript mejorado
+          epsBody += `\n% Logo vectorized pattern\n`
+          
+          // Extraer los rectángulos del SVG y convertirlos a PostScript
+          const rectMatches = vectorizedLogo.match(/<rect[^>]*>/g)
+          if (rectMatches && rectMatches.length > 0) {
+            for (const rect of rectMatches) {
+              // Extraer atributos del rectángulo
+              const xMatch = rect.match(/x="([^"]*)"/)
+              const yMatch = rect.match(/y="([^"]*)"/)
+              const widthMatch = rect.match(/width="([^"]*)"/)
+              const heightMatch = rect.match(/height="([^"]*)"/)
+              const fillMatch = rect.match(/fill="([^"]*)"/)
+              
+              if (xMatch && yMatch && widthMatch && heightMatch && fillMatch) {
+                const x = parseFloat(xMatch[1])
+                const y = parseFloat(yMatch[1])
+                const width = parseFloat(widthMatch[1])
+                const height = parseFloat(heightMatch[1])
+                const fill = fillMatch[1]
+                
+                // Convertir color RGB a PostScript
+                let r = 0, g = 0, b = 0
+                if (fill.startsWith('rgb(')) {
+                  const rgbMatch = fill.match(/rgb\((\d+),(\d+),(\d+)\)/)
+                  if (rgbMatch) {
+                    r = parseInt(rgbMatch[1]) / 255
+                    g = parseInt(rgbMatch[2]) / 255
+                    b = parseInt(rgbMatch[3]) / 255
+                  }
+                } else if (fill === '#FF6B35') {
+                  r = 1; g = 0.42; b = 0.21
+                }
+                
+                // Escalar las coordenadas del logo
+                const scale = logoSize / 64
+                const epsX = logoX + (x * scale)
+                const epsY = logoY + (y * scale)
+                const epsWidth = width * scale
+                const epsHeight = height * scale
+                
+                epsBody += `${r} ${g} ${b} setrgbcolor\n`
+                epsBody += `${epsX} ${epsY} ${epsWidth} ${epsHeight} rectfill\n`
+              }
+            }
+          } else {
+            // Si no hay rectángulos, crear un patrón más elaborado
+            const logoCenterX = logoX + logoSize / 2
+            const logoCenterY = logoY + logoSize / 2
+            
+            // Crear un patrón de círculos concéntricos
+            epsBody += `1 0.42 0.21 setrgbcolor\n` // Color naranja
+            epsBody += `${logoCenterX} ${logoCenterY} ${logoSize/3} 0 360 arc\n`
+            epsBody += `fill\n`
+            epsBody += `1 1 1 setrgbcolor\n` // Color blanco
+            epsBody += `${logoCenterX} ${logoCenterY} ${logoSize/4} 0 360 arc\n`
+            epsBody += `fill\n`
+            epsBody += `1 0.42 0.21 setrgbcolor\n` // Color naranja
+            epsBody += `${logoCenterX} ${logoCenterY} ${logoSize/6} 0 360 arc\n`
+            epsBody += `fill\n`
+          }
+        } catch (error) {
+          console.error('Error vectorizando logo para EPS:', error)
+          // Fallback: crear un patrón más elaborado
+          const logoX = quietZone + logoStartX
+          const logoY = total - (quietZone + logoStartY + logoSize)
+          const logoCenterX = logoX + logoSize / 2
+          const logoCenterY = logoY + logoSize / 2
+          
+          epsBody += `1 0.42 0.21 setrgbcolor\n` // Color naranja
+          epsBody += `${logoCenterX} ${logoCenterY} ${logoSize/3} 0 360 arc\n`
+          epsBody += `fill\n`
+          epsBody += `1 1 1 setrgbcolor\n` // Color blanco
+          epsBody += `${logoCenterX} ${logoCenterY} ${logoSize/4} 0 360 arc\n`
+          epsBody += `fill\n`
+          epsBody += `1 0.42 0.21 setrgbcolor\n` // Color naranja
+          epsBody += `${logoCenterX} ${logoCenterY} ${logoSize/6} 0 360 arc\n`
+          epsBody += `fill\n`
+        }
       }
 
       const epsFooter = `grestore
@@ -385,13 +524,19 @@ showpage
             {/* Información sobre el logo */}
             <div className="bg-blue-50 p-4 rounded-lg">
               <p className="text-sm text-blue-800 mb-2">
-                <strong>Logo:</strong> El código QR incluirá automáticamente el logo de HomEstate en el centro (64x64 píxeles)
+                <strong>Logo Vectorizado Mejorado:</strong> El código QR incluirá automáticamente el logo de HomEstate vectorizado en el centro (64x64 píxeles)
               </p>
               <p className="text-xs text-blue-600">
                 Para cambiar el logo, reemplaza el archivo: <code>/public/logo-qr.png</code>
               </p>
               <p className="text-xs text-orange-600 mt-1">
                 <strong>Color:</strong> El QR se genera en color naranja mandarina (#FF6B35)
+              </p>
+              <p className="text-xs text-green-600 mt-1">
+                <strong>Nuevo:</strong> Vectorización inteligente que preserva colores y detalles del logo original
+              </p>
+              <p className="text-xs text-purple-600 mt-1">
+                <strong>Mejorado:</strong> SVG y EPS ahora incluyen el logo vectorizado con mejor calidad y posicionamiento
               </p>
               <p className="text-xs text-red-600 mt-1">
                 <strong>Importante:</strong> Asegúrate de que el archivo <code>/public/logo-qr.png</code> existe para que el logo aparezca en todos los formatos.
