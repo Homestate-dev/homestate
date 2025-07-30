@@ -24,19 +24,81 @@ export function QRGenerator({ building }: QRGeneratorProps) {
 
   const qrUrl = `https://homestate-17ca5a8016cd.herokuapp.com/edificio/${building.permalink}`
 
+  // Función para combinar QR con logo
+  const combineQRWithLogo = async (qrDataUrl: string, logoUrl: string = '/logo-qr.png'): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const canvas = document.createElement('canvas')
+      const ctx = canvas.getContext('2d')
+      if (!ctx) {
+        reject(new Error('No se pudo obtener el contexto del canvas'))
+        return
+      }
+
+      const qrImage = new Image()
+      const logoImage = new Image()
+
+      qrImage.onload = () => {
+        // Configurar canvas con el tamaño del QR
+        canvas.width = qrImage.width
+        canvas.height = qrImage.height
+
+        // Dibujar el QR
+        ctx.drawImage(qrImage, 0, 0)
+
+        // Cargar y dibujar el logo
+        logoImage.onload = () => {
+          // Tamaño fijo del logo: 64x64 píxeles
+          const logoSize = 64
+          const logoX = (canvas.width - logoSize) / 2
+          const logoY = (canvas.height - logoSize) / 2
+
+          // Crear un fondo circular blanco para el logo
+          ctx.save()
+          ctx.beginPath()
+          ctx.arc(logoX + logoSize/2, logoY + logoSize/2, logoSize/2 + 6, 0, 2 * Math.PI)
+          ctx.fillStyle = 'white'
+          ctx.fill()
+          ctx.restore()
+
+          // Dibujar el logo redimensionado a 64x64
+          ctx.drawImage(logoImage, logoX, logoY, logoSize, logoSize)
+
+          // Convertir a data URL
+          resolve(canvas.toDataURL('image/png'))
+        }
+
+        logoImage.onerror = () => {
+          // Si no se puede cargar el logo, devolver solo el QR
+          console.warn('No se pudo cargar el logo, usando QR sin logo')
+          resolve(qrDataUrl)
+        }
+
+        logoImage.src = logoUrl
+      }
+
+      qrImage.onerror = () => {
+        reject(new Error('No se pudo cargar el QR'))
+      }
+
+      qrImage.src = qrDataUrl
+    })
+  }
+
   const generateQR = async () => {
     try {
-      // Generar QR con la biblioteca qrcode
+      // Generar QR con la biblioteca qrcode en color naranja mandarina
       const dataUrl = await QRCodeLib.toDataURL(qrUrl, {
         width: 256,
         margin: 2,
         color: {
-          dark: '#000000',
+          dark: '#FF6B35', // Naranja mandarina
           light: '#ffffff'
         }
       })
       
-      setQrDataUrl(dataUrl)
+      // Combinar con logo si existe
+      const qrWithLogo = await combineQRWithLogo(dataUrl)
+      setQrDataUrl(qrWithLogo)
       setQrGenerated(true)
     } catch (error) {
       console.error('Error generando QR:', error)
@@ -46,7 +108,7 @@ export function QRGenerator({ building }: QRGeneratorProps) {
   const downloadQR = async (format: 'png' | 'svg') => {
     try {
       if (format === 'png') {
-        // Descargar PNG
+        // Descargar PNG con logo
         const link = document.createElement('a')
         link.href = qrDataUrl
         link.download = `qr-${building.permalink}.png`
@@ -54,13 +116,13 @@ export function QRGenerator({ building }: QRGeneratorProps) {
         link.click()
         document.body.removeChild(link)
       } else if (format === 'svg') {
-        // Generar y descargar SVG
+        // Para SVG, generar sin logo por ahora (SVG con logo es más complejo)
         const svgString = await QRCodeLib.toString(qrUrl, {
           type: 'svg',
           width: 256,
           margin: 2,
           color: {
-            dark: '#000000',
+            dark: '#FF6B35', // Naranja mandarina
             light: '#ffffff'
           }
         })
@@ -81,13 +143,13 @@ export function QRGenerator({ building }: QRGeneratorProps) {
 
   const downloadVectorized = async () => {
     try {
-      // Generar un SVG de alta calidad para uso vectorizado
+      // Generar un SVG de alta calidad para uso vectorizado (sin logo por ahora)
       const svgString = await QRCodeLib.toString(qrUrl, {
         type: 'svg',
         width: 512, // Mayor resolución para vectorizado
         margin: 4,
         color: {
-          dark: '#000000',
+          dark: '#FF6B35', // Naranja mandarina
           light: '#ffffff'
         }
       })
@@ -198,6 +260,19 @@ showpage
               </p>
             </div>
 
+            {/* Información sobre el logo */}
+            <div className="bg-blue-50 p-4 rounded-lg">
+              <p className="text-sm text-blue-800 mb-2">
+                <strong>Logo:</strong> El código QR incluirá automáticamente el logo de HomEstate en el centro (64x64 píxeles)
+              </p>
+              <p className="text-xs text-blue-600">
+                Para cambiar el logo, reemplaza el archivo: <code>/public/logo-qr.png</code>
+              </p>
+              <p className="text-xs text-orange-600 mt-1">
+                <strong>Color:</strong> El QR se genera en color naranja mandarina (#FF6B35)
+              </p>
+            </div>
+
             <Button onClick={generateQR} className="w-full bg-orange-600 hover:bg-orange-700 text-white">
               <QrCode className="h-4 w-4 mr-2" />
               Generar Código QR
@@ -236,7 +311,7 @@ showpage
                     className="w-full bg-blue-600 hover:bg-blue-700 text-white"
                   >
                     <Download className="h-4 w-4 mr-2" />
-                    PNG para folletería
+                    PNG con logo (folletería)
                   </Button>
 
                   <Button 
@@ -316,9 +391,9 @@ showpage
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
             <div>
-              <h4 className="font-semibold text-blue-600 mb-2">PNG</h4>
+              <h4 className="font-semibold text-blue-600 mb-2">PNG con Logo</h4>
               <p className="text-gray-600">
-                Ideal para usar en folletería digital, redes sociales y sitios web. Formato rasterizado con buena calidad.
+                Incluye el logo de HomEstate en el centro (64x64 píxeles) y QR en color naranja mandarina. Ideal para folletería digital, redes sociales y sitios web.
               </p>
             </div>
             <div>
