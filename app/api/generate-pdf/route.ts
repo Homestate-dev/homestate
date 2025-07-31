@@ -12,9 +12,14 @@ export async function POST(request: NextRequest) {
         <head>
           <meta charset="utf-8">
           <title>${title}</title>
+          <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300&display=swap" rel="stylesheet">
           <style>
             body { font-family: Arial, sans-serif; margin: 20px; }
             .header { text-align: center; margin-bottom: 30px; }
+            .header-content { display: flex; align-items: center; justify-content: center; gap: 15px; }
+            .logo { width: 64px; height: 64px; }
+            .brand-text { font-family: 'Poppins', sans-serif; font-weight: 300; font-size: 24px; color: #3b82f6; }
+            .title { margin-top: 10px; font-size: 20px; color: #333; }
             .info { margin-bottom: 20px; }
             table { width: 100%; border-collapse: collapse; margin-top: 20px; }
             th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
@@ -27,7 +32,13 @@ export async function POST(request: NextRequest) {
         </head>
         <body>
           <div class="header">
-            <h1>${title}</h1>
+            <div class="header-content">
+              <img src="/logo-qr.png" alt="Homestate Logo" class="logo">
+              <div>
+                <div class="brand-text">HomEstate</div>
+                <div class="title">${title}</div>
+              </div>
+            </div>
           </div>
           
           <div class="info">
