@@ -106,7 +106,8 @@ export function BuildingTransactionsReport() {
     // Verificar si el valor es válido
     if (amount === null || amount === undefined || isNaN(amount)) {
       return '$0'
-    }  ormat('es-CO', {
+    }
+    return new Intl.NumberFormat('es-CO', {
       style: 'currency',
       currency: 'COP',
       minimumFractionDigits: 0,
