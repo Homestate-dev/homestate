@@ -14,7 +14,9 @@ import {
   Calendar, 
   User,
   FileText,
-  Download
+  Download,
+  ChevronLeft,
+  ChevronRight
 } from "lucide-react"
 import { PDFGenerator } from "@/lib/pdf-utils"
 
@@ -60,10 +62,19 @@ export function BuildingTransactionsReport() {
   const [buildings, setBuildings] = useState<Building[]>([])
   const [selectedBuilding, setSelectedBuilding] = useState<string>("all")
   const [loading, setLoading] = useState(true)
+  
+  // Estado para el paginador
+  const [currentPage, setCurrentPage] = useState(1)
+  const [itemsPerPage, setItemsPerPage] = useState(10)
 
   useEffect(() => {
     fetchBuildings()
     fetchTransactions()
+  }, [selectedBuilding])
+
+  // Resetear a la primera página cuando cambie el edificio seleccionado
+  useEffect(() => {
+    setCurrentPage(1)
   }, [selectedBuilding])
 
   const fetchBuildings = async () => {
@@ -165,6 +176,13 @@ export function BuildingTransactionsReport() {
     const config = statusConfig[status] || { color: 'bg-gray-100 text-gray-800', text: status }
     return <Badge className={config.color}>{config.text}</Badge>
   }
+
+  // Lógica de paginación
+  const totalItems = transactions.length
+  const totalPages = Math.ceil(totalItems / itemsPerPage)
+  const startIndex = (currentPage - 1) * itemsPerPage
+  const endIndex = startIndex + itemsPerPage
+  const paginatedTransactions = transactions.slice(startIndex, endIndex)
 
   if (loading) {
     return (
@@ -500,7 +518,7 @@ export function BuildingTransactionsReport() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {processedTransactions.map((transaction) => (
+                  {paginatedTransactions.map((transaction) => (
                     <TableRow key={transaction.departamento_id}>
                       <TableCell>
                         <div>
@@ -534,6 +552,78 @@ export function BuildingTransactionsReport() {
                   ))}
                 </TableBody>
               </Table>
+
+              {/* Paginador */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between mt-4">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-gray-600">
+                      Mostrando {startIndex + 1}-{Math.min(endIndex, totalItems)} de {totalItems} transacciones
+                    </span>
+                    <Select value={itemsPerPage.toString()} onValueChange={(value) => {
+                      setItemsPerPage(parseInt(value))
+                      setCurrentPage(1)
+                    }}>
+                      <SelectTrigger className="w-20">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="5">5</SelectItem>
+                        <SelectItem value="10">10</SelectItem>
+                        <SelectItem value="25">25</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <span className="text-sm text-gray-600">por página</span>
+                  </div>
+                  
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                      disabled={currentPage === 1}
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                    </Button>
+                    
+                    <div className="flex items-center gap-1">
+                      {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                        let pageNum
+                        if (totalPages <= 5) {
+                          pageNum = i + 1
+                        } else if (currentPage <= 3) {
+                          pageNum = i + 1
+                        } else if (currentPage >= totalPages - 2) {
+                          pageNum = totalPages - 4 + i
+                        } else {
+                          pageNum = currentPage - 2 + i
+                        }
+                        
+                        return (
+                          <Button
+                            key={pageNum}
+                            variant={currentPage === pageNum ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => setCurrentPage(pageNum)}
+                            className="w-8 h-8"
+                          >
+                            {pageNum}
+                          </Button>
+                        )
+                      })}
+                    </div>
+                    
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                      disabled={currentPage === totalPages}
+                    >
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </CardContent>

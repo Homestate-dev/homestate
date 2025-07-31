@@ -14,7 +14,9 @@ import {
   DollarSign, 
   TrendingUp,
   Download,
-  BarChart3
+  BarChart3,
+  ChevronLeft,
+  ChevronRight
 } from "lucide-react"
 
 interface BuildingIncome {
@@ -47,6 +49,10 @@ export function BuildingIncomeReport() {
   const [buildings, setBuildings] = useState<Building[]>([])
   const [selectedBuilding, setSelectedBuilding] = useState<string>("all")
   const [loading, setLoading] = useState(true)
+  
+  // Estado para el paginador
+  const [currentPage, setCurrentPage] = useState(1)
+  const [itemsPerPage, setItemsPerPage] = useState(10)
 
   // Función auxiliar para manejar valores numéricos de forma segura
   const safeNumberFormat = (value: any, decimals: number = 1): string => {
@@ -108,6 +114,18 @@ export function BuildingIncomeReport() {
   const getTotalTransactions = () => {
     return processedIncomeData.reduce((sum, building) => sum + building.total_transacciones, 0)
   }
+
+  // Resetear a la primera página cuando cambie el edificio seleccionado
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [selectedBuilding])
+
+  // Lógica de paginación
+  const totalItems = processedIncomeData.length
+  const totalPages = Math.ceil(totalItems / itemsPerPage)
+  const startIndex = (currentPage - 1) * itemsPerPage
+  const endIndex = startIndex + itemsPerPage
+  const paginatedIncomeData = processedIncomeData.slice(startIndex, endIndex)
 
   useEffect(() => {
     fetchBuildings()
@@ -252,7 +270,7 @@ export function BuildingIncomeReport() {
             </div>
           ) : (
             <div className="space-y-6">
-              {processedIncomeData.filter(building => building.total_transacciones > 0).map((building) => (
+              {paginatedIncomeData.filter(building => building.total_transacciones > 0).map((building) => (
                 <Card key={building.edificio_id} className="p-4">
                   <div className="space-y-4">
                     {/* Información del edificio */}
@@ -353,6 +371,78 @@ export function BuildingIncomeReport() {
                   </div>
                 </Card>
               ))}
+
+              {/* Paginador */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between mt-6">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-gray-600">
+                      Mostrando {startIndex + 1}-{Math.min(endIndex, totalItems)} de {totalItems} edificios
+                    </span>
+                    <Select value={itemsPerPage.toString()} onValueChange={(value) => {
+                      setItemsPerPage(parseInt(value))
+                      setCurrentPage(1)
+                    }}>
+                      <SelectTrigger className="w-20">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="5">5</SelectItem>
+                        <SelectItem value="10">10</SelectItem>
+                        <SelectItem value="25">25</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <span className="text-sm text-gray-600">por página</span>
+                  </div>
+                  
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                      disabled={currentPage === 1}
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                    </Button>
+                    
+                    <div className="flex items-center gap-1">
+                      {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                        let pageNum
+                        if (totalPages <= 5) {
+                          pageNum = i + 1
+                        } else if (currentPage <= 3) {
+                          pageNum = i + 1
+                        } else if (currentPage >= totalPages - 2) {
+                          pageNum = totalPages - 4 + i
+                        } else {
+                          pageNum = currentPage - 2 + i
+                        }
+                        
+                        return (
+                          <Button
+                            key={pageNum}
+                            variant={currentPage === pageNum ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => setCurrentPage(pageNum)}
+                            className="w-8 h-8"
+                          >
+                            {pageNum}
+                          </Button>
+                        )
+                      })}
+                    </div>
+                    
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                      disabled={currentPage === totalPages}
+                    >
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </CardContent>
