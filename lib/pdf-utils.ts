@@ -2,6 +2,7 @@
 export class PDFGenerator {
   private static jsPDF: any = null
   private static isLoading = false
+  private static loadPromise: Promise<any> | null = null
 
   static async loadJsPDF(): Promise<any> {
     // Si ya está cargado, retornar
@@ -9,27 +10,26 @@ export class PDFGenerator {
       return this.jsPDF
     }
 
-    // Si está cargando, esperar
-    if (this.isLoading) {
-      return new Promise((resolve) => {
-        const checkLoaded = () => {
-          if (this.jsPDF) {
-            resolve(this.jsPDF)
-          } else {
-            setTimeout(checkLoaded, 100)
-          }
-        }
-        checkLoaded()
-      })
+    // Si ya está cargando, retornar la promesa existente
+    if (this.loadPromise) {
+      return this.loadPromise
     }
 
     this.isLoading = true
+    this.loadPromise = new Promise((resolve, reject) => {
+      // Timeout para evitar ciclos infinitos
+      const timeout = setTimeout(() => {
+        this.isLoading = false
+        this.loadPromise = null
+        reject(new Error('Timeout al cargar jsPDF'))
+      }, 10000) // 10 segundos de timeout
 
-    return new Promise((resolve, reject) => {
       // Verificar si ya está disponible globalmente
       if (typeof window !== 'undefined' && (window as any).jsPDF) {
         this.jsPDF = (window as any).jsPDF
         this.isLoading = false
+        this.loadPromise = null
+        clearTimeout(timeout)
         resolve(this.jsPDF)
         return
       }
@@ -39,26 +39,42 @@ export class PDFGenerator {
       script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js'
       
       script.onload = () => {
-        // Verificar que se cargó correctamente
+        // Verificar que se cargó correctamente con timeout
+        let attempts = 0
+        const maxAttempts = 50 // 5 segundos máximo
+        
         const checkLoaded = () => {
+          attempts++
           if ((window as any).jsPDF) {
             this.jsPDF = (window as any).jsPDF
             this.isLoading = false
+            this.loadPromise = null
+            clearTimeout(timeout)
             resolve(this.jsPDF)
-          } else {
+          } else if (attempts < maxAttempts) {
             setTimeout(checkLoaded, 100)
+          } else {
+            this.isLoading = false
+            this.loadPromise = null
+            clearTimeout(timeout)
+            reject(new Error('jsPDF no se cargó después de múltiples intentos'))
           }
         }
-        checkLoaded()
+        
+        setTimeout(checkLoaded, 100)
       }
 
       script.onerror = () => {
         this.isLoading = false
-        reject(new Error('No se pudo cargar jsPDF'))
+        this.loadPromise = null
+        clearTimeout(timeout)
+        reject(new Error('No se pudo cargar jsPDF desde CDN'))
       }
 
       document.head.appendChild(script)
     })
+
+    return this.loadPromise
   }
 
   static async createPDF(options: {
@@ -92,13 +108,13 @@ export class PDFGenerator {
         
         // Encabezados
         let xPosition = 20
-        const columnWidth = 40
+        const columnWidth = 35 // Reducido para mejor ajuste
         
         options.headers.forEach((header, index) => {
           doc.setFillColor(59, 130, 246)
           doc.setTextColor(255, 255, 255)
           doc.rect(xPosition, yPosition, columnWidth, 8, 'F')
-          doc.text(header.substring(0, 8), xPosition + 2, yPosition + 6)
+          doc.text(header.substring(0, 10), xPosition + 2, yPosition + 6)
           xPosition += columnWidth
         })
         
@@ -116,7 +132,7 @@ export class PDFGenerator {
           
           xPosition = 20
           row.forEach((cell: any, cellIndex: number) => {
-            const cellText = String(cell).substring(0, 8)
+            const cellText = String(cell).substring(0, 10)
             doc.text(cellText, xPosition + 2, yPosition + 6)
             xPosition += columnWidth
           })

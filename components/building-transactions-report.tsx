@@ -106,8 +106,7 @@ export function BuildingTransactionsReport() {
     // Verificar si el valor es válido
     if (amount === null || amount === undefined || isNaN(amount)) {
       return '$0'
-    }
-    return new Intl.NumberFormat('es-CO', {
+    }  ormat('es-CO', {
       style: 'currency',
       currency: 'COP',
       minimumFractionDigits: 0,
@@ -169,9 +168,9 @@ export function BuildingTransactionsReport() {
   const exportReport = async () => {
     try {
       // Mostrar indicador de carga
-      toast.loading('Generando PDF...')
+      toast.loading('Generando reporte...')
       
-      // Preparar datos para el PDF
+      // Preparar datos para el reporte
       const buildingName = buildings.find((b: Building) => b.id.toString() === selectedBuilding)?.nombre
       const title = selectedBuilding === "all" 
         ? "Reporte de Transacciones - Todos los Edificios"
@@ -205,25 +204,54 @@ export function BuildingTransactionsReport() {
       // Generar nombre del archivo
       const date = new Date().toISOString().split('T')[0]
       const fileName = selectedBuilding === "all" 
-        ? `transacciones_todos_edificios_${date}.pdf`
-        : `transacciones_${buildingName?.replace(/\s+/g, '_') || 'edificio'}_${date}.pdf`
+        ? `transacciones_todos_edificios_${date}.html`
+        : `transacciones_${buildingName?.replace(/\s+/g, '_') || 'edificio'}_${date}.html`
       
-      // Crear PDF usando la utilidad
-      await PDFGenerator.createPDF({
-        title,
-        data: tableData,
-        headers,
-        fileName
+      // Llamar a la API del servidor
+      const response = await fetch('/api/generate-pdf', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          title,
+          data: tableData,
+          headers,
+          fileName
+        })
       })
       
-      // Mostrar mensaje de éxito
-      toast.dismiss()
-      toast.success('PDF exportado exitosamente')
+      const result = await response.json()
+      
+      if (result.success) {
+        // Crear un blob con el HTML
+        const blob = new Blob([result.html], { type: 'text/html' })
+        
+        // Crear URL del blob
+        const url = window.URL.createObjectURL(blob)
+        
+        // Crear enlace de descarga
+        const link = document.createElement('a')
+        link.href = url
+        link.download = fileName
+        document.body.appendChild(link)
+        link.click()
+        
+        // Limpiar
+        document.body.removeChild(link)
+        window.URL.revokeObjectURL(url)
+        
+        // Mostrar mensaje de éxito
+        toast.dismiss()
+        toast.success('Reporte exportado exitosamente')
+      } else {
+        throw new Error(result.error || 'Error al generar el reporte')
+      }
       
     } catch (error) {
-      console.error('Error al generar PDF:', error)
+      console.error('Error al generar reporte:', error)
       toast.dismiss()
-      toast.error('Error al generar el PDF. Inténtalo de nuevo.')
+      toast.error('Error al generar el reporte. Inténtalo de nuevo.')
     }
   }
 
