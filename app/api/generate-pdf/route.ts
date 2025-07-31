@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
               font-family: 'Poppins', sans-serif; 
               font-weight: 300; 
               font-size: 24px; 
-              color: #3b82f6; 
+              color:rgb(248, 113, 22); 
             }
             .title { 
               margin-top: 10px; 
@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
               word-wrap: break-word;
             }
             th { 
-              background-color: #3b82f6; 
+              background-color:rgb(246, 159, 59); 
               color: white; 
               font-weight: bold;
             }
@@ -79,7 +79,7 @@ export async function POST(request: NextRequest) {
               font-weight: bold; 
             }
             .total-row td { 
-              border-top: 2px solid #3b82f6; 
+              border-top: 2px solidrgb(246, 187, 59); 
             }
             .footer { 
               margin-top: 30px; 

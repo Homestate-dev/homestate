@@ -50,7 +50,7 @@ export function ReportsSection() {
         </TabsList>
 
         <TabsContent value="building-transactions" className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="space-y-4">
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">

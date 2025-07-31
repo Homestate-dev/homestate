@@ -30,7 +30,9 @@ import {
   Trash2,
   Download,
   BarChart3,
-  AlertTriangle
+  AlertTriangle,
+  ChevronLeft,
+  ChevronRight
 } from "lucide-react"
 import { TransactionStateManager } from "./transaction-state-manager"
 import { ReportsSection } from "./reports-section"
@@ -131,6 +133,8 @@ export function SalesRentalsManagement() {
     from: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
     to: new Date().toISOString().split('T')[0]
   })
+  const [currentPage, setCurrentPage] = useState(1)
+  const [itemsPerPage, setItemsPerPage] = useState(10)
   const isMobile = useIsMobile()
 
   // Nuevo estado para el formulario
@@ -528,6 +532,18 @@ export function SalesRentalsManagement() {
     return matchesSearch && matchesType && matchesStatus && matchesAgent
   })
 
+  // Lógica de paginación
+  const totalItems = filteredTransactions.length
+  const totalPages = Math.ceil(totalItems / itemsPerPage)
+  const startIndex = (currentPage - 1) * itemsPerPage
+  const endIndex = startIndex + itemsPerPage
+  const paginatedTransactions = filteredTransactions.slice(startIndex, endIndex)
+
+  // Resetear a la primera página cuando cambien los filtros
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [searchTerm, filterType, filterStatus, filterAgent, filterBuilding])
+
   const getStatusBadge = (status: string) => {
     const statusConfig = {
       reservado: { variant: "default" as const, text: "Reservado", className: "bg-blue-100 text-blue-800" },
@@ -773,58 +789,132 @@ export function SalesRentalsManagement() {
                 </div>
               </div>
             ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Cliente</TableHead>
-                    <TableHead>Propiedad</TableHead>
-                    <TableHead>Tipo</TableHead>
-                    <TableHead>Valor</TableHead>
-                    <TableHead>Agente</TableHead>
-                    <TableHead>Estado</TableHead>
-                    <TableHead>Fecha</TableHead>
-                    <TableHead>Acciones</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredTransactions.map((transaction) => (
-                    <TableRow key={transaction.id}>
-                      <TableCell>
-                        <div>
-                          <p className="font-medium">{transaction.cliente_nombre}</p>
-                          <p className="text-sm text-gray-500">{transaction.cliente_email}</p>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div>
-                          <p className="font-medium">{transaction.edificio_nombre}</p>
-                          <p className="text-sm text-gray-500">Depto. {transaction.departamento_numero}</p>
-                        </div>
-                      </TableCell>
-                      <TableCell>{getTypeBadge(transaction.tipo_transaccion)}</TableCell>
-                      <TableCell className="font-medium">
-                        {formatCurrency(transaction.valor_transaccion)}
-                      </TableCell>
-                      <TableCell>{transaction.agente_nombre}</TableCell>
-                      <TableCell>{getStatusBadge(transaction.estado_actual)}</TableCell>
-                      <TableCell>
-                        {transaction.fecha_transaccion ? new Date(transaction.fecha_transaccion).toLocaleDateString('es-CO') : 'N/A'}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setSelectedTransaction(transaction)}
-                          >
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
+              <>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Cliente</TableHead>
+                      <TableHead>Propiedad</TableHead>
+                      <TableHead>Tipo</TableHead>
+                      <TableHead>Valor</TableHead>
+                      <TableHead>Agente</TableHead>
+                      <TableHead>Estado</TableHead>
+                      <TableHead>Fecha</TableHead>
+                      <TableHead>Acciones</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {paginatedTransactions.map((transaction) => (
+                      <TableRow key={transaction.id}>
+                        <TableCell>
+                          <div>
+                            <p className="font-medium">{transaction.cliente_nombre}</p>
+                            <p className="text-sm text-gray-500">{transaction.cliente_email}</p>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div>
+                            <p className="font-medium">{transaction.edificio_nombre}</p>
+                            <p className="text-sm text-gray-500">Depto. {transaction.departamento_numero}</p>
+                          </div>
+                        </TableCell>
+                        <TableCell>{getTypeBadge(transaction.tipo_transaccion)}</TableCell>
+                        <TableCell className="font-medium">
+                          {formatCurrency(transaction.valor_transaccion)}
+                        </TableCell>
+                        <TableCell>{transaction.agente_nombre}</TableCell>
+                        <TableCell>{getStatusBadge(transaction.estado_actual)}</TableCell>
+                        <TableCell>
+                          {transaction.fecha_transaccion ? new Date(transaction.fecha_transaccion).toLocaleDateString('es-CO') : 'N/A'}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setSelectedTransaction(transaction)}
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+
+                {/* Paginador */}
+                {totalPages > 1 && (
+                  <div className="flex items-center justify-between mt-4">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-gray-600">
+                        Mostrando {startIndex + 1}-{Math.min(endIndex, totalItems)} de {totalItems} transacciones
+                      </span>
+                      <Select value={itemsPerPage.toString()} onValueChange={(value) => {
+                        setItemsPerPage(parseInt(value))
+                        setCurrentPage(1)
+                      }}>
+                        <SelectTrigger className="w-20">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="5">5</SelectItem>
+                          <SelectItem value="10">10</SelectItem>
+                          <SelectItem value="25">25</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <span className="text-sm text-gray-600">por página</span>
+                    </div>
+                    
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                        disabled={currentPage === 1}
+                      >
+                        <ChevronLeft className="h-4 w-4" />
+                      </Button>
+                      
+                      <div className="flex items-center gap-1">
+                        {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                          let pageNum
+                          if (totalPages <= 5) {
+                            pageNum = i + 1
+                          } else if (currentPage <= 3) {
+                            pageNum = i + 1
+                          } else if (currentPage >= totalPages - 2) {
+                            pageNum = totalPages - 4 + i
+                          } else {
+                            pageNum = currentPage - 2 + i
+                          }
+                          
+                          return (
+                            <Button
+                              key={pageNum}
+                              variant={currentPage === pageNum ? "default" : "outline"}
+                              size="sm"
+                              onClick={() => setCurrentPage(pageNum)}
+                              className="w-8 h-8"
+                            >
+                              {pageNum}
+                            </Button>
+                          )
+                        })}
+                      </div>
+                      
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                        disabled={currentPage === totalPages}
+                      >
+                        <ChevronRight className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </>
             )}
           </div>
         </CardContent>
