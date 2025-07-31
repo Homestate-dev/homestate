@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Plus, MapPin, Car, Users, Eye, Edit, QrCode, Trash2, UserCog, Activity, ExternalLink, Search, Briefcase, DollarSign } from "lucide-react"
+import { Plus, MapPin, Car, Users, Eye, Edit, QrCode, Trash2, UserCog, Activity, ExternalLink, Search, Briefcase, DollarSign, Building2 } from "lucide-react"
 import { Logo } from "@/components/ui/logo"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { Button } from "@/components/ui/button"
@@ -108,12 +108,12 @@ export function BuildingList({ buildings, onSelectBuilding, onBuildingCreated, o
       <Tabs defaultValue="buildings" className="w-full">
         <TabsList className={`${isMobile ? 'grid w-full' : 'grid w-full lg:w-[1000px]'} ${isMainAdmin ? 'grid-cols-4' : 'grid-cols-2'}`}>
           <TabsTrigger value="buildings" className={`flex items-center gap-2 ${isMobile ? 'text-xs' : ''}`}>
-            <Logo size={16} />
+            <Building2 className="h-4 w-4" />
             {isMobile ? 'Edificios' : 'Edificios'}
           </TabsTrigger>
           <TabsTrigger value="admins" className={`flex items-center gap-2 ${isMobile ? 'text-xs' : ''}`}>
             <UserCog className="h-4 w-4" />
-            {isMobile ? 'Admins' : 'Administradores'}
+            {isMobile ? 'Agentes' : 'Agentes Inmobiliarios'}
           </TabsTrigger>
           {isMainAdmin && (
             <TabsTrigger value="sales-rentals" className={`flex items-center gap-2 ${isMobile ? 'text-xs' : ''}`}>
