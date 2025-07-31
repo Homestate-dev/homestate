@@ -5,7 +5,7 @@
 Se ha implementado la funcionalidad de exportar a PDF para el reporte de transacciones por edificio. Esta funcionalidad permite generar reportes en formato PDF que incluyen:
 
 - **Título del reporte** con el nombre del edificio seleccionado o "Todos los edificios"
-- **Información del reporte** incluyendo fecha de generación, total de transacciones, ventas, arriendos y valor total
+- **Información del reporte** incluyendo fecha de generación y total de transacciones
 - **Tabla detallada** con todas las transacciones incluyendo:
   - Edificio
   - Departamento
@@ -22,11 +22,12 @@ Se ha implementado la funcionalidad de exportar a PDF para el reporte de transac
 ### ✅ Funcionalidades Implementadas
 
 1. **Exportación dinámica**: Se adapta al edificio seleccionado
-2. **Carga automática de librerías**: jsPDF y autoTable se cargan dinámicamente desde CDN
-3. **Manejo de errores**: Incluye try-catch y mensajes de error informativos
+2. **Carga automática de librerías**: jsPDF se carga dinámicamente desde CDN
+3. **Manejo robusto de errores**: Incluye try-catch y mensajes de error informativos
 4. **Indicadores de carga**: Muestra toast de carga mientras genera el PDF
 5. **Nombres de archivo inteligentes**: Incluye fecha y nombre del edificio
 6. **Diseño profesional**: Tabla con colores alternados y formato profesional
+7. **Carga singleton**: Evita cargar múltiples veces la misma librería
 
 ### 📋 Cómo usar
 
@@ -40,9 +41,12 @@ Se ha implementado la funcionalidad de exportar a PDF para el reporte de transac
 ```
 components/
 ├── building-transactions-report.tsx    # Componente principal con funcionalidad PDF
-├── pdf-export-test.tsx                # Componente de prueba para verificar funcionalidad
+├── simple-pdf-export.tsx              # Componente de prueba simplificado
 └── ui/
     └── button.tsx                     # Botón de exportar
+
+lib/
+└── pdf-utils.ts                       # Utilidades para generación de PDF
 
 types/
 └── pdf.d.ts                          # Tipos para jsPDF
@@ -54,8 +58,9 @@ PDF_EXPORT_README.md                   # Este archivo
 
 La funcionalidad utiliza:
 - **jsPDF**: Para generar el documento PDF
-- **jsPDF-AutoTable**: Para crear tablas profesionales en el PDF
-- **CDN**: Las librerías se cargan dinámicamente desde CDN para evitar dependencias adicionales
+- **CDN**: La librería se carga dinámicamente desde CDN para evitar dependencias adicionales
+- **Singleton Pattern**: Evita cargar múltiples veces la misma librería
+- **Error Handling**: Manejo robusto de errores con fallbacks
 
 ### 📊 Formato del PDF
 
@@ -81,16 +86,13 @@ El PDF generado incluye:
 El diseño del PDF se puede personalizar modificando:
 
 ```typescript
+// En lib/pdf-utils.ts
 // Colores del encabezado de tabla
-headStyles: {
-  fillColor: [59, 130, 246],  // Azul
-  textColor: 255               // Blanco
-}
+doc.setFillColor(59, 130, 246)  // Azul
+doc.setTextColor(255, 255, 255)  // Blanco
 
-// Colores de filas alternadas
-alternateRowStyles: {
-  fillColor: [248, 250, 252]  // Gris claro
-}
+// Tamaño de columnas
+const columnWidth = 40
 ```
 
 ### 🚀 Próximas mejoras
@@ -103,14 +105,17 @@ alternateRowStyles: {
 
 ### 🐛 Solución de problemas
 
+**Problema**: Error "is not a constructor"
+**Solución**: Se ha implementado una carga más robusta con verificaciones adicionales
+
 **Problema**: El PDF no se genera
 **Solución**: Verificar conexión a internet (necesaria para cargar librerías desde CDN)
 
 **Problema**: Error de librería no encontrada
-**Solución**: La librería se carga automáticamente, esperar unos segundos
+**Solución**: La librería se carga automáticamente con fallbacks, esperar unos segundos
 
 **Problema**: Tabla muy ancha
-**Solución**: El autoTable ajusta automáticamente el ancho de columnas
+**Solución**: Se ajusta automáticamente el ancho de columnas
 
 ### 📝 Notas de desarrollo
 
@@ -118,4 +123,27 @@ alternateRowStyles: {
 - No requiere instalación de dependencias adicionales
 - Compatible con todos los navegadores modernos
 - Manejo robusto de errores incluido
-- Carga asíncrona de librerías para mejor rendimiento 
+- Carga asíncrona de librerías para mejor rendimiento
+- Implementación singleton para evitar conflictos
+
+### 🔄 Cambios recientes
+
+**Versión 2.0**:
+- Implementación de `PDFGenerator` class para mejor organización
+- Carga singleton de jsPDF para evitar conflictos
+- Manejo más robusto de errores
+- Fallbacks mejorados para diferentes CDNs
+- Código más limpio y mantenible
+
+### 🧪 Componente de prueba
+
+Se incluye `SimplePDFExport` para probar la funcionalidad básica:
+
+```typescript
+import { SimplePDFExport } from "@/components/simple-pdf-export"
+
+// Usar en cualquier componente
+<SimplePDFExport />
+```
+
+Este componente genera un PDF de prueba simple para verificar que la funcionalidad funciona correctamente. 

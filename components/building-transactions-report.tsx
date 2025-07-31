@@ -16,6 +16,7 @@ import {
   FileText,
   Download
 } from "lucide-react"
+import { PDFGenerator } from "@/lib/pdf-utils"
 
 // Declaraciones de tipos para jsPDF
 declare global {
@@ -170,108 +171,36 @@ export function BuildingTransactionsReport() {
       // Mostrar indicador de carga
       toast.loading('Generando PDF...')
       
-      // Función para cargar jsPDF dinámicamente
-      const loadJsPDF = (): Promise<any> => {
-        return new Promise((resolve, reject) => {
-          // Verificar si ya está cargado
-          if (typeof window !== 'undefined' && (window as any).jsPDF) {
-            resolve((window as any).jsPDF)
-            return
-          }
-          
-          // Cargar jsPDF
-          const script = document.createElement('script')
-          script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js'
-          script.onload = () => {
-            // Cargar autoTable
-            const autoTableScript = document.createElement('script')
-            autoTableScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js'
-            autoTableScript.onload = () => {
-              resolve((window as any).jsPDF)
-            }
-            autoTableScript.onerror = reject
-            document.head.appendChild(autoTableScript)
-          }
-          script.onerror = reject
-          document.head.appendChild(script)
-        })
-      }
-      
-      // Cargar jsPDF
-      const jsPDF = await loadJsPDF()
-      
-      // Crear el documento PDF
-      const doc = new jsPDF()
-      
-      // Configurar el documento
-      doc.setFont('helvetica')
-      doc.setFontSize(20)
-      
-      // Título del reporte
+      // Preparar datos para el PDF
       const buildingName = buildings.find((b: Building) => b.id.toString() === selectedBuilding)?.nombre
       const title = selectedBuilding === "all" 
         ? "Reporte de Transacciones - Todos los Edificios"
         : `Reporte de Transacciones - ${buildingName || 'Edificio Seleccionado'}`
       
-      doc.text(title, 20, 30)
+      // Preparar datos de la tabla
+      const tableData = processedTransactions.map((transaction: BuildingTransaction) => [
+        transaction.edificio_nombre,
+        transaction.departamento_numero,
+        transaction.tipo_transaccion === 'venta' ? 'Venta' : 'Arriendo',
+        transaction.cliente_nombre,
+        transaction.agente_nombre,
+        formatCurrency(transaction.precio_final),
+        formatCurrency(transaction.comision_valor),
+        new Date(transaction.fecha_transaccion).toLocaleDateString('es-CO'),
+        transaction.estado_actual
+      ])
       
-      // Información del reporte
-      doc.setFontSize(12)
-      doc.text(`Fecha de generación: ${new Date().toLocaleDateString('es-CO')}`, 20, 45)
-      doc.text(`Total de transacciones: ${processedTransactions.length}`, 20, 55)
-      doc.text(`Ventas: ${totalSales}`, 20, 65)
-      doc.text(`Arriendos: ${totalRentals}`, 20, 75)
-      doc.text(`Valor total: ${formatCurrency(totalValue)}`, 20, 85)
-      
-      // Crear tabla de transacciones
-      if (processedTransactions.length > 0) {
-        const tableData = processedTransactions.map((transaction: BuildingTransaction) => [
-          transaction.edificio_nombre,
-          transaction.departamento_numero,
-          transaction.tipo_transaccion === 'venta' ? 'Venta' : 'Arriendo',
-          transaction.cliente_nombre,
-          transaction.agente_nombre,
-          formatCurrency(transaction.precio_final),
-          formatCurrency(transaction.comision_valor),
-          new Date(transaction.fecha_transaccion).toLocaleDateString('es-CO'),
-          transaction.estado_actual
-        ])
-        
-        const headers = [
-          'Edificio',
-          'Depto',
-          'Tipo',
-          'Cliente',
-          'Agente',
-          'Valor',
-          'Comisión',
-          'Fecha',
-          'Estado'
-        ]
-        
-        // Agregar tabla usando autoTable
-        doc.autoTable({
-          head: [headers],
-          body: tableData,
-          startY: 100,
-          styles: {
-            fontSize: 8,
-            cellPadding: 2
-          },
-          headStyles: {
-            fillColor: [59, 130, 246],
-            textColor: 255
-          },
-          alternateRowStyles: {
-            fillColor: [248, 250, 252]
-          },
-          margin: { top: 10, right: 10, bottom: 10, left: 10 }
-        })
-      } else {
-        // Si no hay transacciones, mostrar mensaje
-        doc.setFontSize(14)
-        doc.text('No se encontraron transacciones para el período seleccionado', 20, 100)
-      }
+      const headers = [
+        'Edificio',
+        'Depto',
+        'Tipo',
+        'Cliente',
+        'Agente',
+        'Valor',
+        'Comisión',
+        'Fecha',
+        'Estado'
+      ]
       
       // Generar nombre del archivo
       const date = new Date().toISOString().split('T')[0]
@@ -279,8 +208,13 @@ export function BuildingTransactionsReport() {
         ? `transacciones_todos_edificios_${date}.pdf`
         : `transacciones_${buildingName?.replace(/\s+/g, '_') || 'edificio'}_${date}.pdf`
       
-      // Guardar el PDF
-      doc.save(fileName)
+      // Crear PDF usando la utilidad
+      await PDFGenerator.createPDF({
+        title,
+        data: tableData,
+        headers,
+        fileName
+      })
       
       // Mostrar mensaje de éxito
       toast.dismiss()
