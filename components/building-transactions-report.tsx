@@ -169,7 +169,7 @@ export function BuildingTransactionsReport() {
   const exportReport = async () => {
     try {
       // Mostrar indicador de carga
-      toast.loading('Generando reporte...')
+      toast.loading('Generando PDF...')
       
       // Preparar datos para el reporte
       const buildingName = buildings.find((b: Building) => b.id.toString() === selectedBuilding)?.nombre
@@ -254,8 +254,8 @@ export function BuildingTransactionsReport() {
       // Generar nombre del archivo
       const date = new Date().toISOString().split('T')[0]
       const fileName = selectedBuilding === "all" 
-        ? `transacciones_todos_edificios_${date}.html`
-        : `transacciones_${buildingName?.replace(/\s+/g, '_') || 'edificio'}_${date}.html`
+        ? `transacciones_todos_edificios_${date}.pdf`
+        : `transacciones_${buildingName?.replace(/\s+/g, '_') || 'edificio'}_${date}.pdf`
       
       // Llamar a la API del servidor
       const response = await fetch('/api/generate-pdf', {
@@ -271,37 +271,35 @@ export function BuildingTransactionsReport() {
         })
       })
       
-      const result = await response.json()
-      
-      if (result.success) {
-        // Crear un blob con el HTML
-        const blob = new Blob([result.html], { type: 'text/html' })
-        
-        // Crear URL del blob
-        const url = window.URL.createObjectURL(blob)
-        
-        // Crear enlace de descarga
-        const link = document.createElement('a')
-        link.href = url
-        link.download = fileName
-        document.body.appendChild(link)
-        link.click()
-        
-        // Limpiar
-        document.body.removeChild(link)
-        window.URL.revokeObjectURL(url)
-        
-        // Mostrar mensaje de éxito
-        toast.dismiss()
-        toast.success('Reporte exportado exitosamente')
-      } else {
-        throw new Error(result.error || 'Error al generar el reporte')
+      if (!response.ok) {
+        throw new Error('Error al generar el PDF')
       }
       
-    } catch (error) {
-      console.error('Error al generar reporte:', error)
+      // Obtener el PDF como blob
+      const pdfBlob = await response.blob()
+      
+      // Crear URL del blob
+      const url = window.URL.createObjectURL(pdfBlob)
+      
+      // Crear enlace de descarga
+      const link = document.createElement('a')
+      link.href = url
+      link.download = fileName
+      document.body.appendChild(link)
+      link.click()
+      
+      // Limpiar
+      document.body.removeChild(link)
+      window.URL.revokeObjectURL(url)
+      
+      // Mostrar mensaje de éxito
       toast.dismiss()
-      toast.error('Error al generar el reporte. Inténtalo de nuevo.')
+      toast.success('PDF generado exitosamente')
+      
+    } catch (error) {
+      console.error('Error al generar PDF:', error)
+      toast.dismiss()
+      toast.error('Error al generar el PDF. Inténtalo de nuevo.')
     }
   }
 

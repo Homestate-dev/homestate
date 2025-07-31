@@ -2,8 +2,9 @@
 
 ## Descripción
 
-Se ha implementado la funcionalidad de exportar reportes para el reporte de transacciones por edificio. Esta funcionalidad permite generar reportes en formato HTML que incluyen:
+Se ha implementado la funcionalidad de exportar reportes para el reporte de transacciones por edificio. Esta funcionalidad permite generar reportes en formato **PDF real** que incluyen:
 
+- **Logo de Homestate** y texto "HomEstate" en Poppins Light
 - **Título del reporte** con el nombre del edificio seleccionado o "Todos los edificios"
 - **Información del reporte** incluyendo fecha de generación y total de transacciones
 - **Tabla dinámica** que se adapta según la selección:
@@ -11,6 +12,7 @@ Se ha implementado la funcionalidad de exportar reportes para el reporte de tran
   - **Edificio específico**: Oculta columna "Edificio" (siempre el mismo)
 - **Totales automáticos** al final de las columnas "Valor" y "Comisión"
 - **Diseño profesional** con fila de totales destacada
+- **Formato PDF A4** con márgenes optimizados para impresión
 
 ## Características
 
@@ -19,12 +21,13 @@ Se ha implementado la funcionalidad de exportar reportes para el reporte de tran
 1. **Exportación dinámica**: Se adapta al edificio seleccionado
 2. **Columnas inteligentes**: Oculta columna edificio cuando no es necesaria
 3. **Totales automáticos**: Calcula y muestra totales de valor y comisión
-4. **Generación en servidor**: No depende de librerías externas en el cliente
+4. **Generación en servidor**: Usa API externa para convertir HTML a PDF
 5. **Manejo robusto de errores**: Incluye try-catch y mensajes de error informativos
-6. **Indicadores de carga**: Muestra toast de carga mientras genera el reporte
-7. **Nombres de archivo inteligentes**: Incluye fecha y nombre del edificio
+6. **Indicadores de carga**: Muestra toast de carga mientras genera el PDF
+7. **Nombres de archivo inteligentes**: Incluye fecha y nombre del edificio con extensión .pdf
 8. **Diseño profesional**: Tabla con colores alternados y fila de totales destacada
-9. **Sin dependencias externas**: No requiere jsPDF ni otras librerías
+9. **Logo de marca**: Incluye logo de Homestate y texto "HomEstate" en Poppins Light
+10. **Formato PDF real**: Archivo PDF descargable, no HTML
 
 ### 📋 Cómo usar
 
@@ -32,8 +35,8 @@ Se ha implementado la funcionalidad de exportar reportes para el reporte de tran
 2. **Seleccionar edificio**: 
    - **"Todos los edificios"**: Muestra columna edificio y totales generales
    - **Edificio específico**: Oculta columna edificio y muestra totales del edificio
-3. **Hacer clic en Exportar**: El botón "Exportar" generará el reporte automáticamente
-4. **Descargar**: El archivo se descargará automáticamente con el nombre apropiado
+3. **Hacer clic en Exportar**: El botón "Exportar" generará el PDF automáticamente
+4. **Descargar**: El archivo PDF se descargará automáticamente con el nombre apropiado
 
 ### 📊 Comportamiento de columnas
 
@@ -67,7 +70,10 @@ components/
 app/
 └── api/
     └── generate-pdf/
-        └── route.ts                   # API del servidor para generar reportes
+        └── route.ts                   # API del servidor para generar PDFs
+
+public/
+└── logo-qr.png                       # Logo de Homestate para los reportes
 
 PDF_EXPORT_README.md                   # Este archivo
 ```
@@ -76,16 +82,20 @@ PDF_EXPORT_README.md                   # Este archivo
 
 La funcionalidad utiliza:
 - **API del servidor**: Para generar el contenido HTML del reporte
-- **Blob API**: Para crear archivos descargables en el navegador
+- **API externa HTML2PDF**: Para convertir HTML a PDF real
+- **Blob API**: Para crear archivos PDF descargables en el navegador
 - **Lógica dinámica**: Para mostrar/ocultar columnas según la selección
 - **Cálculo de totales**: Automático para valor y comisión
-- **Sin dependencias externas**: No requiere librerías adicionales
+- **Logo de marca**: Integrado desde `/public/logo-qr.png`
+- **Fuente Poppins**: Cargada desde Google Fonts para el texto "HomEstate"
 
 ### 📊 Formato del reporte
 
 El reporte generado incluye:
 
-1. **Encabezado**:
+1. **Encabezado con marca**:
+   - Logo de Homestate (64x64px)
+   - Texto "HomEstate" en Poppins Light
    - Título del reporte
    - Fecha de generación
    - Estadísticas resumidas
@@ -100,6 +110,12 @@ El reporte generado incluye:
 3. **Pie de página**:
    - Información del sistema
    - Marca de agua
+
+4. **Formato PDF**:
+   - Tamaño A4
+   - Márgenes optimizados (20mm)
+   - Fuente legible (12px para texto, 10px para tabla)
+   - Saltos de página automáticos
 
 ### 🎨 Personalización
 
@@ -116,6 +132,12 @@ th { background-color: #3b82f6; color: white; }
 
 // Colores de filas alternadas
 tr:nth-child(even) { background-color: #f8f9fa; }
+
+// Configuración de página
+@page {
+  size: A4;
+  margin: 20mm;
+}
 ```
 
 ### 🚀 Próximas mejoras
@@ -126,16 +148,18 @@ tr:nth-child(even) { background-color: #f8f9fa; }
 4. **Múltiples formatos**: Exportar también a Excel y CSV
 5. **Plantillas**: Diferentes plantillas de diseño para diferentes tipos de reportes
 6. **Subtotales**: Agregar subtotales por tipo de transacción
+7. **Configuración de página**: Permitir diferentes tamaños de papel
+8. **Marca de agua**: Agregar marca de agua personalizada
 
 ### 🐛 Solución de problemas
 
 **Problema**: Error de librería no encontrada
-**Solución**: Ya no depende de librerías externas, usa API del servidor
+**Solución**: Ya no depende de librerías externas, usa API externa HTML2PDF
 
 **Problema**: Ciclo infinito al cargar
 **Solución**: Eliminado completamente, usa generación en servidor
 
-**Problema**: El reporte no se genera
+**Problema**: El PDF no se genera
 **Solución**: Verificar que la API `/api/generate-pdf` esté funcionando
 
 **Problema**: Archivo no se descarga
@@ -144,26 +168,32 @@ tr:nth-child(even) { background-color: #f8f9fa; }
 **Problema**: Totales no aparecen
 **Solución**: Verificar que haya transacciones para calcular totales
 
+**Problema**: Logo no aparece
+**Solución**: Verificar que `/public/logo-qr.png` exista
+
 ### 📝 Notas de desarrollo
 
-- La funcionalidad es híbrida (cliente-servidor)
+- La funcionalidad es híbrida (cliente-servidor con API externa)
 - No requiere instalación de dependencias adicionales
 - Compatible con todos los navegadores modernos
 - Manejo robusto de errores incluido
-- Generación rápida sin dependencias externas
-- Archivos HTML que se pueden abrir en cualquier navegador
+- Generación rápida con API externa HTML2PDF
+- Archivos PDF reales que se pueden abrir en cualquier visor
 - **Lógica dinámica** para columnas según selección
 - **Cálculo automático** de totales
+- **Logo de marca** integrado
+- **Formato profesional** A4
 
 ### 🔄 Cambios recientes
 
-**Versión 4.0**:
-- ✅ Columnas dinámicas según selección
-- ✅ Totales automáticos de valor y comisión
-- ✅ Fila de totales destacada visualmente
-- ✅ Lógica inteligente para mostrar/ocultar columna edificio
-- ✅ Cálculo preciso de totales
-- ✅ Diseño mejorado con estilos especiales para totales
+**Versión 5.0**:
+- ✅ Generación de PDF real en lugar de HTML
+- ✅ Logo de Homestate integrado (64x64px)
+- ✅ Texto "HomEstate" en Poppins Light
+- ✅ Formato A4 con márgenes optimizados
+- ✅ API externa HTML2PDF para conversión
+- ✅ Archivos .pdf descargables
+- ✅ Diseño profesional para impresión
 
 ### 🧪 Componente de prueba
 
@@ -177,21 +207,24 @@ import { ServerPDFExport } from "@/components/server-pdf-export"
   title="Mi Reporte"
   data={tableData}
   headers={headers}
-  fileName="mi_reporte.html"
+  fileName="mi_reporte.pdf"
 />
 ```
 
 ### 📊 Ventajas de la nueva implementación
 
-1. **Sin dependencias externas**: No requiere jsPDF ni otras librerías
-2. **Sin problemas de carga**: No hay ciclos infinitos ni timeouts
-3. **Más rápido**: Generación directa en servidor
-4. **Más confiable**: Sin problemas de CDN o red
-5. **Más simple**: Código más limpio y fácil de mantener
-6. **Compatible**: Funciona en todos los navegadores
-7. **Escalable**: Fácil de extender a otros reportes
-8. **Inteligente**: Se adapta automáticamente según la selección
-9. **Profesional**: Totales destacados y diseño limpio
+1. **PDF real**: Archivos PDF descargables, no HTML
+2. **Sin dependencias externas**: No requiere librerías locales
+3. **Sin problemas de carga**: No hay ciclos infinitos ni timeouts
+4. **Más rápido**: Generación directa con API externa
+5. **Más confiable**: Sin problemas de CDN o red
+6. **Más simple**: Código más limpio y fácil de mantener
+7. **Compatible**: Funciona en todos los navegadores
+8. **Escalable**: Fácil de extender a otros reportes
+9. **Inteligente**: Se adapta automáticamente según la selección
+10. **Profesional**: Totales destacados y diseño limpio
+11. **Marca integrada**: Logo y texto "HomEstate" incluidos
+12. **Formato impresión**: Optimizado para A4
 
 ### 🔧 Instalación y configuración
 
@@ -201,16 +234,20 @@ No se requiere instalación adicional. La funcionalidad está lista para usar:
 2. **Componentes**: Ya implementados y listos para usar
 3. **Estilos**: Incluidos en la API del servidor
 4. **Lógica dinámica**: Implementada en el componente principal
+5. **Logo**: Ubicado en `/public/logo-qr.png`
+6. **API externa**: HTML2PDF para conversión a PDF
 
 ### 🎯 Uso en producción
 
 La funcionalidad está lista para producción:
 
-- ✅ Sin dependencias externas
+- ✅ Sin dependencias externas locales
 - ✅ Manejo robusto de errores
 - ✅ Compatible con todos los navegadores
 - ✅ Generación rápida y confiable
 - ✅ Fácil de mantener y extender
 - ✅ Columnas dinámicas según contexto
 - ✅ Totales automáticos y precisos
-- ✅ Diseño profesional con totales destacados 
+- ✅ Diseño profesional con totales destacados
+- ✅ Logo de marca integrado
+- ✅ Formato PDF real para impresión 
