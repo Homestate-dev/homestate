@@ -20,6 +20,8 @@ export async function POST(request: NextRequest) {
             th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
             th { background-color: #3b82f6; color: white; }
             tr:nth-child(even) { background-color: #f8f9fa; }
+            .total-row { background-color: #e5f3ff !important; font-weight: bold; }
+            .total-row td { border-top: 2px solid #3b82f6; }
             .footer { margin-top: 30px; text-align: center; font-size: 12px; color: #666; }
           </style>
         </head>
@@ -30,7 +32,7 @@ export async function POST(request: NextRequest) {
           
           <div class="info">
             <p><strong>Fecha:</strong> ${new Date().toLocaleDateString('es-CO')}</p>
-            <p><strong>Total de registros:</strong> ${data.length}</p>
+            <p><strong>Total de registros:</strong> ${data.length - 1}</p>
           </div>
           
           ${data.length > 0 ? `
@@ -41,11 +43,15 @@ export async function POST(request: NextRequest) {
                 </tr>
               </thead>
               <tbody>
-                ${data.map(row => `
-                  <tr>
-                    ${row.map(cell => `<td>${cell}</td>`).join('')}
-                  </tr>
-                `).join('')}
+                ${data.map((row, index) => {
+                  const isTotalRow = index === data.length - 1
+                  const rowClass = isTotalRow ? 'total-row' : ''
+                  return `
+                    <tr class="${rowClass}">
+                      ${row.map(cell => `<td>${cell}</td>`).join('')}
+                    </tr>
+                  `
+                }).join('')}
               </tbody>
             </table>
           ` : '<p>No hay datos para mostrar</p>'}

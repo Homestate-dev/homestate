@@ -177,21 +177,70 @@ export function BuildingTransactionsReport() {
         ? "Reporte de Transacciones - Todos los Edificios"
         : `Reporte de Transacciones - ${buildingName || 'Edificio Seleccionado'}`
       
-      // Preparar datos de la tabla
-      const tableData = processedTransactions.map((transaction: BuildingTransaction) => [
-        transaction.edificio_nombre,
-        transaction.departamento_numero,
-        transaction.tipo_transaccion === 'venta' ? 'Venta' : 'Arriendo',
-        transaction.cliente_nombre,
-        transaction.agente_nombre,
-        formatCurrency(transaction.precio_final),
-        formatCurrency(transaction.comision_valor),
-        new Date(transaction.fecha_transaccion).toLocaleDateString('es-CO'),
-        transaction.estado_actual
-      ])
+      // Determinar si mostrar columna edificio
+      const showBuildingColumn = selectedBuilding === "all"
       
-      const headers = [
-        'Edificio',
+      // Preparar datos de la tabla
+      const tableData = processedTransactions.map((transaction: BuildingTransaction) => {
+        const row = []
+        
+        // Agregar columna edificio solo si es "todos los edificios"
+        if (showBuildingColumn) {
+          row.push(transaction.edificio_nombre)
+        }
+        
+        // Agregar resto de columnas
+        row.push(
+          transaction.departamento_numero,
+          transaction.tipo_transaccion === 'venta' ? 'Venta' : 'Arriendo',
+          transaction.cliente_nombre,
+          transaction.agente_nombre,
+          formatCurrency(transaction.precio_final),
+          formatCurrency(transaction.comision_valor),
+          new Date(transaction.fecha_transaccion).toLocaleDateString('es-CO'),
+          transaction.estado_actual
+        )
+        
+        return row
+      })
+      
+      // Calcular totales
+      const totalValue = processedTransactions.reduce((sum, t) => sum + t.precio_final, 0)
+      const totalCommission = processedTransactions.reduce((sum, t) => sum + t.comision_valor, 0)
+      
+      // Agregar fila de totales
+      const totalRow = []
+      
+      // Agregar columna vacía para edificio si es necesario
+      if (showBuildingColumn) {
+        totalRow.push('')
+      }
+      
+      // Agregar totales
+      totalRow.push(
+        'TOTAL',
+        '',
+        '',
+        '',
+        formatCurrency(totalValue),
+        formatCurrency(totalCommission),
+        '',
+        ''
+      )
+      
+      // Agregar fila de totales al final
+      tableData.push(totalRow)
+      
+      // Preparar headers
+      const headers = []
+      
+      // Agregar header edificio solo si es necesario
+      if (showBuildingColumn) {
+        headers.push('Edificio')
+      }
+      
+      // Agregar resto de headers
+      headers.push(
         'Depto',
         'Tipo',
         'Cliente',
@@ -200,7 +249,7 @@ export function BuildingTransactionsReport() {
         'Comisión',
         'Fecha',
         'Estado'
-      ]
+      )
       
       // Generar nombre del archivo
       const date = new Date().toISOString().split('T')[0]
