@@ -169,7 +169,7 @@ export function BuildingTransactionsReport() {
   const exportReport = async () => {
     try {
       // Mostrar indicador de carga
-      toast.loading('Generando PDF...')
+      toast.loading('Generando reporte...')
       
       // Preparar datos para el reporte
       const buildingName = buildings.find((b: Building) => b.id.toString() === selectedBuilding)?.nombre
@@ -254,8 +254,8 @@ export function BuildingTransactionsReport() {
       // Generar nombre del archivo
       const date = new Date().toISOString().split('T')[0]
       const fileName = selectedBuilding === "all" 
-        ? `transacciones_todos_edificios_${date}.pdf`
-        : `transacciones_${buildingName?.replace(/\s+/g, '_') || 'edificio'}_${date}.pdf`
+        ? `transacciones_todos_edificios_${date}.html`
+        : `transacciones_${buildingName?.replace(/\s+/g, '_') || 'edificio'}_${date}.html`
       
       // Llamar a la API del servidor
       const response = await fetch('/api/generate-pdf', {
@@ -271,35 +271,43 @@ export function BuildingTransactionsReport() {
         })
       })
       
-      if (!response.ok) {
-        throw new Error('Error al generar el PDF')
+      const result = await response.json()
+      
+      if (result.success) {
+        // Crear un blob con el HTML
+        const blob = new Blob([result.html], { type: 'text/html' })
+        
+        // Crear URL del blob
+        const url = window.URL.createObjectURL(blob)
+        
+        // Crear enlace de descarga
+        const link = document.createElement('a')
+        link.href = url
+        link.download = fileName
+        document.body.appendChild(link)
+        link.click()
+        
+        // Limpiar
+        document.body.removeChild(link)
+        window.URL.revokeObjectURL(url)
+        
+        // Mostrar mensaje de éxito con instrucciones
+        toast.dismiss()
+        toast.success('Reporte generado. Para PDF: Imprimir → Guardar como PDF')
+        
+        // Mostrar instrucciones adicionales
+        setTimeout(() => {
+          toast.info('💡 Tip: Usa Ctrl+P para imprimir como PDF')
+        }, 2000)
+        
+      } else {
+        throw new Error(result.error || 'Error al generar el reporte')
       }
       
-      // Obtener el PDF como blob
-      const pdfBlob = await response.blob()
-      
-      // Crear URL del blob
-      const url = window.URL.createObjectURL(pdfBlob)
-      
-      // Crear enlace de descarga
-      const link = document.createElement('a')
-      link.href = url
-      link.download = fileName
-      document.body.appendChild(link)
-      link.click()
-      
-      // Limpiar
-      document.body.removeChild(link)
-      window.URL.revokeObjectURL(url)
-      
-      // Mostrar mensaje de éxito
-      toast.dismiss()
-      toast.success('PDF generado exitosamente')
-      
     } catch (error) {
-      console.error('Error al generar PDF:', error)
+      console.error('Error al generar reporte:', error)
       toast.dismiss()
-      toast.error('Error al generar el PDF. Inténtalo de nuevo.')
+      toast.error('Error al generar el reporte. Inténtalo de nuevo.')
     }
   }
 
@@ -337,6 +345,233 @@ export function BuildingTransactionsReport() {
         <Button variant="outline" size="sm" onClick={exportReport}>
           <Download className="h-4 w-4 mr-2" />
           Exportar
+        </Button>
+        
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={() => {
+            // Abrir el reporte en una nueva ventana para facilitar la impresión
+            const buildingName = buildings.find((b: Building) => b.id.toString() === selectedBuilding)?.nombre
+            const title = selectedBuilding === "all" 
+              ? "Reporte de Transacciones - Todos los Edificios"
+              : `Reporte de Transacciones - ${buildingName || 'Edificio Seleccionado'}`
+            
+            // Crear HTML del reporte
+            const showBuildingColumn = selectedBuilding === "all"
+            const tableData = processedTransactions.map((transaction: BuildingTransaction) => {
+              const row = []
+              if (showBuildingColumn) {
+                row.push(transaction.edificio_nombre)
+              }
+              row.push(
+                transaction.departamento_numero,
+                transaction.tipo_transaccion === 'venta' ? 'Venta' : 'Arriendo',
+                transaction.cliente_nombre,
+                transaction.agente_nombre,
+                formatCurrency(transaction.precio_final),
+                formatCurrency(transaction.comision_valor),
+                new Date(transaction.fecha_transaccion).toLocaleDateString('es-CO'),
+                transaction.estado_actual
+              )
+              return row
+            })
+            
+            // Calcular totales
+            const totalValue = processedTransactions.reduce((sum, t) => sum + t.precio_final, 0)
+            const totalCommission = processedTransactions.reduce((sum, t) => sum + t.comision_valor, 0)
+            
+            // Agregar fila de totales
+            const totalRow = []
+            if (showBuildingColumn) {
+              totalRow.push('')
+            }
+            totalRow.push(
+              'TOTAL',
+              '',
+              '',
+              '',
+              formatCurrency(totalValue),
+              formatCurrency(totalCommission),
+              '',
+              ''
+            )
+            tableData.push(totalRow)
+            
+            // Preparar headers
+            const headers = []
+            if (showBuildingColumn) {
+              headers.push('Edificio')
+            }
+            headers.push(
+              'Depto',
+              'Tipo',
+              'Cliente',
+              'Agente',
+              'Valor',
+              'Comisión',
+              'Fecha',
+              'Estado'
+            )
+            
+            // Crear HTML del reporte
+            const htmlContent = `
+              <!DOCTYPE html>
+              <html>
+                <head>
+                  <meta charset="utf-8">
+                  <title>${title}</title>
+                  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300&display=swap" rel="stylesheet">
+                  <style>
+                    @page {
+                      size: A4;
+                      margin: 20mm;
+                    }
+                    body { 
+                      font-family: Arial, sans-serif; 
+                      margin: 0; 
+                      padding: 0;
+                      font-size: 12px;
+                    }
+                    .header { 
+                      text-align: center; 
+                      margin-bottom: 30px; 
+                      page-break-after: avoid;
+                    }
+                    .header-content { 
+                      display: flex; 
+                      align-items: center; 
+                      justify-content: center; 
+                      gap: 15px; 
+                    }
+                    .logo { 
+                      width: 64px; 
+                      height: 64px; 
+                    }
+                    .brand-text { 
+                      font-family: 'Poppins', sans-serif; 
+                      font-weight: 300; 
+                      font-size: 24px; 
+                      color: #3b82f6; 
+                    }
+                    .title { 
+                      margin-top: 10px; 
+                      font-size: 20px; 
+                      color: #333; 
+                    }
+                    .info { 
+                      margin-bottom: 20px; 
+                      page-break-after: avoid;
+                    }
+                    table { 
+                      width: 100%; 
+                      border-collapse: collapse; 
+                      margin-top: 20px; 
+                      font-size: 10px;
+                    }
+                    th, td { 
+                      border: 1px solid #ddd; 
+                      padding: 6px; 
+                      text-align: left; 
+                      word-wrap: break-word;
+                    }
+                    th { 
+                      background-color: #3b82f6; 
+                      color: white; 
+                      font-weight: bold;
+                    }
+                    tr:nth-child(even) { 
+                      background-color: #f8f9fa; 
+                    }
+                    .total-row { 
+                      background-color: #e5f3ff !important; 
+                      font-weight: bold; 
+                    }
+                    .total-row td { 
+                      border-top: 2px solid #3b82f6; 
+                    }
+                    .footer { 
+                      margin-top: 30px; 
+                      text-align: center; 
+                      font-size: 10px; 
+                      color: #666; 
+                      page-break-before: avoid;
+                    }
+                    .print-button {
+                      position: fixed;
+                      top: 20px;
+                      right: 20px;
+                      background: #3b82f6;
+                      color: white;
+                      border: none;
+                      padding: 10px 20px;
+                      border-radius: 5px;
+                      cursor: pointer;
+                      font-size: 14px;
+                    }
+                    @media print {
+                      .print-button {
+                        display: none;
+                      }
+                    }
+                  </style>
+                </head>
+                <body>
+                  <button class="print-button" onclick="window.print()">🖨️ Imprimir PDF</button>
+                  
+                  <div class="header">
+                    <div class="header-content">
+                      <img src="/logo-qr.png" alt="Homestate Logo" class="logo">
+                      <div>
+                        <div class="brand-text">HomEstate</div>
+                        <div class="title">${title}</div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div class="info">
+                    <p><strong>Fecha:</strong> ${new Date().toLocaleDateString('es-CO')}</p>
+                    <p><strong>Total de registros:</strong> ${tableData.length - 1}</p>
+                  </div>
+                  
+                  ${tableData.length > 0 ? `
+                    <table>
+                      <thead>
+                        <tr>
+                          ${headers.map(header => `<th>${header}</th>`).join('')}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        ${tableData.map((row, index) => {
+                          const isTotalRow = index === tableData.length - 1
+                          const rowClass = isTotalRow ? 'total-row' : ''
+                          return `
+                            <tr class="${rowClass}">
+                              ${row.map(cell => `<td>${cell}</td>`).join('')}
+                            </tr>
+                          `
+                        }).join('')}
+                      </tbody>
+                    </table>
+                  ` : '<p>No hay datos para mostrar</p>'}
+                  
+                  <div class="footer">
+                    <p>Generado por HomeState - ${new Date().toLocaleDateString('es-CO')}</p>
+                  </div>
+                </body>
+              </html>
+            `
+            
+            // Abrir en nueva ventana
+            const newWindow = window.open('', '_blank')
+            if (newWindow) {
+              newWindow.document.write(htmlContent)
+              newWindow.document.close()
+            }
+          }}
+        >
+          <FileText className="h-4 w-4 mr-2" />
+          Ver Reporte
         </Button>
       </div>
 

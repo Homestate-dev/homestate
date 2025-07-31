@@ -137,39 +137,12 @@ export async function POST(request: NextRequest) {
       </html>
     `
 
-    // Para generar PDF real, necesitamos usar una librería externa
-    // Por ahora, vamos a usar una API externa que convierta HTML a PDF
-    const pdfResponse = await fetch('https://api.html2pdf.app/v1/generate', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        html: htmlContent,
-        options: {
-          format: 'A4',
-          margin: {
-            top: '20mm',
-            right: '20mm',
-            bottom: '20mm',
-            left: '20mm'
-          }
-        }
-      })
-    })
-
-    if (!pdfResponse.ok) {
-      throw new Error('Error al convertir HTML a PDF')
-    }
-
-    const pdfBuffer = await pdfResponse.arrayBuffer()
-
-    // Retornar el PDF como respuesta
-    return new NextResponse(pdfBuffer, {
-      headers: {
-        'Content-Type': 'application/pdf',
-        'Content-Disposition': `attachment; filename="${fileName.replace('.html', '.pdf')}"`,
-      },
+    // Por ahora, vamos a retornar HTML con estilos optimizados para PDF
+    // El navegador puede imprimir esto como PDF
+    return NextResponse.json({
+      success: true,
+      html: htmlContent,
+      fileName: fileName || 'reporte.html'
     })
 
   } catch (error) {
