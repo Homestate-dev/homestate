@@ -58,10 +58,10 @@ export function MyActivities() {
   useEffect(() => {
     // Filtrar actividades por término de búsqueda
     const filtered = activities.filter(activity =>
-      activity.admin_nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      activity.admin_email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      activity.accion.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      activity.tipo.toLowerCase().includes(searchTerm.toLowerCase())
+      (activity.admin_nombre?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+      (activity.admin_email?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+      (activity.accion?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+      (activity.tipo?.toLowerCase() || '').includes(searchTerm.toLowerCase())
     )
     setFilteredActivities(filtered)
   }, [activities, searchTerm])
