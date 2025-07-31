@@ -772,151 +772,131 @@ export function SalesRentalsManagement() {
           <CardTitle>Transacciones Registradas ({filteredTransactions.length})</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto">
-            {transactionsLoading ? (
-              <div className="flex items-center justify-center p-8">
-                <div className="text-center">
-                  <DollarSign className="h-8 w-8 text-green-600 mx-auto mb-2 animate-spin" />
-                  <p className="text-gray-600">Cargando transacciones...</p>
-                </div>
+          {transactionsLoading ? (
+            <div className="flex items-center justify-center p-8">
+              <div className="text-center">
+                <DollarSign className="h-8 w-8 text-green-600 mx-auto mb-2 animate-spin" />
+                <p className="text-gray-600">Cargando transacciones...</p>
               </div>
-            ) : filteredTransactions.length === 0 ? (
-              <div className="flex items-center justify-center p-8">
-                <div className="text-center">
-                  <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-600">No se encontraron transacciones</p>
-                  <p className="text-sm text-gray-500 mt-1">Intenta ajustar los filtros de búsqueda</p>
-                </div>
+            </div>
+          ) : filteredTransactions.length === 0 ? (
+            <div className="flex items-center justify-center p-8">
+              <div className="text-center">
+                <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-600">No se encontraron transacciones</p>
+                <p className="text-sm text-gray-500 mt-1">Intenta ajustar los filtros de búsqueda</p>
               </div>
-            ) : (
-              <>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Cliente</TableHead>
-                      <TableHead>Propiedad</TableHead>
-                      <TableHead>Tipo</TableHead>
-                      <TableHead>Valor</TableHead>
-                      <TableHead>Agente</TableHead>
-                      <TableHead>Estado</TableHead>
-                      <TableHead>Fecha</TableHead>
-                      <TableHead>Acciones</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {paginatedTransactions.map((transaction) => (
-                      <TableRow key={transaction.id}>
-                        <TableCell>
-                          <div>
-                            <p className="font-medium">{transaction.cliente_nombre}</p>
-                            <p className="text-sm text-gray-500">{transaction.cliente_email}</p>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div>
-                            <p className="font-medium">{transaction.edificio_nombre}</p>
-                            <p className="text-sm text-gray-500">Depto. {transaction.departamento_numero}</p>
-                          </div>
-                        </TableCell>
-                        <TableCell>{getTypeBadge(transaction.tipo_transaccion)}</TableCell>
-                        <TableCell className="font-medium">
-                          {formatCurrency(transaction.valor_transaccion)}
-                        </TableCell>
-                        <TableCell>{transaction.agente_nombre}</TableCell>
-                        <TableCell>{getStatusBadge(transaction.estado_actual)}</TableCell>
-                        <TableCell>
-                          {transaction.fecha_transaccion ? new Date(transaction.fecha_transaccion).toLocaleDateString('es-CO') : 'N/A'}
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex gap-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => setSelectedTransaction(transaction)}
-                            >
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-
-                {/* Paginador */}
-                {totalItems > 0 && (
-                  <div className="flex items-center justify-between mt-4">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm text-gray-600">
-                        Mostrando {startIndex + 1}-{Math.min(endIndex, totalItems)} de {totalItems} transacciones
-                      </span>
-                      <Select value={itemsPerPage.toString()} onValueChange={(value) => {
-                        setItemsPerPage(parseInt(value))
-                        setCurrentPage(1)
-                      }}>
-                        <SelectTrigger className="w-20">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="5">5</SelectItem>
-                          <SelectItem value="10">10</SelectItem>
-                          <SelectItem value="25">25</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <span className="text-sm text-gray-600">por página</span>
-                    </div>
-                    
-                    <div className="flex items-center gap-2">
+            </div>
+          ) : (
+            <>
+              {/* Paginador */}
+              {totalItems > 0 && (
+                <div className="flex items-center justify-between mb-4 p-4 bg-orange-50 border border-orange-200 rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-orange-700">Elementos por página:</span>
+                    <Select
+                      value={itemsPerPage.toString()}
+                      onValueChange={(value) => {
+                        setItemsPerPage(Number(value));
+                        setCurrentPage(1);
+                      }}
+                    >
+                      <SelectTrigger className="w-20 h-8 bg-orange-100 border-orange-300 text-orange-800">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="5">5</SelectItem>
+                        <SelectItem value="10">10</SelectItem>
+                        <SelectItem value="25">25</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-orange-700">
+                      {startIndex + 1}-{Math.min(endIndex, totalItems)} de {totalItems}
+                    </span>
+                    <div className="flex gap-1">
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                        onClick={() => setCurrentPage(currentPage - 1)}
                         disabled={currentPage === 1}
+                        className="h-8 w-8 p-0 border-orange-300 text-orange-700 hover:bg-orange-100"
                       >
                         <ChevronLeft className="h-4 w-4" />
                       </Button>
-                      
-                      <div className="flex items-center gap-1">
-                        {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                          let pageNum
-                          if (totalPages <= 5) {
-                            pageNum = i + 1
-                          } else if (currentPage <= 3) {
-                            pageNum = i + 1
-                          } else if (currentPage >= totalPages - 2) {
-                            pageNum = totalPages - 4 + i
-                          } else {
-                            pageNum = currentPage - 2 + i
-                          }
-                          
-                          return (
-                            <Button
-                              key={pageNum}
-                              variant={currentPage === pageNum ? "default" : "outline"}
-                              size="sm"
-                              onClick={() => setCurrentPage(pageNum)}
-                              className="w-8 h-8"
-                            >
-                              {pageNum}
-                            </Button>
-                          )
-                        })}
-                      </div>
-                      
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                        onClick={() => setCurrentPage(currentPage + 1)}
                         disabled={currentPage === totalPages}
+                        className="h-8 w-8 p-0 border-orange-300 text-orange-700 hover:bg-orange-100"
                       >
                         <ChevronRight className="h-4 w-4" />
                       </Button>
                     </div>
                   </div>
-                )}
-              </>
-            )}
-          </div>
+                </div>
+              )}
+
+              <div className="overflow-x-auto">
+                <div className="relative w-full overflow-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Cliente</TableHead>
+                        <TableHead>Propiedad</TableHead>
+                        <TableHead>Tipo</TableHead>
+                        <TableHead>Valor</TableHead>
+                        <TableHead>Agente</TableHead>
+                        <TableHead>Estado</TableHead>
+                        <TableHead>Fecha</TableHead>
+                        <TableHead>Acciones</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {paginatedTransactions.map((transaction) => (
+                        <TableRow key={transaction.id}>
+                          <TableCell>
+                            <div>
+                              <p className="font-medium">{transaction.cliente_nombre}</p>
+                              <p className="text-sm text-gray-500">{transaction.cliente_email}</p>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div>
+                              <p className="font-medium">{transaction.edificio_nombre}</p>
+                              <p className="text-sm text-gray-500">Depto. {transaction.departamento_numero}</p>
+                            </div>
+                          </TableCell>
+                          <TableCell>{getTypeBadge(transaction.tipo_transaccion)}</TableCell>
+                          <TableCell className="font-medium">
+                            {formatCurrency(transaction.valor_transaccion)}
+                          </TableCell>
+                          <TableCell>{transaction.agente_nombre}</TableCell>
+                          <TableCell>{getStatusBadge(transaction.estado_actual)}</TableCell>
+                          <TableCell>
+                            {transaction.fecha_transaccion ? new Date(transaction.fecha_transaccion).toLocaleDateString('es-CO') : 'N/A'}
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex gap-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setSelectedTransaction(transaction)}
+                              >
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </div>
+            </>
+          )}
         </CardContent>
       </Card>
 

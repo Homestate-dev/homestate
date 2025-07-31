@@ -270,179 +270,76 @@ export function BuildingIncomeReport() {
             </div>
           ) : (
             <div className="space-y-6">
-              {paginatedIncomeData.filter(building => building.total_transacciones > 0).map((building) => (
-                <Card key={building.edificio_id} className="p-4">
-                  <div className="space-y-4">
-                    {/* Información del edificio */}
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h3 className="text-lg font-semibold">{building.edificio_nombre}</h3>
-                        <p className="text-sm text-gray-500">{building.edificio_direccion}</p>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-2xl font-bold text-green-600">
-                          {formatCurrency(building.total_comisiones)}
-                        </div>
-                        <div className="text-sm text-gray-500">Total Comisiones</div>
-                      </div>
+                {/* Paginador */}
+                {totalItems > 0 && (
+                  <div className="flex items-center justify-between mb-4 p-4 bg-orange-50 border border-orange-200 rounded-lg">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-orange-700">Elementos por página:</span>
+                      <Select
+                        value={itemsPerPage.toString()}
+                        onValueChange={(value) => {
+                          setItemsPerPage(Number(value));
+                          setCurrentPage(1);
+                        }}
+                      >
+                        <SelectTrigger className="w-20 h-8 bg-orange-100 border-orange-300 text-orange-800">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="5">5</SelectItem>
+                          <SelectItem value="10">10</SelectItem>
+                          <SelectItem value="25">25</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
-
-                    {/* Estadísticas de transacciones */}
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                      <div className="text-center">
-                        <div className="text-lg font-semibold">{building.total_transacciones}</div>
-                        <div className="text-sm text-gray-500">Transacciones</div>
-                      </div>
-                      <div className="text-center">
-                        <div className="text-lg font-semibold text-green-600">{building.total_ventas}</div>
-                        <div className="text-sm text-gray-500">Ventas</div>
-                      </div>
-                      <div className="text-center">
-                        <div className="text-lg font-semibold text-blue-600">{building.total_arriendos}</div>
-                        <div className="text-sm text-gray-500">Arriendos</div>
-                      </div>
-                      <div className="text-center">
-                        <div className="text-lg font-semibold">
-                          {formatCurrency(building.valor_total_transacciones)}
-                        </div>
-                        <div className="text-sm text-gray-500">Valor Total</div>
-                      </div>
-                    </div>
-
-                    {/* Distribución de comisiones */}
-                    <div className="space-y-3">
-                      <h4 className="font-medium text-gray-700">Distribución de Comisiones</h4>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div className="p-3 bg-blue-50 rounded-lg">
-                          <div className="flex items-center justify-between">
-                            <span className="text-sm font-medium text-blue-700">HomeState</span>
-                            <span className="text-sm font-semibold text-blue-800">
-                              {formatCurrency(building.total_homestate)}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-2 mt-1">
-                            <Progress 
-                              value={building.total_comisiones > 0 ? (building.total_homestate / building.total_comisiones) * 100 : 0} 
-                              className="flex-1 h-2"
-                            />
-                            <span className="text-xs text-blue-600">
-                              {safeNumberFormat(building.promedio_porcentaje_homestate)}%
-                            </span>
-                          </div>
-                        </div>
-                        
-                        <div className="p-3 bg-green-50 rounded-lg">
-                          <div className="flex items-center justify-between">
-                            <span className="text-sm font-medium text-green-700">Bienes Raíces</span>
-                            <span className="text-sm font-semibold text-green-800">
-                              {formatCurrency(building.total_bienes_raices)}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-2 mt-1">
-                            <Progress 
-                              value={building.total_comisiones > 0 ? (building.total_bienes_raices / building.total_comisiones) * 100 : 0} 
-                              className="flex-1 h-2"
-                            />
-                            <span className="text-xs text-green-600">
-                              {safeNumberFormat(building.promedio_porcentaje_bienes_raices)}%
-                            </span>
-                          </div>
-                        </div>
-                        
-                        <div className="p-3 bg-purple-50 rounded-lg">
-                          <div className="flex items-center justify-between">
-                            <span className="text-sm font-medium text-purple-700">Admin Edificio</span>
-                            <span className="text-sm font-semibold text-purple-800">
-                              {formatCurrency(building.total_admin_edificio)}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-2 mt-1">
-                            <Progress 
-                              value={building.total_comisiones > 0 ? (building.total_admin_edificio / building.total_comisiones) * 100 : 0} 
-                              className="flex-1 h-2"
-                            />
-                            <span className="text-xs text-purple-600">
-                              {safeNumberFormat(building.promedio_porcentaje_admin_edificio)}%
-                            </span>
-                          </div>
-                        </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-orange-700">
+                        {startIndex + 1}-{Math.min(endIndex, totalItems)} de {totalItems}
+                      </span>
+                      <div className="flex gap-1">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setCurrentPage(currentPage - 1)}
+                          disabled={currentPage === 1}
+                          className="h-8 w-8 p-0 border-orange-300 text-orange-700 hover:bg-orange-100"
+                        >
+                          <ChevronLeft className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setCurrentPage(currentPage + 1)}
+                          disabled={currentPage === totalPages}
+                          className="h-8 w-8 p-0 border-orange-300 text-orange-700 hover:bg-orange-100"
+                        >
+                          <ChevronRight className="h-4 w-4" />
+                        </Button>
                       </div>
                     </div>
                   </div>
-                </Card>
-              ))}
+                )}
 
-              {/* Paginador */}
-              {totalItems > 0 && (
-                <div className="flex items-center justify-between mt-6">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-gray-600">
-                      Mostrando {startIndex + 1}-{Math.min(endIndex, totalItems)} de {totalItems} edificios
-                    </span>
-                    <Select value={itemsPerPage.toString()} onValueChange={(value) => {
-                      setItemsPerPage(parseInt(value))
-                      setCurrentPage(1)
-                    }}>
-                      <SelectTrigger className="w-20">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="5">5</SelectItem>
-                        <SelectItem value="10">10</SelectItem>
-                        <SelectItem value="25">25</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <span className="text-sm text-gray-600">por página</span>
-                  </div>
-                  
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                      disabled={currentPage === 1}
-                    >
-                      <ChevronLeft className="h-4 w-4" />
-                    </Button>
-                    
-                    <div className="flex items-center gap-1">
-                      {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                        let pageNum
-                        if (totalPages <= 5) {
-                          pageNum = i + 1
-                        } else if (currentPage <= 3) {
-                          pageNum = i + 1
-                        } else if (currentPage >= totalPages - 2) {
-                          pageNum = totalPages - 4 + i
-                        } else {
-                          pageNum = currentPage - 2 + i
-                        }
-                        
-                        return (
-                          <Button
-                            key={pageNum}
-                            variant={currentPage === pageNum ? "default" : "outline"}
-                            size="sm"
-                            onClick={() => setCurrentPage(pageNum)}
-                            className="w-8 h-8"
-                          >
-                            {pageNum}
-                          </Button>
-                        )
-                      })}
-                    </div>
-                    
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                      disabled={currentPage === totalPages}
-                    >
-                      <ChevronRight className="h-4 w-4" />
-                    </Button>
-                  </div>
+                <div className="grid gap-4">
+                  {paginatedIncomeData.map((building) => (
+                    <Card key={building.edificio_id} className="p-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h3 className="font-semibold text-lg">{building.edificio_nombre}</h3>
+                          <p className="text-sm text-gray-600">{building.edificio_direccion}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-2xl font-bold text-green-600">
+                            ${building.ingresos_totales?.toLocaleString()}
+                          </p>
+                          <p className="text-sm text-gray-500">
+                            {building.total_transacciones} transacciones
+                          </p>
+                        </div>
+                      </div>
+                    </Card>
+                  ))}
                 </div>
-              )}
             </div>
           )}
         </CardContent>

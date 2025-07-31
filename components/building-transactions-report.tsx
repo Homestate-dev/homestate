@@ -502,69 +502,20 @@ export function BuildingTransactionsReport() {
               No se encontraron transacciones para el edificio seleccionado
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Edificio</TableHead>
-                    <TableHead>Departamento</TableHead>
-                    <TableHead>Tipo</TableHead>
-                    <TableHead>Cliente</TableHead>
-                    <TableHead>Agente</TableHead>
-                    <TableHead>Valor</TableHead>
-                    <TableHead>Comisión</TableHead>
-                    <TableHead>Fecha</TableHead>
-                    <TableHead>Estado</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {paginatedTransactions.map((transaction) => (
-                    <TableRow key={transaction.departamento_id}>
-                      <TableCell>
-                        <div>
-                          <div className="font-medium">{transaction.edificio_nombre}</div>
-                          <div className="text-sm text-gray-500">{transaction.edificio_direccion}</div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div>
-                          <div className="font-medium">{transaction.departamento_numero}</div>
-                          <div className="text-sm text-gray-500">{transaction.departamento_nombre}</div>
-                        </div>
-                      </TableCell>
-                      <TableCell>{getTypeBadge(transaction.tipo_transaccion)}</TableCell>
-                      <TableCell>
-                        <div>
-                          <div className="font-medium">{transaction.cliente_nombre}</div>
-                          <div className="text-sm text-gray-500">{transaction.cliente_email}</div>
-                        </div>
-                      </TableCell>
-                      <TableCell>{transaction.agente_nombre}</TableCell>
-                      <TableCell className="font-medium">
-                        {formatCurrency(transaction.precio_final)}
-                      </TableCell>
-                      <TableCell className="font-medium">
-                        {formatCurrency(transaction.comision_valor)}
-                      </TableCell>
-                      <TableCell>{formatDate(transaction.fecha_transaccion)}</TableCell>
-                      <TableCell>{getStatusBadge(transaction.estado_actual)}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-
+            <>
               {/* Paginador */}
               {totalItems > 0 && (
-                <div className="flex items-center justify-between mt-4">
+                <div className="flex items-center justify-between mb-4 p-4 bg-orange-50 border border-orange-200 rounded-lg">
                   <div className="flex items-center gap-2">
-                    <span className="text-sm text-gray-600">
-                      Mostrando {startIndex + 1}-{Math.min(endIndex, totalItems)} de {totalItems} transacciones
-                    </span>
-                    <Select value={itemsPerPage.toString()} onValueChange={(value) => {
-                      setItemsPerPage(parseInt(value))
-                      setCurrentPage(1)
-                    }}>
-                      <SelectTrigger className="w-20">
+                    <span className="text-sm text-orange-700">Elementos por página:</span>
+                    <Select
+                      value={itemsPerPage.toString()}
+                      onValueChange={(value) => {
+                        setItemsPerPage(Number(value));
+                        setCurrentPage(1);
+                      }}
+                    >
+                      <SelectTrigger className="w-20 h-8 bg-orange-100 border-orange-300 text-orange-800">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -573,58 +524,89 @@ export function BuildingTransactionsReport() {
                         <SelectItem value="25">25</SelectItem>
                       </SelectContent>
                     </Select>
-                    <span className="text-sm text-gray-600">por página</span>
                   </div>
-                  
                   <div className="flex items-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                      disabled={currentPage === 1}
-                    >
-                      <ChevronLeft className="h-4 w-4" />
-                    </Button>
-                    
-                    <div className="flex items-center gap-1">
-                      {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                        let pageNum
-                        if (totalPages <= 5) {
-                          pageNum = i + 1
-                        } else if (currentPage <= 3) {
-                          pageNum = i + 1
-                        } else if (currentPage >= totalPages - 2) {
-                          pageNum = totalPages - 4 + i
-                        } else {
-                          pageNum = currentPage - 2 + i
-                        }
-                        
-                        return (
-                          <Button
-                            key={pageNum}
-                            variant={currentPage === pageNum ? "default" : "outline"}
-                            size="sm"
-                            onClick={() => setCurrentPage(pageNum)}
-                            className="w-8 h-8"
-                          >
-                            {pageNum}
-                          </Button>
-                        )
-                      })}
+                    <span className="text-sm text-orange-700">
+                      {startIndex + 1}-{Math.min(endIndex, totalItems)} de {totalItems}
+                    </span>
+                    <div className="flex gap-1">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage(currentPage - 1)}
+                        disabled={currentPage === 1}
+                        className="h-8 w-8 p-0 border-orange-300 text-orange-700 hover:bg-orange-100"
+                      >
+                        <ChevronLeft className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage(currentPage + 1)}
+                        disabled={currentPage === totalPages}
+                        className="h-8 w-8 p-0 border-orange-300 text-orange-700 hover:bg-orange-100"
+                      >
+                        <ChevronRight className="h-4 w-4" />
+                      </Button>
                     </div>
-                    
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                      disabled={currentPage === totalPages}
-                    >
-                      <ChevronRight className="h-4 w-4" />
-                    </Button>
                   </div>
                 </div>
               )}
-            </div>
+
+              <div className="overflow-x-auto">
+                <div className="relative w-full overflow-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Edificio</TableHead>
+                        <TableHead>Departamento</TableHead>
+                        <TableHead>Tipo</TableHead>
+                        <TableHead>Cliente</TableHead>
+                        <TableHead>Agente</TableHead>
+                        <TableHead>Valor</TableHead>
+                        <TableHead>Comisión</TableHead>
+                        <TableHead>Fecha</TableHead>
+                        <TableHead>Estado</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {paginatedTransactions.map((transaction) => (
+                        <TableRow key={transaction.departamento_id}>
+                          <TableCell>
+                            <div>
+                              <div className="font-medium">{transaction.edificio_nombre}</div>
+                              <div className="text-sm text-gray-500">{transaction.edificio_direccion}</div>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div>
+                              <div className="font-medium">{transaction.departamento_numero}</div>
+                              <div className="text-sm text-gray-500">{transaction.departamento_nombre}</div>
+                            </div>
+                          </TableCell>
+                          <TableCell>{getTypeBadge(transaction.tipo_transaccion)}</TableCell>
+                          <TableCell>
+                            <div>
+                              <div className="font-medium">{transaction.cliente_nombre}</div>
+                              <div className="text-sm text-gray-500">{transaction.cliente_email}</div>
+                            </div>
+                          </TableCell>
+                          <TableCell>{transaction.agente_nombre}</TableCell>
+                          <TableCell className="font-medium">
+                            {formatCurrency(transaction.precio_final)}
+                          </TableCell>
+                          <TableCell className="font-medium">
+                            {formatCurrency(transaction.comision_valor)}
+                          </TableCell>
+                          <TableCell>{formatDate(transaction.fecha_transaccion)}</TableCell>
+                          <TableCell>{getStatusBadge(transaction.estado_actual)}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </div>
+            </>
           )}
         </CardContent>
       </Card>
