@@ -199,9 +199,218 @@ export function BuildingIncomeReport() {
           </SelectContent>
         </Select>
         
-        <Button variant="outline" size="sm" onClick={exportReport}>
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={() => {
+            // Abrir el reporte en una nueva ventana para facilitar la impresión
+            const buildingName = buildings.find((b: Building) => b.id.toString() === selectedBuilding)?.nombre
+            const title = selectedBuilding === "all" 
+              ? "Reporte de Ingresos - Todos los Edificios"
+              : `Reporte de Ingresos - ${buildingName || 'Edificio Seleccionado'}`
+            
+            // Crear HTML del reporte
+            const showBuildingColumn = selectedBuilding === "all"
+            const tableData = processedIncomeData
+              .filter(building => building.total_transacciones > 0)
+              .map((building: BuildingIncome) => {
+                const row = []
+                if (showBuildingColumn) {
+                  row.push(building.edificio_nombre)
+                }
+                row.push(
+                  building.total_transacciones.toString(),
+                  building.total_ventas.toString(),
+                  building.total_arriendos.toString(),
+                  formatCurrency(building.valor_total_transacciones),
+                  formatCurrency(building.total_comisiones),
+                  formatCurrency(building.total_homestate),
+                  formatCurrency(building.total_bienes_raices),
+                  formatCurrency(building.total_admin_edificio),
+                  `${safeNumberFormat(building.promedio_porcentaje_homestate)}%`,
+                  `${safeNumberFormat(building.promedio_porcentaje_bienes_raices)}%`,
+                  `${safeNumberFormat(building.promedio_porcentaje_admin_edificio)}%`
+                )
+                return row
+              })
+            
+            // Calcular totales
+            const totalTransactions = processedIncomeData.reduce((sum, b) => sum + b.total_transacciones, 0)
+            const totalSales = processedIncomeData.reduce((sum, b) => sum + b.total_ventas, 0)
+            const totalRentals = processedIncomeData.reduce((sum, b) => sum + b.total_arriendos, 0)
+            const totalValue = processedIncomeData.reduce((sum, b) => sum + b.valor_total_transacciones, 0)
+            const totalCommissions = processedIncomeData.reduce((sum, b) => sum + b.total_comisiones, 0)
+            const totalHomeState = processedIncomeData.reduce((sum, b) => sum + b.total_homestate, 0)
+            const totalBienesRaices = processedIncomeData.reduce((sum, b) => sum + b.total_bienes_raices, 0)
+            const totalAdminEdificio = processedIncomeData.reduce((sum, b) => sum + b.total_admin_edificio, 0)
+            
+            // Agregar fila de totales
+            const totalRow = []
+            if (showBuildingColumn) {
+              totalRow.push('TOTAL')
+            }
+            totalRow.push(
+              totalTransactions.toString(),
+              totalSales.toString(),
+              totalRentals.toString(),
+              formatCurrency(totalValue),
+              formatCurrency(totalCommissions),
+              formatCurrency(totalHomeState),
+              formatCurrency(totalBienesRaices),
+              formatCurrency(totalAdminEdificio),
+              '',
+              '',
+              ''
+            )
+            tableData.push(totalRow)
+            
+            // Preparar headers
+            const headers = []
+            if (showBuildingColumn) {
+              headers.push('Edificio')
+            }
+            headers.push(
+              'Transacciones',
+              'Ventas',
+              'Arriendos',
+              'Valor Total',
+              'Total Comisiones',
+              'HomeState',
+              'Bienes Raíces',
+              'Admin Edificio',
+              '% HomeState',
+              '% Bienes Raíces',
+              '% Admin Edificio'
+            )
+            
+            // Crear HTML del reporte
+            const htmlContent = `
+              <!DOCTYPE html>
+              <html>
+                <head>
+                  <meta charset="utf-8">
+                  <title>${title}</title>
+                  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300&display=swap" rel="stylesheet">
+                  <style>
+                    @page {
+                      size: A4;
+                      margin: 20mm;
+                    }
+                    body { 
+                      font-family: Arial, sans-serif; 
+                      margin: 0; 
+                      padding: 20px;
+                      background: white;
+                    }
+                    .header {
+                      text-align: center;
+                      margin-bottom: 30px;
+                      border-bottom: 2px solid #333;
+                      padding-bottom: 20px;
+                    }
+                    .header h1 {
+                      margin: 0;
+                      color: #333;
+                      font-size: 24px;
+                    }
+                    .header p {
+                      margin: 5px 0 0 0;
+                      color: #666;
+                      font-size: 14px;
+                    }
+                    table {
+                      width: 100%;
+                      border-collapse: collapse;
+                      margin-top: 20px;
+                      font-size: 12px;
+                    }
+                    th, td {
+                      border: 1px solid #ddd;
+                      padding: 8px;
+                      text-align: left;
+                    }
+                    th {
+                      background-color: #f8f9fa;
+                      font-weight: bold;
+                      color: #333;
+                    }
+                    .total-row {
+                      background-color: #f0f0f0;
+                      font-weight: bold;
+                    }
+                    .currency {
+                      text-align: right;
+                    }
+                    .number {
+                      text-align: center;
+                    }
+                    .percentage {
+                      text-align: center;
+                    }
+                    @media print {
+                      body { margin: 0; }
+                      .no-print { display: none; }
+                    }
+                  </style>
+                </head>
+                <body>
+                  <div class="header">
+                    <h1>${title}</h1>
+                    <p>Generado el ${new Date().toLocaleDateString('es-CO')} a las ${new Date().toLocaleTimeString('es-CO')}</p>
+                  </div>
+                  
+                  <table>
+                    <thead>
+                      <tr>
+                        ${headers.map(header => `<th>${header}</th>`).join('')}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      ${tableData.map(row => `
+                        <tr class="${row[0] === 'TOTAL' ? 'total-row' : ''}">
+                          ${row.map((cell, index) => {
+                            const isCurrency = index >= 4 && index <= 7 && row[0] !== 'TOTAL'
+                            const isNumber = index >= 1 && index <= 3
+                            const isPercentage = index >= 8
+                            const className = isCurrency ? 'currency' : isNumber ? 'number' : isPercentage ? 'percentage' : ''
+                            return `<td class="${className}">${cell}</td>`
+                          }).join('')}
+                        </tr>
+                      `).join('')}
+                    </tbody>
+                  </table>
+                  
+                  <div style="margin-top: 30px; font-size: 12px; color: #666;">
+                    <p><strong>Resumen:</strong></p>
+                    <ul>
+                      <li>Total de edificios con transacciones: ${processedIncomeData.filter(b => b.total_transacciones > 0).length}</li>
+                      <li>Total de transacciones: ${totalTransactions}</li>
+                      <li>Total de ventas: ${totalSales}</li>
+                      <li>Total de arriendos: ${totalRentals}</li>
+                      <li>Valor total de transacciones: ${formatCurrency(totalValue)}</li>
+                      <li>Total de comisiones: ${formatCurrency(totalCommissions)}</li>
+                    </ul>
+                  </div>
+                  
+                  <div class="no-print" style="margin-top: 30px; text-align: center;">
+                    <button onclick="window.print()" style="padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                      Imprimir Reporte
+                    </button>
+                  </div>
+                </body>
+              </html>
+            `
+            
+            // Abrir en nueva ventana
+            const newWindow = window.open('', '_blank')
+            if (newWindow) {
+              newWindow.document.write(htmlContent)
+              newWindow.document.close()
+            }
+          }}
+        >
           <Download className="h-4 w-4 mr-2" />
-          Exportar
+          Ver Reporte
         </Button>
       </div>
 
