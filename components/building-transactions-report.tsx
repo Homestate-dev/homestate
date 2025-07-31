@@ -95,6 +95,10 @@ export function BuildingTransactionsReport() {
   }
 
   const formatCurrency = (amount: number) => {
+    // Verificar si el valor es válido
+    if (amount === null || amount === undefined || isNaN(amount)) {
+      return '$0'
+    }
     return new Intl.NumberFormat('es-CO', {
       style: 'currency',
       currency: 'COP',
@@ -102,6 +106,33 @@ export function BuildingTransactionsReport() {
       maximumFractionDigits: 0,
     }).format(amount)
   }
+
+  // Función para procesar datos numéricos de forma segura
+  const safeNumber = (value: any): number => {
+    if (value === null || value === undefined || value === '') {
+      return 0
+    }
+    const num = parseFloat(value)
+    return isNaN(num) ? 0 : num
+  }
+
+  // Procesar transacciones para asegurar que los valores numéricos sean correctos
+  const processedTransactions = transactions.map(transaction => ({
+    ...transaction,
+    precio_final: safeNumber(transaction.precio_final),
+    comision_valor: safeNumber(transaction.comision_valor),
+    porcentaje_homestate: safeNumber(transaction.porcentaje_homestate),
+    porcentaje_bienes_raices: safeNumber(transaction.porcentaje_bienes_raices),
+    porcentaje_admin_edificio: safeNumber(transaction.porcentaje_admin_edificio),
+    valor_homestate: safeNumber(transaction.valor_homestate),
+    valor_bienes_raices: safeNumber(transaction.valor_bienes_raices),
+    valor_admin_edificio: safeNumber(transaction.valor_admin_edificio)
+  }))
+
+  // Calcular totales de forma segura
+  const totalValue = processedTransactions.reduce((sum, t) => sum + t.precio_final, 0)
+  const totalSales = processedTransactions.filter(t => t.tipo_transaccion === 'venta').length
+  const totalRentals = processedTransactions.filter(t => t.tipo_transaccion === 'arriendo').length
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('es-CO')
@@ -186,7 +217,7 @@ export function BuildingTransactionsReport() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">
-              {transactions.filter(t => t.tipo_transaccion === 'venta').length}
+              {totalSales}
             </div>
           </CardContent>
         </Card>
@@ -197,7 +228,7 @@ export function BuildingTransactionsReport() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-blue-600">
-              {transactions.filter(t => t.tipo_transaccion === 'arriendo').length}
+              {totalRentals}
             </div>
           </CardContent>
         </Card>
@@ -208,7 +239,7 @@ export function BuildingTransactionsReport() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {formatCurrency(transactions.reduce((sum, t) => sum + t.precio_final, 0))}
+              {formatCurrency(totalValue)}
             </div>
           </CardContent>
         </Card>
@@ -244,7 +275,7 @@ export function BuildingTransactionsReport() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {transactions.map((transaction) => (
+                  {processedTransactions.map((transaction) => (
                     <TableRow key={transaction.departamento_id}>
                       <TableCell>
                         <div>

@@ -81,6 +81,78 @@ export function CommissionDistributionReport() {
     return '0.0'
   }
 
+  // Función para procesar datos numéricos de forma segura
+  const safeNumber = (value: any): number => {
+    if (value === null || value === undefined || value === '') {
+      return 0
+    }
+    const num = parseFloat(value)
+    return isNaN(num) ? 0 : num
+  }
+
+  // Procesar transacciones para asegurar que los valores numéricos sean correctos
+  const processedTransactions = transactions.map(transaction => ({
+    ...transaction,
+    precio_final: safeNumber(transaction.precio_final),
+    comision_valor: safeNumber(transaction.comision_valor),
+    porcentaje_homestate: safeNumber(transaction.porcentaje_homestate),
+    porcentaje_bienes_raices: safeNumber(transaction.porcentaje_bienes_raices),
+    porcentaje_admin_edificio: safeNumber(transaction.porcentaje_admin_edificio),
+    valor_homestate: safeNumber(transaction.valor_homestate),
+    valor_bienes_raices: safeNumber(transaction.valor_bienes_raices),
+    valor_admin_edificio: safeNumber(transaction.valor_admin_edificio),
+    total_distribuido: safeNumber(transaction.total_distribuido),
+    total_porcentajes: safeNumber(transaction.total_porcentajes)
+  }))
+
+  // Procesar resumen para asegurar que los valores numéricos sean correctos
+  const processedSummary = summary ? {
+    ...summary,
+    total_transacciones: safeNumber(summary.total_transacciones),
+    total_ventas: safeNumber(summary.total_ventas),
+    total_arriendos: safeNumber(summary.total_arriendos),
+    total_comisiones: safeNumber(summary.total_comisiones),
+    total_homestate: safeNumber(summary.total_homestate),
+    total_bienes_raices: safeNumber(summary.total_bienes_raices),
+    total_admin_edificio: safeNumber(summary.total_admin_edificio),
+    promedio_porcentaje_homestate: safeNumber(summary.promedio_porcentaje_homestate),
+    promedio_porcentaje_bienes_raices: safeNumber(summary.promedio_porcentaje_bienes_raices),
+    promedio_porcentaje_admin_edificio: safeNumber(summary.promedio_porcentaje_admin_edificio),
+    porcentaje_total_homestate: safeNumber(summary.porcentaje_total_homestate),
+    porcentaje_total_bienes_raices: safeNumber(summary.porcentaje_total_bienes_raices),
+    porcentaje_total_admin_edificio: safeNumber(summary.porcentaje_total_admin_edificio)
+  } : null
+
+  const formatCurrency = (amount: number) => {
+    // Verificar si el valor es válido
+    if (amount === null || amount === undefined || isNaN(amount)) {
+      return '$0'
+    }
+    return new Intl.NumberFormat('es-CO', {
+      style: 'currency',
+      currency: 'COP',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(amount)
+  }
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('es-CO')
+  }
+
+  const getTypeBadge = (type: string) => {
+    return type === 'venta' ? (
+      <Badge className="bg-green-100 text-green-800">Venta</Badge>
+    ) : (
+      <Badge className="bg-blue-100 text-blue-800">Arriendo</Badge>
+    )
+  }
+
+  const exportReport = () => {
+    // Implementar exportación
+    toast.info('Función de exportación en desarrollo')
+  }
+
   useEffect(() => {
     fetchAgents()
     fetchCommissionData()
@@ -124,32 +196,6 @@ export function CommissionDistributionReport() {
     } finally {
       setLoading(false)
     }
-  }
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('es-CO', {
-      style: 'currency',
-      currency: 'COP',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(amount)
-  }
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('es-CO')
-  }
-
-  const getTypeBadge = (type: string) => {
-    return type === 'venta' ? (
-      <Badge className="bg-green-100 text-green-800">Venta</Badge>
-    ) : (
-      <Badge className="bg-blue-100 text-blue-800">Arriendo</Badge>
-    )
-  }
-
-  const exportReport = () => {
-    // Implementar exportación
-    toast.info('Función de exportación en desarrollo')
   }
 
   if (loading) {
@@ -221,7 +267,7 @@ export function CommissionDistributionReport() {
       </Card>
 
       {/* Resumen general */}
-      {summary && (
+      {processedSummary && (
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <Card>
             <CardHeader className="pb-2">
@@ -229,7 +275,7 @@ export function CommissionDistributionReport() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-green-600">
-                {formatCurrency(summary.total_comisiones)}
+                {formatCurrency(processedSummary.total_comisiones)}
               </div>
             </CardContent>
           </Card>
@@ -240,7 +286,7 @@ export function CommissionDistributionReport() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {summary.total_transacciones}
+                {processedSummary.total_transacciones}
               </div>
             </CardContent>
           </Card>
@@ -251,8 +297,8 @@ export function CommissionDistributionReport() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-blue-600">
-                {summary.total_transacciones > 0 
-                  ? formatCurrency(summary.total_comisiones / summary.total_transacciones)
+                {processedSummary.total_transacciones > 0 
+                  ? formatCurrency(processedSummary.total_comisiones / processedSummary.total_transacciones)
                   : formatCurrency(0)
                 }
               </div>
@@ -267,15 +313,15 @@ export function CommissionDistributionReport() {
               <div className="text-sm">
                 <div className="flex items-center justify-between">
                   <span>HomeState:</span>
-                  <span className="font-semibold">{safeNumberFormat(summary.promedio_porcentaje_homestate)}%</span>
+                  <span className="font-semibold">{safeNumberFormat(processedSummary.promedio_porcentaje_homestate)}%</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span>Bienes Raíces:</span>
-                  <span className="font-semibold">{safeNumberFormat(summary.promedio_porcentaje_bienes_raices)}%</span>
+                  <span className="font-semibold">{safeNumberFormat(processedSummary.promedio_porcentaje_bienes_raices)}%</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span>Admin Edificio:</span>
-                  <span className="font-semibold">{safeNumberFormat(summary.promedio_porcentaje_admin_edificio)}%</span>
+                  <span className="font-semibold">{safeNumberFormat(processedSummary.promedio_porcentaje_admin_edificio)}%</span>
                 </div>
               </div>
             </CardContent>
@@ -284,7 +330,7 @@ export function CommissionDistributionReport() {
       )}
 
       {/* Distribución de comisiones */}
-      {summary && (
+      {processedSummary && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -298,16 +344,16 @@ export function CommissionDistributionReport() {
                 <div className="flex items-center justify-between mb-2">
                   <h3 className="font-semibold text-blue-800">HomeState</h3>
                   <span className="text-2xl font-bold text-blue-800">
-                    {formatCurrency(summary.total_homestate)}
+                    {formatCurrency(processedSummary.total_homestate)}
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Progress 
-                    value={summary.total_comisiones > 0 ? summary.porcentaje_total_homestate : 0} 
+                    value={processedSummary.total_comisiones > 0 ? processedSummary.porcentaje_total_homestate : 0} 
                     className="flex-1 h-3"
                   />
                                      <span className="text-sm font-semibold text-blue-600">
-                     {safeNumberFormat(summary.porcentaje_total_homestate)}%
+                     {safeNumberFormat(processedSummary.porcentaje_total_homestate)}%
                    </span>
                 </div>
               </div>
@@ -316,16 +362,16 @@ export function CommissionDistributionReport() {
                 <div className="flex items-center justify-between mb-2">
                   <h3 className="font-semibold text-green-800">Bienes Raíces</h3>
                   <span className="text-2xl font-bold text-green-800">
-                    {formatCurrency(summary.total_bienes_raices)}
+                    {formatCurrency(processedSummary.total_bienes_raices)}
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Progress 
-                    value={summary.total_comisiones > 0 ? summary.porcentaje_total_bienes_raices : 0} 
+                    value={processedSummary.total_comisiones > 0 ? processedSummary.porcentaje_total_bienes_raices : 0} 
                     className="flex-1 h-3"
                   />
                                      <span className="text-sm font-semibold text-green-600">
-                     {safeNumberFormat(summary.porcentaje_total_bienes_raices)}%
+                     {safeNumberFormat(processedSummary.porcentaje_total_bienes_raices)}%
                    </span>
                 </div>
               </div>
@@ -334,16 +380,16 @@ export function CommissionDistributionReport() {
                 <div className="flex items-center justify-between mb-2">
                   <h3 className="font-semibold text-purple-800">Admin Edificio</h3>
                   <span className="text-2xl font-bold text-purple-800">
-                    {formatCurrency(summary.total_admin_edificio)}
+                    {formatCurrency(processedSummary.total_admin_edificio)}
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Progress 
-                    value={summary.total_comisiones > 0 ? summary.porcentaje_total_admin_edificio : 0} 
+                    value={processedSummary.total_comisiones > 0 ? processedSummary.porcentaje_total_admin_edificio : 0} 
                     className="flex-1 h-3"
                   />
                                      <span className="text-sm font-semibold text-purple-600">
-                     {safeNumberFormat(summary.porcentaje_total_admin_edificio)}%
+                     {safeNumberFormat(processedSummary.porcentaje_total_admin_edificio)}%
                    </span>
                 </div>
               </div>
@@ -361,7 +407,7 @@ export function CommissionDistributionReport() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {transactions.length === 0 ? (
+          {processedTransactions.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
               No se encontraron transacciones con los filtros seleccionados
             </div>
@@ -384,7 +430,7 @@ export function CommissionDistributionReport() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {transactions.map((transaction) => (
+                  {processedTransactions.map((transaction) => (
                     <TableRow key={transaction.transaccion_id}>
                       <TableCell className="font-medium">
                         #{transaction.transaccion_id}

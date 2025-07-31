@@ -56,6 +56,59 @@ export function BuildingIncomeReport() {
     return '0.0'
   }
 
+  // Función para procesar datos numéricos de forma segura
+  const safeNumber = (value: any): number => {
+    if (value === null || value === undefined || value === '') {
+      return 0
+    }
+    const num = parseFloat(value)
+    return isNaN(num) ? 0 : num
+  }
+
+  // Procesar datos de ingresos para asegurar que los valores numéricos sean correctos
+  const processedIncomeData = incomeData.map(building => ({
+    ...building,
+    total_transacciones: safeNumber(building.total_transacciones),
+    total_ventas: safeNumber(building.total_ventas),
+    total_arriendos: safeNumber(building.total_arriendos),
+    valor_total_transacciones: safeNumber(building.valor_total_transacciones),
+    valor_total_ventas: safeNumber(building.valor_total_ventas),
+    valor_total_arriendos: safeNumber(building.valor_total_arriendos),
+    total_comisiones: safeNumber(building.total_comisiones),
+    total_homestate: safeNumber(building.total_homestate),
+    total_bienes_raices: safeNumber(building.total_bienes_raices),
+    total_admin_edificio: safeNumber(building.total_admin_edificio),
+    promedio_porcentaje_homestate: safeNumber(building.promedio_porcentaje_homestate),
+    promedio_porcentaje_bienes_raices: safeNumber(building.promedio_porcentaje_bienes_raices),
+    promedio_porcentaje_admin_edificio: safeNumber(building.promedio_porcentaje_admin_edificio)
+  }))
+
+  const formatCurrency = (amount: number) => {
+    // Verificar si el valor es válido
+    if (amount === null || amount === undefined || isNaN(amount)) {
+      return '$0'
+    }
+    return new Intl.NumberFormat('es-CO', {
+      style: 'currency',
+      currency: 'COP',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(amount)
+  }
+
+  const exportReport = () => {
+    // Implementar exportación
+    toast.info('Función de exportación en desarrollo')
+  }
+
+  const getTotalIncome = () => {
+    return processedIncomeData.reduce((sum, building) => sum + building.total_comisiones, 0)
+  }
+
+  const getTotalTransactions = () => {
+    return processedIncomeData.reduce((sum, building) => sum + building.total_transacciones, 0)
+  }
+
   useEffect(() => {
     fetchBuildings()
     fetchIncomeData()
@@ -95,28 +148,6 @@ export function BuildingIncomeReport() {
     } finally {
       setLoading(false)
     }
-  }
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('es-CO', {
-      style: 'currency',
-      currency: 'COP',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(amount)
-  }
-
-  const exportReport = () => {
-    // Implementar exportación
-    toast.info('Función de exportación en desarrollo')
-  }
-
-  const getTotalIncome = () => {
-    return incomeData.reduce((sum, building) => sum + building.total_comisiones, 0)
-  }
-
-  const getTotalTransactions = () => {
-    return incomeData.reduce((sum, building) => sum + building.total_transacciones, 0)
   }
 
   if (loading) {
@@ -186,7 +217,7 @@ export function BuildingIncomeReport() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-blue-600">
-              {incomeData.filter(b => b.total_transacciones > 0).length}
+              {processedIncomeData.filter(b => b.total_transacciones > 0).length}
             </div>
           </CardContent>
         </Card>
@@ -197,8 +228,8 @@ export function BuildingIncomeReport() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {incomeData.length > 0 
-                ? formatCurrency(getTotalIncome() / incomeData.filter(b => b.total_transacciones > 0).length)
+              {processedIncomeData.length > 0 
+                ? formatCurrency(getTotalIncome() / processedIncomeData.filter(b => b.total_transacciones > 0).length)
                 : formatCurrency(0)
               }
             </div>
@@ -221,7 +252,7 @@ export function BuildingIncomeReport() {
             </div>
           ) : (
             <div className="space-y-6">
-              {incomeData.filter(building => building.total_transacciones > 0).map((building) => (
+              {processedIncomeData.filter(building => building.total_transacciones > 0).map((building) => (
                 <Card key={building.edificio_id} className="p-4">
                   <div className="space-y-4">
                     {/* Información del edificio */}

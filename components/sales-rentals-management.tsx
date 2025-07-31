@@ -565,6 +565,27 @@ export function SalesRentalsManagement() {
     }).format(amount)
   }
 
+  // Función para procesar datos numéricos de forma segura
+  const safeNumber = (value: any): number => {
+    if (value === null || value === undefined || value === '') {
+      return 0
+    }
+    const num = parseFloat(value)
+    return isNaN(num) ? 0 : num
+  }
+
+  // Procesar estadísticas para asegurar que los valores numéricos sean correctos
+  const processedStats = stats ? {
+    ...stats,
+    total_transacciones: safeNumber(stats.total_transacciones),
+    ventas_completadas: safeNumber(stats.ventas_completadas),
+    arriendos_completados: safeNumber(stats.arriendos_completados),
+    valor_total_ventas: safeNumber(stats.valor_total_ventas),
+    valor_total_arriendos: safeNumber(stats.valor_total_arriendos),
+    comisiones_generadas: safeNumber(stats.comisiones_generadas),
+    transacciones_mes_actual: safeNumber(stats.transacciones_mes_actual)
+  } : null
+
   if (loading) {
     return (
       <div className="flex items-center justify-center p-8">
@@ -599,7 +620,7 @@ export function SalesRentalsManagement() {
         </div>
 
         {/* Estadísticas */}
-        {stats && (
+        {processedStats && (
           <div className={`grid ${isMobile ? 'grid-cols-2 gap-2' : 'grid-cols-2 md:grid-cols-4 gap-4'}`}>
             <Card>
               <CardContent className={`${isMobile ? 'p-3' : 'p-4'}`}>
@@ -607,7 +628,7 @@ export function SalesRentalsManagement() {
                   <DollarSign className={`${isMobile ? 'h-4 w-4' : 'h-5 w-5'} text-green-600`} />
                   <div>
                     <p className={`${isMobile ? 'text-xs' : 'text-sm'} text-gray-600`}>Total Transacciones</p>
-                    <p className={`${isMobile ? 'text-lg' : 'text-2xl'} font-bold`}>{stats.total_transacciones}</p>
+                    <p className={`${isMobile ? 'text-lg' : 'text-2xl'} font-bold`}>{processedStats.total_transacciones}</p>
                   </div>
                 </div>
               </CardContent>
@@ -618,7 +639,7 @@ export function SalesRentalsManagement() {
                   <TrendingUp className={`${isMobile ? 'h-4 w-4' : 'h-5 w-5'} text-blue-600`} />
                   <div>
                     <p className={`${isMobile ? 'text-xs' : 'text-sm'} text-gray-600`}>Ventas</p>
-                    <p className={`${isMobile ? 'text-lg' : 'text-2xl'} font-bold`}>{stats.ventas_completadas}</p>
+                    <p className={`${isMobile ? 'text-lg' : 'text-2xl'} font-bold`}>{processedStats.ventas_completadas}</p>
                   </div>
                 </div>
               </CardContent>
@@ -629,7 +650,7 @@ export function SalesRentalsManagement() {
                   <Users className={`${isMobile ? 'h-4 w-4' : 'h-5 w-5'} text-purple-600`} />
                   <div>
                     <p className={`${isMobile ? 'text-xs' : 'text-sm'} text-gray-600`}>Arriendos</p>
-                    <p className={`${isMobile ? 'text-lg' : 'text-2xl'} font-bold`}>{stats.arriendos_completados}</p>
+                    <p className={`${isMobile ? 'text-lg' : 'text-2xl'} font-bold`}>{processedStats.arriendos_completados}</p>
                   </div>
                 </div>
               </CardContent>
@@ -641,7 +662,7 @@ export function SalesRentalsManagement() {
                   <div>
                     <p className={`${isMobile ? 'text-xs' : 'text-sm'} text-gray-600`}>Comisiones</p>
                     <p className={`${isMobile ? 'text-sm' : 'text-lg'} font-bold`}>
-                      {formatCurrency(stats.comisiones_generadas)}
+                      {formatCurrency(processedStats.comisiones_generadas)}
                     </p>
                   </div>
                 </div>
