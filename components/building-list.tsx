@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Plus, MapPin, Car, Users, Eye, Edit, QrCode, Trash2, UserCog, Activity, ExternalLink, Search, Briefcase, DollarSign, Building2 } from "lucide-react"
+import { Plus, MapPin, Car, Users, Eye, Edit, QrCode, Trash2, UserCog, Activity, ExternalLink, Search, Briefcase, DollarSign, Building2, Settings } from "lucide-react"
 import { Logo } from "@/components/ui/logo"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { Button } from "@/components/ui/button"
@@ -12,6 +12,7 @@ import { CreateBuildingDialog } from "@/components/create-building-dialog"
 import { DeleteBuildingDialog } from "@/components/delete-building-dialog"
 import { AdminManagement } from "@/components/admin-management"
 import { MyActivities } from "@/components/my-activities"
+import { PageConfiguration } from "@/components/page-configuration"
 
 import { SalesRentalsManagement } from "@/components/sales-rentals-management"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -106,7 +107,7 @@ export function BuildingList({ buildings, onSelectBuilding, onBuildingCreated, o
       </div>
 
       <Tabs defaultValue="buildings" className="w-full">
-        <TabsList className={`${isMobile ? 'grid w-full' : 'grid w-full lg:w-[1000px]'} ${isMainAdmin ? 'grid-cols-4' : 'grid-cols-2'}`}>
+        <TabsList className={`${isMobile ? 'grid w-full' : 'grid w-full lg:w-[1000px]'} ${isMainAdmin ? 'grid-cols-5' : 'grid-cols-3'}`}>
           <TabsTrigger value="buildings" className={`flex items-center gap-2 ${isMobile ? 'text-xs' : ''}`}>
             <Building2 className="h-4 w-4" />
             {isMobile ? 'Edificios' : 'Edificios'}
@@ -114,6 +115,10 @@ export function BuildingList({ buildings, onSelectBuilding, onBuildingCreated, o
           <TabsTrigger value="admins" className={`flex items-center gap-2 ${isMobile ? 'text-xs' : ''}`}>
             <UserCog className="h-4 w-4" />
             {isMobile ? 'Agentes' : 'Agentes Inmobiliarios'}
+          </TabsTrigger>
+          <TabsTrigger value="page-config" className={`flex items-center gap-2 ${isMobile ? 'text-xs' : ''}`}>
+            <Settings className="h-4 w-4" />
+            {isMobile ? 'Config' : 'Configuración de página'}
           </TabsTrigger>
           {isMainAdmin && (
             <TabsTrigger value="sales-rentals" className={`flex items-center gap-2 ${isMobile ? 'text-xs' : ''}`}>
@@ -325,6 +330,10 @@ export function BuildingList({ buildings, onSelectBuilding, onBuildingCreated, o
         
         <TabsContent value="admins">
           <AdminManagement buildingId={0} />
+        </TabsContent>
+
+        <TabsContent value="page-config">
+          <PageConfiguration />
         </TabsContent>
 
         {isMainAdmin && (
