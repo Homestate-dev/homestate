@@ -5,7 +5,6 @@ import Image from "next/image"
 import { ArrowLeft, ArrowRight, Star, Building2, Users, TrendingUp } from "lucide-react"
 import { FaWhatsapp } from "react-icons/fa"
 import { Button } from "@/components/ui/button"
-import { Logo } from "@/components/ui/logo"
 import { Header } from "@/components/header"
 
 export default function ContactoPage() {
@@ -28,16 +27,22 @@ export default function ContactoPage() {
           <div className="relative text-center py-20 px-8">
             <div className="flex justify-center mb-8">
               <div className="relative">
-                <Logo size={120} className="text-orange-600 drop-shadow-lg" />
+                <Image
+                  src="/logo-qr.png"
+                  alt="Homestate Logo"
+                  width={120}
+                  height={120}
+                  className="drop-shadow-lg"
+                />
                 <div className="absolute -top-2 -right-2 bg-orange-500 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold">
-                  <Star className="w-4 h-4" />
+                  
                 </div>
               </div>
             </div>
             
             <h1 className="text-5xl md:text-7xl font-black text-gray-900 mb-8 leading-tight">
               ¡QUÉ ES{" "}
-              <span className="bg-gradient-to-r from-orange-600 via-orange-500 to-orange-600 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-orange-600 via-orange-500 to-orange-600 bg-clip-text text-transparent font-light">
                 HOMESTATE
               </span>
               ?
@@ -45,8 +50,8 @@ export default function ContactoPage() {
             
             <div className="max-w-4xl mx-auto">
               <p className="text-xl md:text-2xl text-gray-700 leading-relaxed font-medium">
-                Descubre cómo Homestate transforma el mundo de los bienes raíces. Nuestro servicio está diseñado específicamente para que nuestros socios estratégicos, como edificios y conjuntos, maximicen sus ingresos y aseguren el financiamiento óptimo para el mantenimiento general.{" "}
-                <span className="font-bold text-orange-600">¡Impulsa el valor de tu propiedad con Homestate!</span>
+                Descubre cómo <span className="font-light">Homestate</span> transforma el mundo de los bienes raíces. Nuestro servicio está diseñado específicamente para que nuestros socios estratégicos, como edificios y conjuntos, maximicen sus ingresos y aseguren el financiamiento óptimo para el mantenimiento general.{" "}
+                <span className="font-bold text-orange-600">¡Impulsa el valor de tu propiedad con <span className="font-light">Homestate</span>!</span>
               </p>
             </div>
           </div>
@@ -76,10 +81,7 @@ export default function ContactoPage() {
                   <div className="w-3 h-3 bg-green-500 rounded-full"></div>
                   <span className="font-medium">Búsqueda Inteligente</span>
                 </div>
-                <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-full shadow-md">
-                  <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-                  <span className="font-medium">Visualización 3D</span>
-                </div>
+                
                 <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-full shadow-md">
                   <div className="w-3 h-3 bg-purple-500 rounded-full"></div>
                   <span className="font-medium">Gestión Simplificada</span>
@@ -124,7 +126,7 @@ export default function ContactoPage() {
               <div className="space-y-8">
                 <div className="inline-flex items-center gap-3 bg-white/20 backdrop-blur-sm px-6 py-3 rounded-full font-semibold">
                   <Star className="w-5 h-5" />
-                  ¡ÚNETE A HOMESTATE!
+                  ¡ÚNETE A <span className="font-light">HOMESTATE</span>!
                 </div>
                 
                 <h2 className="text-4xl md:text-5xl font-bold leading-tight">
@@ -185,10 +187,10 @@ export default function ContactoPage() {
           <div className="text-center">
             <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
               ¿Por Qué Elegir{" "}
-              <span className="text-orange-600">Homestate</span>?
+              <span className="text-orange-600 font-light">Homestate</span>?
             </h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Descubre las ventajas que hacen de Homestate la elección perfecta para tu propiedad
+              Descubre las ventajas que hacen de <span className="font-light">Homestate</span> la elección perfecta para tu propiedad
             </p>
           </div>
           
@@ -232,7 +234,7 @@ export default function ContactoPage() {
             ¿Listo para Transformar tu Propiedad?
           </h2>
           <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
-            Únete a cientos de propietarios que ya confían en Homestate para maximizar sus inversiones
+            Únete a cientos de propietarios que ya confían en <span className="font-light">Homestate</span> para maximizar sus inversiones
           </p>
           
           <Button
