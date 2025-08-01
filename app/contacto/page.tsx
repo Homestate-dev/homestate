@@ -30,8 +30,8 @@ export default function ContactoPage() {
                 <Image
                   src="/logo-qr.png"
                   alt="Homestate Logo"
-                  width={150}
-                  height={150}
+                  width={180}
+                  height={180}
                   className="drop-shadow-lg"
                 />
                 
@@ -151,13 +151,7 @@ export default function ContactoPage() {
                     ¡Contáctanos Ahora!
                   </Button>
                   
-                  <Button
-                    variant="outline"
-                    className="border-white/30 text-white hover:bg-white/10 text-lg px-8 py-4 rounded-full backdrop-blur-sm"
-                  >
-                    Saber Más
-                    <ArrowRight className="ml-2 h-5 w-5" />
-                  </Button>
+                 
                 </div>
               </div>
               
@@ -188,7 +182,7 @@ export default function ContactoPage() {
               <span className="text-orange-600 font-light">HomEstate</span>?
             </h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Descubre las ventajas que hacen de <span className="font-light">Homestate</span> la elección perfecta para tu propiedad
+              Descubre las ventajas que hacen de <span className="font-light">HomEstate</span> la elección perfecta para tu propiedad
             </p>
           </div>
           
@@ -232,7 +226,7 @@ export default function ContactoPage() {
             ¿Listo para Transformar tu Propiedad?
           </h2>
           <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
-            Únete a cientos de propietarios que ya confían en <span className="font-light">Homestate</span> para maximizar sus inversiones
+            Únete a los propietarios que ya confían en <span className="font-light">HomEstate</span> para maximizar sus inversiones
           </p>
           
           <Button
