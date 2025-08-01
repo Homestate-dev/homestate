@@ -10,7 +10,7 @@ import { Header } from "@/components/header"
 export default function ContactoPage() {
   const handleWhatsAppClick = () => {
     const phoneNumber = "+5491112345678"
-    const message = "Hola! Me interesa formar parte de HomEState. ¿Podrían darme más información?"
+    const message = "Hola! Me interesa formar parte de HomEstate. ¿Podrían darme más información?"
     const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`
     window.open(whatsappUrl, "_blank")
   }
@@ -41,15 +41,15 @@ export default function ContactoPage() {
             <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-black text-gray-900 mb-6 sm:mb-8 leading-tight px-2">
               ¡QUÉ ES{" "}
               <span className="bg-gradient-to-r from-orange-600 via-orange-500 to-orange-600 bg-clip-text text-transparent font-light">
-                HomEState
+                HomEstate
               </span>
               ?
             </h1>
             
             <div className="max-w-4xl mx-auto px-2">
               <p className="text-lg sm:text-xl md:text-2xl text-gray-700 leading-relaxed font-medium">
-                Descubre cómo <span className="font-light">HomEState</span> transforma el mundo de los bienes raíces. Nuestro servicio está diseñado específicamente para que nuestros socios estratégicos, como edificios y conjuntos, maximicen sus ingresos y aseguren el financiamiento óptimo para el mantenimiento general.{" "}
-                <span className="font-bold text-orange-600">¡Impulsa el valor de tu propiedad con <span className="font-light">HomEState</span>!</span>
+                Descubre cómo <span className="font-light">HomEstate</span> transforma el mundo de los bienes raíces. Nuestro servicio está diseñado específicamente para que nuestros socios estratégicos, como edificios y conjuntos, maximicen sus ingresos y aseguren el financiamiento óptimo para el mantenimiento general.{" "}
+                <span className="font-bold text-orange-600">¡Impulsa el valor de tu propiedad con <span className="font-light">HomEstate</span>!</span>
               </p>
             </div>
           </div>
@@ -124,7 +124,7 @@ export default function ContactoPage() {
               <div className="space-y-6 sm:space-y-8">
                 <div className="inline-flex items-center gap-3 bg-white/20 backdrop-blur-sm px-4 sm:px-6 py-2 sm:py-3 rounded-full font-semibold text-sm sm:text-base">
                   <Star className="w-4 h-4 sm:w-5 sm:h-5" />
-                  ¡ÚNETE A <span className="font-light">HomEState</span>!
+                  ¡ÚNETE A <span className="font-light">HomEstate</span>!
                 </div>
                 
                 <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold leading-tight">
@@ -159,7 +159,7 @@ export default function ContactoPage() {
                 <div className="relative z-10">
                   <Image
                     src="https://firebasestorage.googleapis.com/v0/b/homestate-web.firebasestorage.app/o/WhatsApp%20Image%202025-07-29%20at%2016.14.07.jpeg?alt=media&token=3c224812-498b-4156-800a-9f4ed1491a99"
-                    alt="Miembro HomEState"
+                    alt="Miembro HomEstate"
                     width={400}
                     height={400}
                     className="rounded-xl sm:rounded-2xl border-2 sm:border-4 border-white/30 shadow-2xl object-cover w-full h-auto"
@@ -179,10 +179,10 @@ export default function ContactoPage() {
           <div className="text-center">
             <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-4 sm:mb-6">
               ¿Por Qué Elegir{" "}
-              <span className="text-orange-600 font-light">HomEState</span>?
+              <span className="text-orange-600 font-light">HomEstate</span>?
             </h2>
             <p className="text-base sm:text-lg md:text-xl text-gray-600 max-w-3xl mx-auto px-2">
-              Descubre las ventajas que hacen de <span className="font-light">HomEState</span> la elección perfecta para tu propiedad
+              Descubre las ventajas que hacen de <span className="font-light">HomEstate</span> la elección perfecta para tu propiedad
             </p>
           </div>
           
@@ -226,7 +226,7 @@ export default function ContactoPage() {
             ¿Listo para Transformar tu Propiedad?
           </h2>
           <p className="text-base sm:text-lg md:text-xl text-gray-300 mb-6 sm:mb-8 max-w-2xl mx-auto px-2">
-            Únete a los propietarios que ya confían en <span className="font-light">HomEState</span> para maximizar sus inversiones
+            Únete a los propietarios que ya confían en <span className="font-light">HomEstate</span> para maximizar sus inversiones
           </p>
           
           <Button
