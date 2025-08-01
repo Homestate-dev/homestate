@@ -100,7 +100,7 @@ export default async function DepartamentoPage({ params }: PageProps) {
         <main className="flex-grow container mx-auto px-4 py-8">
           <div className="mb-6">
             <Button variant="outline" asChild className="mb-4">
-              <Link href="/">
+              <Link href={`/edificio/${safeDepartamento.edificio.permalink}`}>
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 Volver al listado
               </Link>
