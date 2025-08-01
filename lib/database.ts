@@ -646,7 +646,8 @@ export async function getDepartmentById(id: number) {
     ...department,
     imagenes: safeJsonParse(department.imagenes, []),
     ambientes_y_adicionales: safeJsonParse(department.ambientes_y_adicionales, []),
-    videos_url: safeJsonParse(department.videos_url, [])
+    videos_url: safeJsonParse(department.videos_url, []),
+    descripcion: department.descripcion || ''
   }
 }
 

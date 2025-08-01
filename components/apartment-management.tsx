@@ -98,9 +98,9 @@ export function ApartmentManagement({ buildingId, buildingName, buildingPermalin
     numero: "",
     nombre: "",
     piso: "",
-    area_total: "",
-    area_cubierta: "",
-    area_descubierta: "",
+    area_total: 0,
+    area_cubierta: 0,
+    area_descubierta: 0,
     cantidad_banos: "1",
     valor_arriendo: "",
     valor_venta: "",
@@ -423,9 +423,9 @@ export function ApartmentManagement({ buildingId, buildingName, buildingPermalin
       formData.append('numero', newApartment.numero)
       formData.append('nombre', newApartment.nombre)
       formData.append('piso', newApartment.piso)
-      formData.append('area_total', ((parseFloat(newApartment.area_cubierta) || 0) + (parseFloat(newApartment.area_descubierta) || 0)).toString())
-      formData.append('area_cubierta', newApartment.area_cubierta)
-      formData.append('area_descubierta', newApartment.area_descubierta)
+      formData.append('area_total', (newApartment.area_total || 0).toString())
+      formData.append('area_cubierta', (newApartment.area_cubierta || 0).toString())
+      formData.append('area_descubierta', (newApartment.area_descubierta || 0).toString())
       formData.append('cantidad_banos', newApartment.cantidad_banos)
       formData.append('valor_arriendo', newApartment.valor_arriendo)
       formData.append('valor_venta', newApartment.valor_venta)
@@ -470,9 +470,9 @@ export function ApartmentManagement({ buildingId, buildingName, buildingPermalin
           numero: "",
           nombre: "",
           piso: "",
-          area_total: "",
-          area_cubierta: "",
-          area_descubierta: "",
+          area_total: 0,
+          area_cubierta: 0,
+          area_descubierta: 0,
           cantidad_banos: "1",
           valor_arriendo: "",
           valor_venta: "",
@@ -950,7 +950,7 @@ export function ApartmentManagement({ buildingId, buildingName, buildingPermalin
                       value={editingDepartment.area_cubierta || ''}
                       onChange={(e) => {
                         const areaCubierta = parseFloat(e.target.value) || 0
-                        const areaDescubierta = editingDepartment?.area_descubierta || 0
+                        const areaDescubierta = parseFloat(editingDepartment?.area_descubierta?.toString() || '0') || 0
                         setEditingDepartment(prev => prev ? { 
                           ...prev, 
                           area_cubierta: areaCubierta,
@@ -968,7 +968,7 @@ export function ApartmentManagement({ buildingId, buildingName, buildingPermalin
                       value={editingDepartment.area_descubierta || ''}
                       onChange={(e) => {
                         const areaDescubierta = parseFloat(e.target.value) || 0
-                        const areaCubierta = editingDepartment?.area_cubierta || 0
+                        const areaCubierta = parseFloat(editingDepartment?.area_cubierta?.toString() || '0') || 0
                         setEditingDepartment(prev => prev ? { 
                           ...prev, 
                           area_descubierta: areaDescubierta,
@@ -1447,14 +1447,14 @@ export function ApartmentManagement({ buildingId, buildingName, buildingPermalin
                     id="area_cubierta"
                     type="number"
                     step="0.1"
-                    value={newApartment.area_cubierta}
+                    value={newApartment.area_cubierta || ''}
                     onChange={(e) => {
-                      const areaCubierta = e.target.value
-                      const areaDescubierta = newApartment.area_descubierta
+                      const areaCubierta = parseFloat(e.target.value) || 0
+                      const areaDescubierta = parseFloat(newApartment.area_descubierta?.toString() || '0') || 0
                       setNewApartment((prev) => ({ 
                         ...prev, 
                         area_cubierta: areaCubierta,
-                        area_total: ((parseFloat(areaCubierta) || 0) + (parseFloat(areaDescubierta) || 0)).toString()
+                        area_total: areaCubierta + areaDescubierta
                       }))
                     }}
                   />
@@ -1465,14 +1465,14 @@ export function ApartmentManagement({ buildingId, buildingName, buildingPermalin
                     id="area_descubierta"
                     type="number"
                     step="0.1"
-                    value={newApartment.area_descubierta}
+                    value={newApartment.area_descubierta || ''}
                     onChange={(e) => {
-                      const areaDescubierta = e.target.value
-                      const areaCubierta = newApartment.area_cubierta
+                      const areaDescubierta = parseFloat(e.target.value) || 0
+                      const areaCubierta = parseFloat(newApartment.area_cubierta?.toString() || '0') || 0
                       setNewApartment((prev) => ({ 
                         ...prev, 
                         area_descubierta: areaDescubierta,
-                        area_total: ((parseFloat(areaCubierta) || 0) + (parseFloat(areaDescubierta) || 0)).toString()
+                        area_total: areaCubierta + areaDescubierta
                       }))
                     }}
                   />
@@ -1483,7 +1483,7 @@ export function ApartmentManagement({ buildingId, buildingName, buildingPermalin
                     id="area_total"
                     type="number"
                     step="0.1"
-                    value={newApartment.area_total}
+                    value={newApartment.area_total || ''}
                     readOnly
                     disabled
                     className="bg-gray-100"
