@@ -164,7 +164,15 @@ export function ApartmentManagement({ buildingId, buildingName, buildingPermalin
   }
 
   const handleEditDepartment = (department: Department) => {
-    setEditingDepartment({ ...department })
+    // Asegurar que el área total se calcule correctamente
+    const areaCubierta = department.area_cubierta || 0
+    const areaDescubierta = department.area_descubierta || 0
+    const areaTotal = areaCubierta + areaDescubierta
+    
+    setEditingDepartment({ 
+      ...department, 
+      area_total: areaTotal 
+    })
     setShowEditDialog(true)
   }
 
@@ -1032,8 +1040,8 @@ export function ApartmentManagement({ buildingId, buildingName, buildingPermalin
                   <div>
                     <Label htmlFor="edit-cantidad_banos">Cantidad de baños *</Label>
                     <Select
-                      value={editingDepartment.cantidad_banos}
-                      onValueChange={(value) => setEditingDepartment(prev => prev ? { ...prev, cantidad_banos: value } : null)}
+                      value={editingDepartment.cantidad_banos?.toString() || "1"}
+                      onValueChange={(value) => setEditingDepartment(prev => prev ? { ...prev, cantidad_banos: parseInt(value) } : null)}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Seleccionar" />
@@ -1106,49 +1114,42 @@ export function ApartmentManagement({ buildingId, buildingName, buildingPermalin
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold">Precios</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="edit-valor_venta">Valor de venta (USD)</Label>
-                    <Input
-                      id="edit-valor_venta"
-                      type="number"
-                      value={editingDepartment?.valor_venta === 0 ? '' : editingDepartment?.valor_venta || ''}
-                      onChange={(e) => setEditingDepartment(prev => prev ? { ...prev, valor_venta: e.target.value === '' ? '' : parseInt(e.target.value) } : null)}
-                      placeholder="Ej: 25000000"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="edit-valor_arriendo">Valor de arriendo (USD/mes)</Label>
-                    <Input
-                      id="edit-valor_arriendo"
-                      type="number"
-                      value={editingDepartment?.valor_arriendo === 0 ? '' : editingDepartment?.valor_arriendo || ''}
-                      onChange={(e) => setEditingDepartment(prev => prev ? { ...prev, valor_arriendo: e.target.value === '' ? '' : parseInt(e.target.value) } : null)}
-                      placeholder="Ej: 1200000"
-                    />
-                  </div>
-                </div>
-                {/* Alícuota (solo arriendo o arriendo y venta) */}
-                {(editingDepartment.tipo === 'arriendo' || editingDepartment.tipo === 'arriendo y venta') && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Valor de venta (solo para venta o arriendo y venta) */}
+                  {(editingDepartment.tipo === 'venta' || editingDepartment.tipo === 'arriendo y venta') && (
                     <div>
-                      <Label htmlFor="edit-alicuota">Valor de alícuota (USD)*</Label>
+                      <Label htmlFor="edit-valor_venta">Valor de venta (USD)</Label>
                       <Input
-                        id="edit-alicuota"
+                        id="edit-valor_venta"
                         type="number"
-                        value={editingDepartment.alicuota === 0 ? '' : editingDepartment.alicuota || ''}
-                        onChange={(e) => setEditingDepartment(prev => prev ? { ...prev, alicuota: e.target.value === '' ? '' : parseInt(e.target.value) } : null)}
-                        placeholder="Ej: 50000"
-                        required
+                        value={editingDepartment?.valor_venta === 0 ? '' : editingDepartment?.valor_venta || ''}
+                        onChange={(e) => setEditingDepartment(prev => prev ? { ...prev, valor_venta: e.target.value === '' ? '' : parseInt(e.target.value) } : null)}
+                        placeholder="Ej: 25000000"
                       />
                     </div>
-                    <div className="flex items-center space-x-2 mt-6 md:mt-0">
-                      <Checkbox
-                        id="edit-incluye-alicuota"
-                        checked={editingDepartment.incluye_alicuota || false}
-                        onCheckedChange={(checked) => setEditingDepartment(prev => prev ? { ...prev, incluye_alicuota: checked as boolean } : null)}
+                  )}
+                  {/* Valor de arriendo (solo para arriendo o arriendo y venta) */}
+                  {(editingDepartment.tipo === 'arriendo' || editingDepartment.tipo === 'arriendo y venta') && (
+                    <div>
+                      <Label htmlFor="edit-valor_arriendo">Valor de arriendo (USD/mes)</Label>
+                      <Input
+                        id="edit-valor_arriendo"
+                        type="number"
+                        value={editingDepartment?.valor_arriendo === 0 ? '' : editingDepartment?.valor_arriendo || ''}
+                        onChange={(e) => setEditingDepartment(prev => prev ? { ...prev, valor_arriendo: e.target.value === '' ? '' : parseInt(e.target.value) } : null)}
+                        placeholder="Ej: 1200000"
                       />
-                      <Label htmlFor="edit-incluye-alicuota">Incluye alícuota</Label>
                     </div>
+                  )}
+                </div>
+                {/* Checkbox de incluye alicuota (solo para arriendo o arriendo y venta) */}
+                {(editingDepartment.tipo === 'arriendo' || editingDepartment.tipo === 'arriendo y venta') && (
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="edit-incluye-alicuota"
+                      checked={editingDepartment.incluye_alicuota || false}
+                      onCheckedChange={(checked) => setEditingDepartment(prev => prev ? { ...prev, incluye_alicuota: checked as boolean } : null)}
+                    />
+                    <Label htmlFor="edit-incluye-alicuota">Incluye alícuota</Label>
                   </div>
                 )}
               </div>
