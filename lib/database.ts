@@ -611,7 +611,7 @@ export async function getDepartmentsByBuilding(edificio_id: number) {
     SELECT 
       id, edificio_id, numero, nombre, piso, area_total, area_cubierta, area_descubierta, cantidad_banos,
       valor_arriendo, valor_venta, alicuota, incluye_alicuota, disponible, cantidad_habitaciones, tipo, estado, ideal_para, 
-      ambientes_y_adicionales, tiene_bodega, videos_url, imagenes,
+      ambientes_y_adicionales, tiene_bodega, videos_url, imagenes, descripcion,
       fecha_creacion, fecha_actualizacion
     FROM departamentos 
     WHERE edificio_id = $1 
@@ -622,7 +622,8 @@ export async function getDepartmentsByBuilding(edificio_id: number) {
     ...row,
     imagenes: safeJsonParse(row.imagenes, []),
     ambientes_y_adicionales: safeJsonParse(row.ambientes_y_adicionales, []),
-    videos_url: safeJsonParse(row.videos_url, [])
+    videos_url: safeJsonParse(row.videos_url, []),
+    descripcion: row.descripcion || ''
   }))
 }
 
