@@ -74,17 +74,7 @@ export default function ContactoPage() {
                 <span className="font-bold text-orange-600">¡No esperes más y aprovecha esta experiencia innovadora!</span>
               </p>
               
-              <div className="flex flex-wrap gap-3 sm:gap-4">
-                <div className="flex items-center gap-2 bg-white px-3 sm:px-4 py-2 rounded-full shadow-md">
-                  <div className="w-2 h-2 sm:w-3 sm:h-3 bg-green-500 rounded-full"></div>
-                  <span className="font-medium text-sm sm:text-base">Búsqueda Inteligente</span>
-                </div>
-                
-                <div className="flex items-center gap-2 bg-white px-3 sm:px-4 py-2 rounded-full shadow-md">
-                  <div className="w-2 h-2 sm:w-3 sm:h-3 bg-purple-500 rounded-full"></div>
-                  <span className="font-medium text-sm sm:text-base">Gestión Simplificada</span>
-                </div>
-              </div>
+              
             </div>
             
             <div className="relative">
