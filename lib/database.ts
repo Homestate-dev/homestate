@@ -671,6 +671,7 @@ export async function updateDepartment(id: number, updates: {
   tiene_bodega?: boolean
   videos_url?: string[]
   imagenes?: string[]
+  descripcion?: string
 }) {
   const setClauses: string[] = []
   const values: any[] = []
@@ -679,7 +680,7 @@ export async function updateDepartment(id: number, updates: {
   // Iterar sobre las actualizaciones y construir la query dinámicamente
   Object.entries(updates).forEach(([key, value]) => {
     if (value !== undefined) {
-      if (key === 'imagenes' || key === 'ambientes_y_adicionales') {
+      if (key === 'imagenes' || key === 'ambientes_y_adicionales' || key === 'videos_url') {
         setClauses.push(`${key} = $${paramIndex}`)
         values.push(JSON.stringify(value))
       } else {

@@ -44,6 +44,7 @@ interface Department {
   tiene_bodega?: boolean
   videos_url: string[]
   imagenes: string[]
+  descripcion?: string
   fecha_creacion: string
   fecha_actualizacion: string
   agente_venta_id?: number
@@ -933,14 +934,51 @@ export function ApartmentManagement({ buildingId, buildingName, buildingPermalin
                     />
                   </div>
                   <div>
-                    <Label htmlFor="edit-area">Área (m²) - Calculado automáticamente</Label>
+                    <Label htmlFor="edit-area-cubierta">Área cubierta (m²)</Label>
                     <Input
-                      id="edit-area"
+                      id="edit-area-cubierta"
+                      type="number"
+                      step="0.1"
+                      value={editingDepartment.area_cubierta || ''}
+                      onChange={(e) => {
+                        const areaCubierta = parseFloat(e.target.value) || 0
+                        const areaDescubierta = editingDepartment?.area_descubierta || 0
+                        setEditingDepartment(prev => prev ? { 
+                          ...prev, 
+                          area_cubierta: areaCubierta,
+                          area_total: areaCubierta + areaDescubierta
+                        } : null)
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="edit-area-descubierta">Área descubierta (m²)</Label>
+                    <Input
+                      id="edit-area-descubierta"
+                      type="number"
+                      step="0.1"
+                      value={editingDepartment.area_descubierta || ''}
+                      onChange={(e) => {
+                        const areaDescubierta = parseFloat(e.target.value) || 0
+                        const areaCubierta = editingDepartment?.area_cubierta || 0
+                        setEditingDepartment(prev => prev ? { 
+                          ...prev, 
+                          area_descubierta: areaDescubierta,
+                          area_total: areaCubierta + areaDescubierta
+                        } : null)
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="edit-area-total">Área total (m²) - Calculado automáticamente</Label>
+                    <Input
+                      id="edit-area-total"
                       type="number"
                       step="0.1"
                       value={editingDepartment.area_total}
-                      onChange={(e) => setEditingDepartment(prev => prev ? { ...prev, area_total: parseFloat(e.target.value) || 0 } : null)}
-                      required
+                      readOnly
+                      disabled
+                      className="bg-gray-100"
                     />
                   </div>
                 </div>
@@ -952,6 +990,17 @@ export function ApartmentManagement({ buildingId, buildingName, buildingPermalin
                     onChange={(e) => setEditingDepartment(prev => prev ? { ...prev, nombre: e.target.value } : null)}
                     placeholder="Ej: Departamento Ejecutivo"
                     required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="edit-descripcion">Descripción *</Label>
+                  <textarea
+                    id="edit-descripcion"
+                    value={editingDepartment.descripcion || ''}
+                    onChange={(e) => setEditingDepartment(prev => prev ? { ...prev, descripcion: e.target.value } : null)}
+                    placeholder="Describe el departamento..."
+                    required
+                    className="w-full min-h-[80px] border rounded p-2"
                   />
                 </div>
               </div>
@@ -1133,6 +1182,44 @@ export function ApartmentManagement({ buildingId, buildingName, buildingPermalin
                   />
                   <Label htmlFor="edit-disponible">Departamento disponible</Label>
                 </div>
+              </div>
+
+              <Separator />
+
+              {/* Características adicionales */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Características adicionales</h3>
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="edit-tiene-bodega"
+                    checked={editingDepartment.tiene_bodega || false}
+                    onCheckedChange={(checked) =>
+                      setEditingDepartment(prev => prev ? { ...prev, tiene_bodega: checked as boolean } : null)
+                    }
+                  />
+                  <Label htmlFor="edit-tiene-bodega">Tiene bodega</Label>
+                </div>
+              </div>
+
+              <Separator />
+
+              {/* Videos de YouTube */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Videos de YouTube</h3>
+                <p className="text-sm text-gray-600">
+                  Se visualizarán {editingDepartment.videos_url.length} video{editingDepartment.videos_url.length === 1 ? '' : 's'} en este departamento.
+                </p>
+                <TagSelector
+                  selectedItems={editingDepartment?.videos_url || []}
+                  onItemsChange={(items) => setEditingDepartment(prev => prev ? { ...prev, videos_url: items } : null)}
+                  availableItems={[]}
+                  placeholder="Agregar URL de video de YouTube..."
+                  label="Videos"
+                  allowCustom={true}
+                />
+                <p className="text-sm text-gray-500">
+                  Ejemplo: https://www.youtube.com/watch?v=VIDEO_ID
+                </p>
               </div>
 
               <Separator />
@@ -1360,9 +1447,15 @@ export function ApartmentManagement({ buildingId, buildingName, buildingPermalin
                     type="number"
                     step="0.1"
                     value={newApartment.area_cubierta}
-                    onChange={(e) =>
-                      setNewApartment((prev) => ({ ...prev, area_cubierta: e.target.value }))
-                    }
+                    onChange={(e) => {
+                      const areaCubierta = e.target.value
+                      const areaDescubierta = newApartment.area_descubierta
+                      setNewApartment((prev) => ({ 
+                        ...prev, 
+                        area_cubierta: areaCubierta,
+                        area_total: ((parseFloat(areaCubierta) || 0) + (parseFloat(areaDescubierta) || 0)).toString()
+                      }))
+                    }}
                   />
                 </div>
                 <div>
@@ -1372,22 +1465,27 @@ export function ApartmentManagement({ buildingId, buildingName, buildingPermalin
                     type="number"
                     step="0.1"
                     value={newApartment.area_descubierta}
-                    onChange={(e) =>
-                      setNewApartment((prev) => ({ ...prev, area_descubierta: e.target.value }))
-                    }
+                    onChange={(e) => {
+                      const areaDescubierta = e.target.value
+                      const areaCubierta = newApartment.area_cubierta
+                      setNewApartment((prev) => ({ 
+                        ...prev, 
+                        area_descubierta: areaDescubierta,
+                        area_total: ((parseFloat(areaCubierta) || 0) + (parseFloat(areaDescubierta) || 0)).toString()
+                      }))
+                    }}
                   />
                 </div>
                 <div>
-                  <Label htmlFor="area_total">Área total (m²) - calculado automáticamente*</Label>
+                  <Label htmlFor="area_total">Área total (m²) - Calculado automáticamente</Label>
                   <Input
                     id="area_total"
                     type="number"
                     step="0.1"
-                    value={
-                      (parseFloat(newApartment.area_cubierta) || 0) + (parseFloat(newApartment.area_descubierta) || 0)
-                    }
+                    value={newApartment.area_total}
                     readOnly
                     disabled
+                    className="bg-gray-100"
                   />
                 </div>
               </div>
