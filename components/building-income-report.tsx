@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Progress } from "@/components/ui/progress"
@@ -53,6 +54,13 @@ export function BuildingIncomeReport() {
   // Estado para el paginador
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(10)
+  
+  // Estado para los filtros
+  const [filterTransactionType, setFilterTransactionType] = useState<string>("all")
+  const [dateRange, setDateRange] = useState<{ from: string; to: string }>({
+    from: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+    to: new Date().toISOString().split('T')[0]
+  })
 
   // Función auxiliar para manejar valores numéricos de forma segura
   const safeNumberFormat = (value: any, decimals: number = 1): string => {
@@ -115,10 +123,10 @@ export function BuildingIncomeReport() {
     return processedIncomeData.reduce((sum, building) => sum + building.total_transacciones, 0)
   }
 
-  // Resetear a la primera página cuando cambie el edificio seleccionado
+  // Resetear a la primera página cuando cambien los filtros
   useEffect(() => {
     setCurrentPage(1)
-  }, [selectedBuilding])
+  }, [selectedBuilding, filterTransactionType, dateRange])
 
   // Lógica de paginación
   const totalItems = processedIncomeData.length
@@ -130,7 +138,7 @@ export function BuildingIncomeReport() {
   useEffect(() => {
     fetchBuildings()
     fetchIncomeData()
-  }, [selectedBuilding])
+  }, [selectedBuilding, filterTransactionType, dateRange])
 
   const fetchBuildings = async () => {
     try {
@@ -148,9 +156,27 @@ export function BuildingIncomeReport() {
   const fetchIncomeData = async () => {
     try {
       setLoading(true)
-      const url = selectedBuilding === "all" 
-        ? '/api/sales-rentals/reports/building-income'
-        : `/api/sales-rentals/reports/building-income?buildingId=${selectedBuilding}`
+      
+      // Construir URL con filtros
+      const params = new URLSearchParams()
+      
+      if (selectedBuilding !== "all") {
+        params.append('buildingId', selectedBuilding)
+      }
+      
+      if (filterTransactionType !== "all") {
+        params.append('transactionType', filterTransactionType)
+      }
+      
+      if (dateRange.from) {
+        params.append('dateFrom', dateRange.from)
+      }
+      
+      if (dateRange.to) {
+        params.append('dateTo', dateRange.to)
+      }
+      
+      const url = `/api/sales-rentals/reports/building-income${params.toString() ? `?${params.toString()}` : ''}`
       
       const response = await fetch(url)
       const data = await response.json()
@@ -180,34 +206,89 @@ export function BuildingIncomeReport() {
   return (
     <div className="space-y-4">
       {/* Filtros */}
-      <div className="flex items-center gap-4">
-        <div className="flex items-center gap-2">
-          <Logo size={16} className="text-gray-500" />
-          <span className="text-sm font-medium">Edificio:</span>
+      <div className="space-y-4">
+        {/* Primera fila de filtros */}
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <Logo size={16} className="text-gray-500" />
+            <span className="text-sm font-medium">Edificio:</span>
+          </div>
+          <Select value={selectedBuilding} onValueChange={setSelectedBuilding}>
+            <SelectTrigger className="w-[300px]">
+              <SelectValue placeholder="Seleccionar edificio" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos los edificios</SelectItem>
+              {buildings.map((building) => (
+                <SelectItem key={building.id} value={building.id.toString()}>
+                  {building.nombre}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium">Tipo Transacción:</span>
+            <Select value={filterTransactionType} onValueChange={setFilterTransactionType}>
+              <SelectTrigger className="w-[200px]">
+                <SelectValue placeholder="Todas las transacciones" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas las transacciones</SelectItem>
+                <SelectItem value="venta">Solo ventas</SelectItem>
+                <SelectItem value="arriendo">Solo arriendos</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
-        <Select value={selectedBuilding} onValueChange={setSelectedBuilding}>
-          <SelectTrigger className="w-[300px]">
-            <SelectValue placeholder="Seleccionar edificio" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos los edificios</SelectItem>
-            {buildings.map((building) => (
-              <SelectItem key={building.id} value={building.id.toString()}>
-                {building.nombre}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
         
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={() => {
-            // Abrir el reporte en una nueva ventana para facilitar la impresión
-            const buildingName = buildings.find((b: Building) => b.id.toString() === selectedBuilding)?.nombre
-            const title = selectedBuilding === "all" 
-              ? "Reporte de Ingresos - Todos los Edificios"
-              : `Reporte de Ingresos - ${buildingName || 'Edificio Seleccionado'}`
+        {/* Segunda fila de filtros */}
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium">Fecha inicio:</span>
+            <Input
+              type="date"
+              value={dateRange.from}
+              onChange={(e) => setDateRange({ ...dateRange, from: e.target.value })}
+              className="w-[180px]"
+            />
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium">Fecha fin:</span>
+            <Input
+              type="date"
+              value={dateRange.to}
+              onChange={(e) => setDateRange({ ...dateRange, to: e.target.value })}
+              className="w-[180px]"
+            />
+          </div>
+          
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => {
+              setDateRange({
+                from: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                to: new Date().toISOString().split('T')[0]
+              })
+            }}
+          >
+            Últimos 30 días
+          </Button>
+        </div>
+        
+        {/* Botones de reporte */}
+        <div className="flex items-center gap-3">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => {
+              // Abrir el reporte en una nueva ventana para facilitar la impresión
+              const buildingName = buildings.find((b: Building) => b.id.toString() === selectedBuilding)?.nombre
+              const title = selectedBuilding === "all" 
+                ? "Reporte de Ingresos - Todos los Edificios"
+                : `Reporte de Ingresos - ${buildingName || 'Edificio Seleccionado'}`
             
             // Crear HTML del reporte
             const showBuildingColumn = selectedBuilding === "all"
@@ -442,6 +523,214 @@ export function BuildingIncomeReport() {
         >
           <Download className="h-4 w-4 mr-2" />
           Ver Reporte
+        </Button>
+        
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={() => {
+            // Abrir el reporte de administrador en una nueva ventana
+            const buildingName = buildings.find((b: Building) => b.id.toString() === selectedBuilding)?.nombre
+            const title = selectedBuilding === "all" 
+              ? "Reporte de Administrador - Todos los Edificios"
+              : `Reporte de Administrador - ${buildingName || 'Edificio Seleccionado'}`
+            
+            // Crear HTML del reporte simplificado para administrador
+            const showBuildingColumn = selectedBuilding === "all"
+            const tableData = processedIncomeData
+              .filter(building => building.total_transacciones > 0)
+              .map((building: BuildingIncome) => {
+                const row = []
+                if (showBuildingColumn) {
+                  row.push(building.edificio_nombre)
+                }
+                row.push(
+                  building.total_ventas.toString(),
+                  building.total_arriendos.toString(),
+                  formatCurrency(building.total_admin_edificio)
+                )
+                return row
+              })
+            
+            // Calcular totales
+            const totalSales = processedIncomeData.reduce((sum, b) => sum + b.total_ventas, 0)
+            const totalRentals = processedIncomeData.reduce((sum, b) => sum + b.total_arriendos, 0)
+            const totalAdminEdificio = processedIncomeData.reduce((sum, b) => sum + b.total_admin_edificio, 0)
+            
+            // Agregar fila de totales
+            const totalRow = []
+            if (showBuildingColumn) {
+              totalRow.push('TOTAL')
+            }
+            totalRow.push(
+              totalSales.toString(),
+              totalRentals.toString(),
+              formatCurrency(totalAdminEdificio)
+            )
+            tableData.push(totalRow)
+            
+            // Preparar headers simplificados
+            const headers = []
+            if (showBuildingColumn) {
+              headers.push('Edificio')
+            }
+            headers.push(
+              'Ventas',
+              'Arriendos',
+              'Administración Edificio'
+            )
+            
+            // Crear HTML del reporte simplificado
+            const htmlContent = `
+              <!DOCTYPE html>
+              <html>
+                <head>
+                  <meta charset="utf-8">
+                  <title>${title}</title>
+                  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300&display=swap" rel="stylesheet">
+                  <style>
+                    @page {
+                      size: A4;
+                      margin: 20mm;
+                    }
+                    body { 
+                      font-family: Arial, sans-serif; 
+                      margin: 0; 
+                      padding: 0;
+                      font-size: 12px;
+                    }
+                    .header { 
+                      text-align: center; 
+                      margin-bottom: 30px; 
+                      page-break-after: avoid;
+                    }
+                    .header-content { 
+                      display: flex; 
+                      align-items: center; 
+                      justify-content: center; 
+                      gap: 15px; 
+                    }
+                    .logo { 
+                      width: 64px; 
+                      height: 64px; 
+                    }
+                    .brand-text { 
+                      font-family: 'Poppins', sans-serif; 
+                      font-weight: 300; 
+                      font-size: 24px; 
+                      color: #3b82f6; 
+                    }
+                    .title { 
+                      margin-top: 10px; 
+                      font-size: 20px; 
+                      color: #333; 
+                    }
+                    .info { 
+                      margin-bottom: 20px; 
+                      page-break-after: avoid;
+                    }
+                    table { 
+                      width: 100%; 
+                      border-collapse: collapse; 
+                      margin-top: 20px; 
+                      font-size: 10px;
+                    }
+                    th, td { 
+                      border: 1px solid #ddd; 
+                      padding: 6px; 
+                      text-align: left; 
+                      word-wrap: break-word;
+                    }
+                    th { 
+                      background-color: #3b82f6; 
+                      color: white; 
+                      font-weight: bold;
+                    }
+                    tr:nth-child(even) { 
+                      background-color: #f8f9fa; 
+                    }
+                    .total-row { 
+                      background-color: #e5f3ff !important; 
+                      font-weight: bold; 
+                    }
+                    .total-row td { 
+                      border-top: 2px solid #3b82f6; 
+                    }
+                    .print-button {
+                      position: fixed;
+                      top: 20px;
+                      right: 20px;
+                      background: #3b82f6;
+                      color: white;
+                      border: none;
+                      padding: 10px 20px;
+                      border-radius: 5px;
+                      cursor: pointer;
+                      font-size: 14px;
+                    }
+                    .currency {
+                      text-align: right;
+                    }
+                    .number {
+                      text-align: center;
+                    }
+                    @media print {
+                      body { margin: 0; }
+                      .no-print { display: none; }
+                    }
+                  </style>
+                </head>
+                <body>
+                  <button class="print-button no-print" onclick="window.print()">🖨️ Imprimir</button>
+                  
+                  <div class="header">
+                    <div class="header-content">
+                      <img src="/logo-qr.png" alt="Homestate Logo" class="logo">
+                      <div>
+                        <div class="brand-text">HomEstate</div>
+                        <div class="title">${title}</div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div class="info">
+                    <p><strong>Fecha de generación:</strong> ${new Date().toLocaleDateString('es-CO')} a las ${new Date().toLocaleTimeString('es-CO')}</p>
+                    <p><strong>Total de edificios con transacciones:</strong> ${processedIncomeData.filter(b => b.total_transacciones > 0).length}</p>
+                  </div>
+                  
+                  <table>
+                    <thead>
+                      <tr>
+                        ${headers.map(header => `<th>${header}</th>`).join('')}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      ${tableData.map(row => `
+                        <tr class="${row[0] === 'TOTAL' ? 'total-row' : ''}">
+                          ${row.map((cell, index) => {
+                            const isCurrency = index === (showBuildingColumn ? 2 : 1) && row[0] !== 'TOTAL'
+                            const isNumber = index === (showBuildingColumn ? 1 : 0) || index === (showBuildingColumn ? 2 : 1)
+                            const className = isCurrency ? 'currency' : isNumber ? 'number' : ''
+                            return `<td class="${className}">${cell}</td>`
+                          }).join('')}
+                        </tr>
+                      `).join('')}
+                    </tbody>
+                  </table>
+                </body>
+              </html>
+            `
+            
+            // Abrir en nueva ventana
+            const newWindow = window.open('', '_blank')
+            if (newWindow) {
+              newWindow.document.write(htmlContent)
+              newWindow.document.close()
+            }
+          }}
+        >
+          <BarChart3 className="h-4 w-4 mr-2" />
+          Ver Reporte para Administrador
         </Button>
       </div>
 
