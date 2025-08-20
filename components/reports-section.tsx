@@ -26,7 +26,7 @@ export function ReportsSection() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">Reportes</h2>
+          <h2 className="text-2xl font-bold tracking-tight text-orange-600">Sistema de reportería</h2>
           <p className="text-muted-foreground">
             Análisis detallado de transacciones, ingresos y comisiones
           </p>

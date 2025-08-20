@@ -688,9 +688,6 @@ export function SalesRentalsManagement() {
         )}
       </div>
 
-      {/* Sección de Reportes */}
-      <ReportsSection />
-
       {/* Filtros y búsqueda */}
       <Card>
         <CardHeader>
@@ -899,6 +896,9 @@ export function SalesRentalsManagement() {
           )}
         </CardContent>
       </Card>
+
+      {/* Sección de Sistema de Reportería */}
+      <ReportsSection />
 
       {/* Dialog para crear nueva transacción */}
       <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
