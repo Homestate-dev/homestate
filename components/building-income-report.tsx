@@ -393,15 +393,13 @@ export function BuildingIncomeReport() {
                 <body>
                   <button class="print-button no-print" onclick="window.print()">🖨️ Imprimir</button>
                   
-                                     <div class="header">
-                     <div class="header-content">
-                       <img src="/logo-qr.png" alt="Homestate Logo" class="logo">
-                       <div>
-                         <div class="brand-text">HomEstate</div>
-                         <div class="title">${title}</div>
-                       </div>
-                     </div>
-                   </div>
+                                                                           <div class="header">
+                      <div class="header-content">
+                        <img src="/logo-qr.png" alt="Homestate Logo" class="logo">
+                        <div class="brand-text">HomEstate</div>
+                      </div>
+                      <div class="title">${title}</div>
+                    </div>
                   
                   <div class="info">
                     <p><strong>Fecha de generación:</strong> ${new Date().toLocaleDateString('es-CO')} a las ${new Date().toLocaleTimeString('es-CO')}</p>

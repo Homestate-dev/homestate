@@ -509,43 +509,46 @@ export function TransactionStateManager({ transactionId, onStateChange }: Transa
               
               {estado_actual !== 'completada' && estado_actual !== 'desistimiento' && (
                 <>
-                  <Dialog open={showFinalizeDialog} onOpenChange={setShowFinalizeDialog}>
-                    <DialogTrigger asChild>
-                      <Button size="sm" variant="outline" className="text-green-600 border-green-600 hover:bg-green-50">
-                        <Check className="mr-2 h-4 w-4" />
-                        Finalizar
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                      <DialogHeader>
-                        <DialogTitle>Finalizar Transacción</DialogTitle>
-                        <DialogDescription>
-                          ¿Está seguro de que desea finalizar esta transacción? Esta acción no se puede deshacer.
-                        </DialogDescription>
-                      </DialogHeader>
-                      <DialogFooter>
-                        <Button variant="outline" onClick={() => setShowFinalizeDialog(false)}>
-                          Cancelar
+                  {/* Solo mostrar el botón Finalizar en estados específicos donde se puede finalizar */}
+                  {(estado_actual === 'firma_escrituras' || estado_actual === 'firma_y_pago') && (
+                    <Dialog open={showFinalizeDialog} onOpenChange={setShowFinalizeDialog}>
+                      <DialogTrigger asChild>
+                        <Button size="sm" variant="outline" className="text-green-600 border-green-600 hover:bg-green-50">
+                          <Check className="mr-2 h-4 w-4" />
+                          Finalizar
                         </Button>
-                        <Button onClick={handleFinalizeTransaction} className="bg-green-600 hover:bg-green-700">
-                          Finalizar Transacción
-                        </Button>
-                      </DialogFooter>
-                    </DialogContent>
-                  </Dialog>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>Finalizar Transacción</DialogTitle>
+                          <DialogDescription>
+                            ¿Está seguro de que desea finalizar esta transacción? Esta acción no se puede deshacer.
+                          </DialogDescription>
+                        </DialogHeader>
+                        <DialogFooter>
+                          <Button variant="outline" onClick={() => setShowFinalizeDialog(false)}>
+                            Cancelar
+                          </Button>
+                          <Button onClick={handleFinalizeTransaction} className="bg-green-600 hover:bg-green-700">
+                            Finalizar Transacción
+                          </Button>
+                        </DialogFooter>
+                      </DialogContent>
+                    </Dialog>
+                  )}
                   
                   <Dialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
                     <DialogTrigger asChild>
                       <Button size="sm" variant="outline" className="text-red-600 border-red-600 hover:bg-red-50">
                         <X className="mr-2 h-4 w-4" />
-                        Cancelar
+                        Desestimar
                       </Button>
                     </DialogTrigger>
                     <DialogContent>
                       <DialogHeader>
-                        <DialogTitle>Cancelar Transacción</DialogTitle>
+                        <DialogTitle>Desestimar Transacción</DialogTitle>
                         <DialogDescription>
-                          Complete los datos para cancelar la transacción
+                          Complete los datos para desestimar la transacción
                         </DialogDescription>
                       </DialogHeader>
                       
@@ -577,7 +580,7 @@ export function TransactionStateManager({ transactionId, onStateChange }: Transa
                           Cancelar
                         </Button>
                         <Button onClick={handleCancelTransaction} className="bg-red-600 hover:bg-red-700">
-                          Cancelar Transacción
+                          Desestimar Transacción
                         </Button>
                       </DialogFooter>
                     </DialogContent>
