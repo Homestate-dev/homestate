@@ -1,0 +1,121 @@
+🔍 Conectando a la base de datos...
+
+📋 Tabla: agentes_inmobiliarios
+   Propietario: ufcmrjr46j97t8
+   Esquema: public
+   📝 Columnas (15):
+      1. id (integer(32)) NOT NULL DEFAULT nextval('agentes_inmobiliarios_id_seq'::regclass)
+      2. nombre (character varying(255)) NOT NULL
+      3. email (character varying(255)) NOT NULL
+      4. telefono (character varying(20))
+      5. cedula (character varying(20))
+      6. especialidad (character varying(100)) NOT NULL
+      7. comision_ventas (numeric(5,2)) DEFAULT 3.00
+      8. comision_arriendos (numeric(5,2)) DEFAULT 10.00
+      9. activo (boolean) DEFAULT true
+      10. foto_perfil (text)
+      11. biografia (text)
+      12. fecha_ingreso (date)
+      13. fecha_creacion (timestamp without time zone) DEFAULT CURRENT_TIMESTAMP
+      14. fecha_actualizacion (timestamp without time zone) DEFAULT CURRENT_TIMESTAMP
+      15. creado_por (character varying(255)) NOT NULL
+   🔍 Índices (3):
+      1. agentes_inmobiliarios_cedula_key
+      2. agentes_inmobiliarios_email_key
+      3. agentes_inmobiliarios_pkey
+   🔒 Restricciones (3):
+      1. agentes_inmobiliarios_cedula_key (UNIQUE)
+      2. agentes_inmobiliarios_email_key (UNIQUE)
+      3. agentes_inmobiliarios_pkey (PRIMARY KEY)
+
+📊 Datos de ejemplo (primeras 5 filas):
+   Fila 1:
+      id: 3
+      nombre: Francisco Dahik
+      email: 123456789@test.com
+      telefono: null
+      cedula: null
+      especialidad: ambas
+      comision_ventas: 3.00
+      comision_arriendos: 10.00
+      activo: true
+      foto_perfil: null
+      biografia: null
+      fecha_ingreso: null
+      fecha_creacion: Wed Jul 09 2025 23:24:28 GMT-0500 (Colombia Standard Time)
+      fecha_actualizacion: Wed Jul 09 2025 23:24:28 GMT-0500 (Colombia Standard Time)
+      creado_por: kbjKr2yTGlUZEDoPPbbumSlBMty2
+
+   Fila 2:
+      id: 4
+      nombre: Maria Gonzalez
+      email: maria@ejemplo.com
+      telefono: +593 999 999 999
+      cedula: 1234567890
+      especialidad: ambas
+      comision_ventas: 2.50
+      comision_arriendos: 10.00
+      activo: true
+      foto_perfil: https://firebasestorage.googleapis.com/v0/b/homestate-web.firebasestorage.app/o/edificios%2Fagentes%2Fagente2.png?alt=media&token=05b7b2c0-146f-4172-af3f-448a4e3fda39
+      biografia: Especialista en propiedades residenciales con más de 8 años de experiencia.
+      fecha_ingreso: Wed Jul 02 2025 00:00:00 GMT-0500 (Colombia Standard Time)
+      fecha_creacion: Wed Jul 02 2025 00:52:28 GMT-0500 (Colombia Standard Time)
+      fecha_actualizacion: Thu Jul 03 2025 19:28:17 GMT-0500 (Colombia Standard Time)
+      creado_por: kbjKr2yTGlUZEDoPPbbumSlBMty2
+
+   Fila 3:
+      id: 5
+      nombre: Administrador Principal
+      email: homestate.dev@gmail.com
+      telefono: null
+      cedula: null
+      especialidad: ambas
+      comision_ventas: 3.00
+      comision_arriendos: 10.00
+      activo: true
+      foto_perfil: null
+      biografia: null
+      fecha_ingreso: null
+      fecha_creacion: Wed Jul 16 2025 22:47:27 GMT-0500 (Colombia Standard Time)
+      fecha_actualizacion: Wed Jul 16 2025 22:47:27 GMT-0500 (Colombia Standard Time)
+      creado_por: kbjKr2yTGlUZEDoPPbbumSlBMty2
+
+   Fila 4:
+      id: 34
+      nombre: Francisco
+      email: franciscojdahik@gmail.com
+      telefono: null
+      cedula: null
+      especialidad: ambas
+      comision_ventas: 3.00
+      comision_arriendos: 10.00
+      activo: true
+      foto_perfil: null
+      biografia: null
+      fecha_ingreso: null
+      fecha_creacion: Wed Jul 16 2025 22:48:41 GMT-0500 (Colombia Standard Time)
+      fecha_actualizacion: Wed Jul 16 2025 22:48:41 GMT-0500 (Colombia Standard Time)
+      creado_por: kbjKr2yTGlUZEDoPPbbumSlBMty2
+
+   Fila 5:
+      id: 67
+      nombre: Pruebas
+      email: agente_prueba@gmail.com
+      telefono: null
+      cedula: null
+      especialidad: ambas
+      comision_ventas: 3.00
+      comision_arriendos: 10.00
+      activo: true
+      foto_perfil: null
+      biografia: null
+      fecha_ingreso: null
+      fecha_creacion: Tue Jul 08 2025 14:03:26 GMT-0500 (Colombia Standard Time)
+      fecha_actualizacion: Tue Jul 08 2025 14:03:26 GMT-0500 (Colombia Standard Time)
+      creado_por: kbjKr2yTGlUZEDoPPbbumSlBMty2
+
+📈 Estadísticas de la tabla:
+   • Total de filas: 5
+   • Total de columnas: 15
+   • Total de índices: 3
+   • Total de restricciones: 3

@@ -888,10 +888,10 @@ export async function getAgents() {
   return result.rows
 }
 
-// Obtener agente por ID
+// Obtener agente por ID (cualquier administrador puede ser agente de transacción)
 export async function getAgentById(id: number) {
   const query = `
-    SELECT * FROM administradores WHERE id = $1 AND es_agente = true
+    SELECT * FROM administradores WHERE id = $1
   `
   const result = await executeQuery(query, [id])
   return result.rows.length > 0 ? result.rows[0] : null

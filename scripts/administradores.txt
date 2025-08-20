@@ -1,0 +1,81 @@
+🔍 Conectando a la base de datos...
+
+📋 Tabla: administradores
+   Propietario: ufcmrjr46j97t8
+   Esquema: public
+   📝 Columnas (8):
+      1. id (integer(32)) NOT NULL DEFAULT nextval('administradores_id_seq'::regclass)
+      2. firebase_uid (character varying(255)) NOT NULL
+      3. nombre (character varying(255)) NOT NULL
+      4. email (character varying(255)) NOT NULL
+      5. activo (boolean) DEFAULT true
+      6. fecha_creacion (timestamp without time zone) DEFAULT CURRENT_TIMESTAMP
+      7. fecha_actualizacion (timestamp without time zone) DEFAULT CURRENT_TIMESTAMP
+      8. creado_por (character varying(255))
+   🔍 Índices (5):
+      1. administradores_email_key
+      2. administradores_firebase_uid_key
+      3. administradores_pkey
+      4. idx_administradores_activo
+      5. idx_administradores_email
+   🔒 Restricciones (3):
+      1. administradores_email_key (UNIQUE)
+      2. administradores_firebase_uid_key (UNIQUE)
+      3. administradores_pkey (PRIMARY KEY)
+
+📊 Datos de ejemplo (primeras 5 filas):
+   Fila 1:
+      id: 1
+      firebase_uid: pC0pMINWzBTC13wDAiI7CBvByjj2
+      nombre: Juan Lopez
+      email: juan_lopez@gmail.com
+      activo: true
+      fecha_creacion: Wed Jun 25 2025 21:12:34 GMT-0500 (Colombia Standard Time)
+      fecha_actualizacion: Wed Jun 25 2025 21:12:34 GMT-0500 (Colombia Standard Time)
+      creado_por: kbjKr2yTGlUZEDoPPbbumSlBMty2
+
+   Fila 2:
+      id: 2
+      firebase_uid: VokZ60Ri6uZtz5SD2ZyHPBzb2Rw1
+      nombre: Maria Perez
+      email: maria_perez@gmail.com
+      activo: true
+      fecha_creacion: Wed Jun 25 2025 21:37:40 GMT-0500 (Colombia Standard Time)
+      fecha_actualizacion: Wed Jun 25 2025 21:37:40 GMT-0500 (Colombia Standard Time)
+      creado_por: pC0pMINWzBTC13wDAiI7CBvByjj2
+
+   Fila 3:
+      id: 4
+      firebase_uid: ap3MZb0m51VwCqHP8LJYSHE4nkp1
+      nombre: Victor Gomez
+      email: victor_gomez@gmail.com
+      activo: true
+      fecha_creacion: Wed Jun 25 2025 23:07:23 GMT-0500 (Colombia Standard Time)
+      fecha_actualizacion: Wed Jun 25 2025 23:07:23 GMT-0500 (Colombia Standard Time)
+      creado_por: pC0pMINWzBTC13wDAiI7CBvByjj2
+
+   Fila 4:
+      id: 5
+      firebase_uid: kbjKr2yTGlUZEDoPPbbumSlBMty2
+      nombre: Administrador Principal
+      email: homestate.dev@gmail.com
+      activo: true
+      fecha_creacion: Thu Jun 26 2025 00:21:32 GMT-0500 (Colombia Standard Time)
+      fecha_actualizacion: Thu Jun 26 2025 00:21:32 GMT-0500 (Colombia Standard Time)
+      creado_por: kbjKr2yTGlUZEDoPPbbumSlBMty2
+
+   Fila 5:
+      id: 34
+      firebase_uid: eu9RYPporrNe4Aehp3mW5TZjVe12
+      nombre: Francisco
+      email: franciscojdahik@gmail.com
+      activo: true
+      fecha_creacion: Fri Jul 04 2025 22:09:24 GMT-0500 (Colombia Standard Time)
+      fecha_actualizacion: Fri Jul 04 2025 22:09:24 GMT-0500 (Colombia Standard Time)
+      creado_por: kbjKr2yTGlUZEDoPPbbumSlBMty2
+
+📈 Estadísticas de la tabla:
+   • Total de filas: 6
+   • Total de columnas: 8
+   • Total de índices: 5
+   • Total de restricciones: 3
