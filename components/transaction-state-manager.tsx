@@ -441,8 +441,8 @@ export function TransactionStateManager({ transactionId, onStateChange }: Transa
                               readOnly
                             />
                             <p className="text-xs text-gray-500 mt-1">
-                              Basado en el valor de la transacción ({formatCurrency(transactionState?.precio_final || 0)}) 
-                              y el porcentaje aplicado ({transactionState?.datos_estado?.porcentaje_aplicado || 0}%)
+                              Basado en el valor de la transacción ({transactionState?.precio_final ? formatCurrency(transactionState.precio_final) : 'No definido'}) 
+                              y el porcentaje aplicado ({transactionState?.datos_estado?.porcentaje_aplicado ? `${transactionState.datos_estado.porcentaje_aplicado}%` : 'No definido'})
                             </p>
                           </div>
                           <div>

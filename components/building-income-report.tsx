@@ -11,7 +11,6 @@ import { Progress } from "@/components/ui/progress"
 import { toast } from "sonner"
 import { Logo } from "@/components/ui/logo"
 import {
- 
   DollarSign, 
   TrendingUp,
   Download,
@@ -289,449 +288,441 @@ export function BuildingIncomeReport() {
               const title = selectedBuilding === "all" 
                 ? "Reporte de Ingresos - Todos los Edificios"
                 : `Reporte de Ingresos - ${buildingName || 'Edificio Seleccionado'}`
-            
-            // Crear HTML del reporte
-            const showBuildingColumn = selectedBuilding === "all"
-            const tableData = processedIncomeData
-              .filter(building => building.total_transacciones > 0)
-              .map((building: BuildingIncome) => {
-                const row = []
-                if (showBuildingColumn) {
-                  row.push(building.edificio_nombre)
-                }
-                                 row.push(
-                   building.total_ventas.toString(),
-                   building.total_arriendos.toString(),
-                   formatCurrency(building.valor_total_transacciones),
-                   formatCurrency(building.total_comisiones),
-                   formatCurrency(building.total_homestate),
-                   formatCurrency(building.total_bienes_raices),
-                   formatCurrency(building.total_admin_edificio),
-                   `${safeNumberFormat(building.promedio_porcentaje_homestate)}%`,
-                   `${safeNumberFormat(building.promedio_porcentaje_bienes_raices)}%`,
-                   `${safeNumberFormat(building.promedio_porcentaje_admin_edificio)}%`
-                 )
-                return row
-              })
-            
-            // Calcular totales
-            const totalTransactions = processedIncomeData.reduce((sum, b) => sum + b.total_transacciones, 0)
-            const totalSales = processedIncomeData.reduce((sum, b) => sum + b.total_ventas, 0)
-            const totalRentals = processedIncomeData.reduce((sum, b) => sum + b.total_arriendos, 0)
-            const totalValue = processedIncomeData.reduce((sum, b) => sum + b.valor_total_transacciones, 0)
-            const totalCommissions = processedIncomeData.reduce((sum, b) => sum + b.total_comisiones, 0)
-            const totalHomeState = processedIncomeData.reduce((sum, b) => sum + b.total_homestate, 0)
-            const totalBienesRaices = processedIncomeData.reduce((sum, b) => sum + b.total_bienes_raices, 0)
-            const totalAdminEdificio = processedIncomeData.reduce((sum, b) => sum + b.total_admin_edificio, 0)
-            
-            // Agregar fila de totales
-            const totalRow = []
-            if (showBuildingColumn) {
-              totalRow.push('TOTAL')
-            }
-                         totalRow.push(
-               totalSales.toString(),
-               totalRentals.toString(),
-               formatCurrency(totalValue),
-               formatCurrency(totalCommissions),
-               formatCurrency(totalHomeState),
-               formatCurrency(totalBienesRaices),
-               formatCurrency(totalAdminEdificio),
-               '',
-               '',
-               ''
-             )
-            tableData.push(totalRow)
-            
-            // Preparar headers
-            const headers = []
-            if (showBuildingColumn) {
-              headers.push('Edificio')
-            }
-                         headers.push(
-               'Ventas',
-               'Arriendos',
-               'Valor Total',
-               'Total Comisiones',
-               'HomeState',
-               'Bienes Raíces',
-               'Admin Edificio',
-               '% HomeState',
-               '% Bienes Raíces',
-               '% Admin Edificio'
-             )
-            
-            // Crear HTML del reporte
-            const htmlContent = `
-              <!DOCTYPE html>
-              <html>
-                <head>
-                  <meta charset="utf-8">
-                  <title>${title}</title>
-                  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300&display=swap" rel="stylesheet">
-                  <style>
-                    @page {
-                      size: A4;
-                      margin: 20mm;
-                    }
-                    body { 
-                      font-family: Arial, sans-serif; 
-                      margin: 0; 
-                      padding: 0;
-                      font-size: 12px;
-                    }
-                    .header { 
-                      text-align: center; 
-                      margin-bottom: 30px; 
-                      page-break-after: avoid;
-                    }
-                    .header-content { 
-                      display: flex; 
-                      align-items: center; 
-                      justify-content: center; 
-                      gap: 15px; 
-                    }
-                    .logo { 
-                      width: 64px; 
-                      height: 64px; 
-                    }
-                    .brand-text { 
-                      font-family: 'Poppins', sans-serif; 
-                      font-weight: 300; 
-                      font-size: 24px; 
-                      color:rgb(246, 134, 59); 
-                    }
-                    .title { 
-                      margin-top: 10px; 
-                      font-size: 20px; 
-                      color: #333; 
-                    }
-                    .info { 
-                      margin-bottom: 20px; 
-                      page-break-after: avoid;
-                    }
-                    table { 
-                      width: 100%; 
-                      border-collapse: collapse; 
-                      margin-top: 20px; 
-                      font-size: 10px;
-                    }
-                    th, td { 
-                      border: 1px solid #ddd; 
-                      padding: 6px; 
-                      text-align: left; 
-                      word-wrap: break-word;
-                    }
-                    th { 
-                      background-color:rgb(246, 134, 59); 
-                      color: white; 
-                      font-weight: bold;
-                    }
-                    tr:nth-child(even) { 
-                      background-color: #f8f9fa; 
-                    }
-                    .total-row { 
-                      background-color: #e5f3ff !important; 
-                      font-weight: bold; 
-                    }
-                    .total-row td { 
-                      border-top: 2px solidrgb(246, 149, 59); 
-                    }
-                    .footer { 
-                      margin-top: 30px; 
-                      text-align: center; 
-                      font-size: 10px; 
-                      color: #666; 
-                      page-break-before: avoid;
-                    }
-                    .print-button {
-                      position: fixed;
-                      top: 20px;
-                      right: 20px;
-                      background:rgb(59, 246, 153);
-                      color: white;
-                      border: none;
-                      padding: 10px 20px;
-                      border-radius: 5px;
-                      cursor: pointer;
-                      font-size: 14px;
-                    }
-                    .currency {
-                      text-align: right;
-                    }
-                    .number {
-                      text-align: center;
-                    }
-                    .percentage {
-                      text-align: center;
-                    }
-                    @media print {
-                      body { margin: 0; }
-                      .no-print { display: none; }
-                    }
-                  </style>
-                </head>
-                <body>
-                  <button class="print-button no-print" onclick="window.print()">🖨️ Imprimir</button>
-                  
-                                                                           <div class="header">
+              
+              // Crear HTML del reporte
+              const showBuildingColumn = selectedBuilding === "all"
+              const tableData = processedIncomeData
+                .filter(building => building.total_transacciones > 0)
+                .map((building: BuildingIncome) => {
+                  const row = []
+                  if (showBuildingColumn) {
+                    row.push(building.edificio_nombre)
+                  }
+                  row.push(
+                    building.total_ventas.toString(),
+                    building.total_arriendos.toString(),
+                    formatCurrency(building.valor_total_transacciones),
+                    formatCurrency(building.total_comisiones),
+                    formatCurrency(building.total_homestate),
+                    formatCurrency(building.total_bienes_raices),
+                    formatCurrency(building.total_admin_edificio),
+                    `${safeNumberFormat(building.promedio_porcentaje_homestate)}%`,
+                    `${safeNumberFormat(building.promedio_porcentaje_bienes_raices)}%`,
+                    `${safeNumberFormat(building.promedio_porcentaje_admin_edificio)}%`
+                  )
+                  return row
+                })
+              
+              // Calcular totales
+              const totalTransactions = processedIncomeData.reduce((sum, b) => sum + b.total_transacciones, 0)
+              const totalSales = processedIncomeData.reduce((sum, b) => sum + b.total_ventas, 0)
+              const totalRentals = processedIncomeData.reduce((sum, b) => sum + b.total_arriendos, 0)
+              const totalValue = processedIncomeData.reduce((sum, b) => sum + b.valor_total_transacciones, 0)
+              const totalCommissions = processedIncomeData.reduce((sum, b) => sum + b.total_comisiones, 0)
+              const totalHomeState = processedIncomeData.reduce((sum, b) => sum + b.total_homestate, 0)
+              const totalBienesRaices = processedIncomeData.reduce((sum, b) => sum + b.total_bienes_raices, 0)
+              const totalAdminEdificio = processedIncomeData.reduce((sum, b) => sum + b.total_admin_edificio, 0)
+              
+              // Agregar fila de totales
+              const totalRow = []
+              if (showBuildingColumn) {
+                totalRow.push('TOTAL')
+              }
+              totalRow.push(
+                totalSales.toString(),
+                totalRentals.toString(),
+                formatCurrency(totalValue),
+                formatCurrency(totalCommissions),
+                formatCurrency(totalHomeState),
+                formatCurrency(totalBienesRaices),
+                formatCurrency(totalAdminEdificio),
+                '',
+                '',
+                ''
+              )
+              tableData.push(totalRow)
+              
+              // Preparar headers
+              const headers = []
+              if (showBuildingColumn) {
+                headers.push('Edificio')
+              }
+              headers.push(
+                'Ventas',
+                'Arriendos',
+                'Valor Total',
+                'Total Comisiones',
+                'HomeState',
+                'Bienes Raíces',
+                'Admin Edificio',
+                '% HomeState',
+                '% Bienes Raíces',
+                '% Admin Edificio'
+              )
+              
+              // Crear HTML del reporte
+              const htmlContent = `
+                <!DOCTYPE html>
+                <html>
+                  <head>
+                    <meta charset="utf-8">
+                    <title>${title}</title>
+                    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300&display=swap" rel="stylesheet">
+                    <style>
+                      @page {
+                        size: A4;
+                        margin: 20mm;
+                      }
+                      body { 
+                        font-family: Arial, sans-serif; 
+                        margin: 0; 
+                        padding: 0;
+                        font-size: 12px;
+                      }
+                      .header { 
+                        text-align: center; 
+                        margin-bottom: 30px; 
+                        page-break-after: avoid;
+                      }
+                      .header-content { 
+                        display: flex; 
+                        align-items: center; 
+                        justify-content: center; 
+                        gap: 15px; 
+                      }
+                      .logo { 
+                        width: 64px; 
+                        height: 64px; 
+                      }
+                      .brand-text { 
+                        font-family: 'Poppins', sans-serif; 
+                        font-weight: 300; 
+                        font-size: 24px; 
+                        color: rgb(246, 134, 59); 
+                      }
+                      .title { 
+                        margin-top: 10px; 
+                        font-size: 20px; 
+                        color: #333; 
+                      }
+                      .info { 
+                        margin-bottom: 20px; 
+                        page-break-after: avoid;
+                      }
+                      table { 
+                        width: 100%; 
+                        border-collapse: collapse; 
+                        margin-top: 20px; 
+                        font-size: 10px;
+                      }
+                      th, td { 
+                        border: 1px solid #ddd; 
+                        padding: 6px; 
+                        text-align: left; 
+                        word-wrap: break-word;
+                      }
+                      th { 
+                        background-color: rgb(246, 134, 59); 
+                        color: white; 
+                        font-weight: bold;
+                      }
+                      tr:nth-child(even) { 
+                        background-color: #f8f9fa; 
+                      }
+                      .total-row { 
+                        background-color: #e5f3ff !important; 
+                        font-weight: bold; 
+                      }
+                      .total-row td { 
+                        border-top: 2px solid rgb(246, 149, 59); 
+                      }
+                      .print-button {
+                        position: fixed;
+                        top: 20px;
+                        right: 20px;
+                        background: rgb(59, 246, 153);
+                        color: white;
+                        border: none;
+                        padding: 10px 20px;
+                        border-radius: 5px;
+                        cursor: pointer;
+                        font-size: 14px;
+                      }
+                      .currency {
+                        text-align: right;
+                      }
+                      .number {
+                        text-align: center;
+                      }
+                      .percentage {
+                        text-align: center;
+                      }
+                      @media print {
+                        body { margin: 0; }
+                        .no-print { display: none; }
+                      }
+                    </style>
+                  </head>
+                  <body>
+                    <button class="print-button no-print" onclick="window.print()">🖨️ Imprimir</button>
+                    
+                    <div class="header">
                       <div class="header-content">
                         <img src="/logo-qr.png" alt="Homestate Logo" class="logo">
                         <div class="brand-text">HomEstate</div>
                       </div>
                       <div class="title">${title}</div>
                     </div>
-                  
-                  <div class="info">
-                    <p><strong>Fecha de generación:</strong> ${new Date().toLocaleDateString('es-CO')} a las ${new Date().toLocaleTimeString('es-CO')}</p>
-                    <p><strong>Total de edificios con transacciones:</strong> ${processedIncomeData.filter(b => b.total_transacciones > 0).length}</p>
-                  </div>
-                  
-                  <table>
-                    <thead>
-                      <tr>
-                        ${headers.map(header => `<th>${header}</th>`).join('')}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      ${tableData.map(row => `
-                        <tr class="${row[0] === 'TOTAL' ? 'total-row' : ''}">
-                                                     ${row.map((cell, index) => {
-                             const isCurrency = index >= 3 && index <= 6 && row[0] !== 'TOTAL'
-                             const isNumber = index >= 1 && index <= 2
-                             const isPercentage = index >= 7
-                             const className = isCurrency ? 'currency' : isNumber ? 'number' : isPercentage ? 'percentage' : ''
-                             return `<td class="${className}">${cell}</td>`
-                           }).join('')}
+                    
+                    <div class="info">
+                      <p><strong>Fecha de generación:</strong> ${new Date().toLocaleDateString('es-CO')} a las ${new Date().toLocaleTimeString('es-CO')}</p>
+                      <p><strong>Total de edificios con transacciones:</strong> ${processedIncomeData.filter(b => b.total_transacciones > 0).length}</p>
+                    </div>
+                    
+                    <table>
+                      <thead>
+                        <tr>
+                          ${headers.map(header => `<th>${header}</th>`).join('')}
                         </tr>
-                      `).join('')}
-                    </tbody>
-                  </table>
-                  
-                  
-                </body>
-              </html>
-            `
-            
-            // Abrir en nueva ventana
-            const newWindow = window.open('', '_blank')
-            if (newWindow) {
-              newWindow.document.write(htmlContent)
-              newWindow.document.close()
-            }
-          }}
-        >
-          <Download className="h-4 w-4 mr-2" />
-          Ver Reporte
-        </Button>
-        
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={() => {
-            // Abrir el reporte de administrador en una nueva ventana
-            const buildingName = buildings.find((b: Building) => b.id.toString() === selectedBuilding)?.nombre
-            const title = selectedBuilding === "all" 
-              ? "Reporte de Administrador - Todos los Edificios"
-              : `Reporte de Administrador - ${buildingName || 'Edificio Seleccionado'}`
-            
-            // Crear HTML del reporte simplificado para administrador
-            const showBuildingColumn = selectedBuilding === "all"
-            const tableData = processedIncomeData
-              .filter(building => building.total_transacciones > 0)
-              .map((building: BuildingIncome) => {
-                const row = []
-                if (showBuildingColumn) {
-                  row.push(building.edificio_nombre)
-                }
-                row.push(
-                  building.total_ventas.toString(),
-                  building.total_arriendos.toString(),
-                  formatCurrency(building.total_admin_edificio)
-                )
-                return row
-              })
-            
-            // Calcular totales
-            const totalSales = processedIncomeData.reduce((sum, b) => sum + b.total_ventas, 0)
-            const totalRentals = processedIncomeData.reduce((sum, b) => sum + b.total_arriendos, 0)
-            const totalAdminEdificio = processedIncomeData.reduce((sum, b) => sum + b.total_admin_edificio, 0)
-            
-            // Agregar fila de totales
-            const totalRow = []
-            if (showBuildingColumn) {
-              totalRow.push('TOTAL')
-            }
-            totalRow.push(
-              totalSales.toString(),
-              totalRentals.toString(),
-              formatCurrency(totalAdminEdificio)
-            )
-            tableData.push(totalRow)
-            
-            // Preparar headers simplificados
-            const headers = []
-            if (showBuildingColumn) {
-              headers.push('Edificio')
-            }
-            headers.push(
-              'Ventas',
-              'Arriendos',
-              'Administración Edificio'
-            )
-            
-            // Crear HTML del reporte simplificado
-            const htmlContent = `
-              <!DOCTYPE html>
-              <html>
-                <head>
-                  <meta charset="utf-8">
-                  <title>${title}</title>
-                  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300&display=swap" rel="stylesheet">
-                  <style>
-                    @page {
-                      size: A4;
-                      margin: 20mm;
-                    }
-                    body { 
-                      font-family: Arial, sans-serif; 
-                      margin: 0; 
-                      padding: 0;
-                      font-size: 12px;
-                    }
-                    .header { 
-                      text-align: center; 
-                      margin-bottom: 30px; 
-                      page-break-after: avoid;
-                    }
-                    .header-content { 
-                      display: flex; 
-                      align-items: center; 
-                      justify-content: center; 
-                      gap: 15px; 
-                    }
-                    .logo { 
-                      width: 64px; 
-                      height: 64px; 
-                    }
-                    .brand-text { 
-                      font-family: 'Poppins', sans-serif; 
-                      font-weight: 300; 
-                      font-size: 24px; 
-                      color: #3b82f6; 
-                    }
-                    .title { 
-                      margin-top: 10px; 
-                      font-size: 20px; 
-                      color: #333; 
-                    }
-                    .info { 
-                      margin-bottom: 20px; 
-                      page-break-after: avoid;
-                    }
-                    table { 
-                      width: 100%; 
-                      border-collapse: collapse; 
-                      margin-top: 20px; 
-                      font-size: 10px;
-                    }
-                    th, td { 
-                      border: 1px solid #ddd; 
-                      padding: 6px; 
-                      text-align: left; 
-                      word-wrap: break-word;
-                    }
-                    th { 
-                      background-color: #3b82f6; 
-                      color: white; 
-                      font-weight: bold;
-                    }
-                    tr:nth-child(even) { 
-                      background-color: #f8f9fa; 
-                    }
-                    .total-row { 
-                      background-color: #e5f3ff !important; 
-                      font-weight: bold; 
-                    }
-                    .total-row td { 
-                      border-top: 2px solid #3b82f6; 
-                    }
-                    .print-button {
-                      position: fixed;
-                      top: 20px;
-                      right: 20px;
-                      background: #3b82f6;
-                      color: white;
-                      border: none;
-                      padding: 10px 20px;
-                      border-radius: 5px;
-                      cursor: pointer;
-                      font-size: 14px;
-                    }
-                    .currency {
-                      text-align: right;
-                    }
-                    .number {
-                      text-align: center;
-                    }
-                    @media print {
-                      body { margin: 0; }
-                      .no-print { display: none; }
-                    }
-                  </style>
-                </head>
-                <body>
-                  <button class="print-button no-print" onclick="window.print()">🖨️ Imprimir</button>
-                  
-                  <div class="header">
-                    <div class="header-content">
-                      <img src="/logo-qr.png" alt="Homestate Logo" class="logo">
-                      <div>
-                        <div class="brand-text">HomEstate</div>
-                        <div class="title">${title}</div>
+                      </thead>
+                      <tbody>
+                        ${tableData.map(row => `
+                          <tr class="${row[0] === 'TOTAL' ? 'total-row' : ''}">
+                            ${row.map((cell, index) => {
+                              const isCurrency = index >= 3 && index <= 6 && row[0] !== 'TOTAL'
+                              const isNumber = index >= 1 && index <= 2
+                              const isPercentage = index >= 7
+                              const className = isCurrency ? 'currency' : isNumber ? 'number' : isPercentage ? 'percentage' : ''
+                              return `<td class="${className}">${cell}</td>`
+                            }).join('')}
+                          </tr>
+                        `).join('')}
+                      </tbody>
+                    </table>
+                  </body>
+                </html>
+              `
+              
+              // Abrir en nueva ventana
+              const newWindow = window.open('', '_blank')
+              if (newWindow) {
+                newWindow.document.write(htmlContent)
+                newWindow.document.close()
+              }
+            }}
+          >
+            <Download className="h-4 w-4 mr-2" />
+            Ver Reporte
+          </Button>
+          
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => {
+              // Abrir el reporte de administrador en una nueva ventana
+              const buildingName = buildings.find((b: Building) => b.id.toString() === selectedBuilding)?.nombre
+              const title = selectedBuilding === "all" 
+                ? "Reporte de Administrador - Todos los Edificios"
+                : `Reporte de Administrador - ${buildingName || 'Edificio Seleccionado'}`
+              
+              // Crear HTML del reporte simplificado para administrador
+              const showBuildingColumn = selectedBuilding === "all"
+              const tableData = processedIncomeData
+                .filter(building => building.total_transacciones > 0)
+                .map((building: BuildingIncome) => {
+                  const row = []
+                  if (showBuildingColumn) {
+                    row.push(building.edificio_nombre)
+                  }
+                  row.push(
+                    building.total_ventas.toString(),
+                    building.total_arriendos.toString(),
+                    formatCurrency(building.total_admin_edificio)
+                  )
+                  return row
+                })
+              
+              // Calcular totales
+              const totalSales = processedIncomeData.reduce((sum, b) => sum + b.total_ventas, 0)
+              const totalRentals = processedIncomeData.reduce((sum, b) => sum + b.total_arriendos, 0)
+              const totalAdminEdificio = processedIncomeData.reduce((sum, b) => sum + b.total_admin_edificio, 0)
+              
+              // Agregar fila de totales
+              const totalRow = []
+              if (showBuildingColumn) {
+                totalRow.push('TOTAL')
+              }
+              totalRow.push(
+                totalSales.toString(),
+                totalRentals.toString(),
+                formatCurrency(totalAdminEdificio)
+              )
+              tableData.push(totalRow)
+              
+              // Preparar headers simplificados
+              const headers = []
+              if (showBuildingColumn) {
+                headers.push('Edificio')
+              }
+              headers.push(
+                'Ventas',
+                'Arriendos',
+                'Administración Edificio'
+              )
+              
+              // Crear HTML del reporte simplificado
+              const htmlContent = `
+                <!DOCTYPE html>
+                <html>
+                  <head>
+                    <meta charset="utf-8">
+                    <title>${title}</title>
+                    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300&display=swap" rel="stylesheet">
+                    <style>
+                      @page {
+                        size: A4;
+                        margin: 20mm;
+                      }
+                      body { 
+                        font-family: Arial, sans-serif; 
+                        margin: 0; 
+                        padding: 0;
+                        font-size: 12px;
+                      }
+                      .header { 
+                        text-align: center; 
+                        margin-bottom: 30px; 
+                        page-break-after: avoid;
+                      }
+                      .header-content { 
+                        display: flex; 
+                        align-items: center; 
+                        justify-content: center; 
+                        gap: 15px; 
+                      }
+                      .logo { 
+                        width: 64px; 
+                        height: 64px; 
+                      }
+                      .brand-text { 
+                        font-family: 'Poppins', sans-serif; 
+                        font-weight: 300; 
+                        font-size: 24px; 
+                        color: #3b82f6; 
+                      }
+                      .title { 
+                        margin-top: 10px; 
+                        font-size: 20px; 
+                        color: #333; 
+                      }
+                      .info { 
+                        margin-bottom: 20px; 
+                        page-break-after: avoid;
+                      }
+                      table { 
+                        width: 100%; 
+                        border-collapse: collapse; 
+                        margin-top: 20px; 
+                        font-size: 10px;
+                      }
+                      th, td { 
+                        border: 1px solid #ddd; 
+                        padding: 6px; 
+                        text-align: left; 
+                        word-wrap: break-word;
+                      }
+                      th { 
+                        background-color: #3b82f6; 
+                        color: white; 
+                        font-weight: bold;
+                      }
+                      tr:nth-child(even) { 
+                        background-color: #f8f9fa; 
+                      }
+                      .total-row { 
+                        background-color: #e5f3ff !important; 
+                        font-weight: bold; 
+                      }
+                      .total-row td { 
+                        border-top: 2px solid #3b82f6; 
+                      }
+                      .print-button {
+                        position: fixed;
+                        top: 20px;
+                        right: 20px;
+                        background: #3b82f6;
+                        color: white;
+                        border: none;
+                        padding: 10px 20px;
+                        border-radius: 5px;
+                        cursor: pointer;
+                        font-size: 14px;
+                      }
+                      .currency {
+                        text-align: right;
+                      }
+                      .number {
+                        text-align: center;
+                      }
+                      @media print {
+                        body { margin: 0; }
+                        .no-print { display: none; }
+                      }
+                    </style>
+                  </head>
+                  <body>
+                    <button class="print-button no-print" onclick="window.print()">🖨️ Imprimir</button>
+                    
+                    <div class="header">
+                      <div class="header-content">
+                        <img src="/logo-qr.png" alt="Homestate Logo" class="logo">
+                        <div>
+                          <div class="brand-text">HomEstate</div>
+                          <div class="title">${title}</div>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                  
-                  <div class="info">
-                    <p><strong>Fecha de generación:</strong> ${new Date().toLocaleDateString('es-CO')} a las ${new Date().toLocaleTimeString('es-CO')}</p>
-                    <p><strong>Total de edificios con transacciones:</strong> ${processedIncomeData.filter(b => b.total_transacciones > 0).length}</p>
-                  </div>
-                  
-                  <table>
-                    <thead>
-                      <tr>
-                        ${headers.map(header => `<th>${header}</th>`).join('')}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      ${tableData.map(row => `
-                        <tr class="${row[0] === 'TOTAL' ? 'total-row' : ''}">
-                          ${row.map((cell, index) => {
-                            const isCurrency = index === (showBuildingColumn ? 2 : 1) && row[0] !== 'TOTAL'
-                            const isNumber = index === (showBuildingColumn ? 1 : 0) || index === (showBuildingColumn ? 2 : 1)
-                            const className = isCurrency ? 'currency' : isNumber ? 'number' : ''
-                            return `<td class="${className}">${cell}</td>`
-                          }).join('')}
+                    
+                    <div class="info">
+                      <p><strong>Fecha de generación:</strong> ${new Date().toLocaleDateString('es-CO')} a las ${new Date().toLocaleTimeString('es-CO')}</p>
+                      <p><strong>Total de edificios con transacciones:</strong> ${processedIncomeData.filter(b => b.total_transacciones > 0).length}</p>
+                    </div>
+                    
+                    <table>
+                      <thead>
+                        <tr>
+                          ${headers.map(header => `<th>${header}</th>`).join('')}
                         </tr>
-                      `).join('')}
-                    </tbody>
-                  </table>
-                </body>
-              </html>
-            `
-            
-            // Abrir en nueva ventana
-            const newWindow = window.open('', '_blank')
-            if (newWindow) {
-              newWindow.document.write(htmlContent)
-              newWindow.document.close()
-            }
-          }}
-        >
-          <BarChart3 className="h-4 w-4 mr-2" />
-          Ver Reporte para Administrador
-        </Button>
+                      </thead>
+                      <tbody>
+                        ${tableData.map(row => `
+                          <tr class="${row[0] === 'TOTAL' ? 'total-row' : ''}">
+                            ${row.map((cell, index) => {
+                              const isCurrency = index === (showBuildingColumn ? 2 : 1) && row[0] !== 'TOTAL'
+                              const isNumber = index === (showBuildingColumn ? 1 : 0) || index === (showBuildingColumn ? 2 : 1)
+                              const className = isCurrency ? 'currency' : isNumber ? 'number' : ''
+                              return `<td class="${className}">${cell}</td>`
+                            }).join('')}
+                          </tr>
+                        `).join('')}
+                      </tbody>
+                    </table>
+                  </body>
+                </html>
+              `
+              
+              // Abrir en nueva ventana
+              const newWindow = window.open('', '_blank')
+              if (newWindow) {
+                newWindow.document.write(htmlContent)
+                newWindow.document.close()
+              }
+            }}
+          >
+            <BarChart3 className="h-4 w-4 mr-2" />
+            Ver Reporte para Administrador
+          </Button>
+        </div>
       </div>
 
       {/* Resumen general */}
@@ -799,159 +790,159 @@ export function BuildingIncomeReport() {
             </div>
           ) : (
             <div className="space-y-6">
-                {/* Paginador */}
-                {totalItems > 0 && (
-                  <div className="flex items-center justify-between mb-4 p-4 bg-orange-50 border border-orange-200 rounded-lg">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm text-orange-700">Elementos por página:</span>
-                      <Select
-                        value={itemsPerPage.toString()}
-                        onValueChange={(value) => {
-                          setItemsPerPage(Number(value));
-                          setCurrentPage(1);
-                        }}
+              {/* Paginador */}
+              {totalItems > 0 && (
+                <div className="flex items-center justify-between mb-4 p-4 bg-orange-50 border border-orange-200 rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-orange-700">Elementos por página:</span>
+                    <Select
+                      value={itemsPerPage.toString()}
+                      onValueChange={(value) => {
+                        setItemsPerPage(Number(value));
+                        setCurrentPage(1);
+                      }}
+                    >
+                      <SelectTrigger className="w-20 h-8 bg-orange-100 border-orange-300 text-orange-800">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="5">5</SelectItem>
+                        <SelectItem value="10">10</SelectItem>
+                        <SelectItem value="25">25</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-orange-700">
+                      {startIndex + 1}-{Math.min(endIndex, totalItems)} de {totalItems}
+                    </span>
+                    <div className="flex gap-1">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage(currentPage - 1)}
+                        disabled={currentPage === 1}
+                        className="h-8 w-8 p-0 border-orange-300 text-orange-700 hover:bg-orange-100"
                       >
-                        <SelectTrigger className="w-20 h-8 bg-orange-100 border-orange-300 text-orange-800">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="5">5</SelectItem>
-                          <SelectItem value="10">10</SelectItem>
-                          <SelectItem value="25">25</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm text-orange-700">
-                        {startIndex + 1}-{Math.min(endIndex, totalItems)} de {totalItems}
-                      </span>
-                      <div className="flex gap-1">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setCurrentPage(currentPage - 1)}
-                          disabled={currentPage === 1}
-                          className="h-8 w-8 p-0 border-orange-300 text-orange-700 hover:bg-orange-100"
-                        >
-                          <ChevronLeft className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setCurrentPage(currentPage + 1)}
-                          disabled={currentPage === totalPages}
-                          className="h-8 w-8 p-0 border-orange-300 text-orange-700 hover:bg-orange-100"
-                        >
-                          <ChevronRight className="h-4 w-4" />
-                        </Button>
-                      </div>
+                        <ChevronLeft className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage(currentPage + 1)}
+                        disabled={currentPage === totalPages}
+                        className="h-8 w-8 p-0 border-orange-300 text-orange-700 hover:bg-orange-100"
+                      >
+                        <ChevronRight className="h-4 w-4" />
+                      </Button>
                     </div>
                   </div>
-                )}
+                </div>
+              )}
 
-                <div className="grid gap-4">
-                  {paginatedIncomeData.filter(building => building.total_transacciones > 0).map((building) => (
-                    <Card key={building.edificio_id} className="p-4">
-                      <div className="space-y-4">
-                        {/* Información del edificio */}
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <h3 className="text-lg font-semibold">{building.edificio_nombre}</h3>
-                            <p className="text-sm text-gray-500">{building.edificio_direccion}</p>
-                          </div>
-                          <div className="text-right">
-                            <div className="text-2xl font-bold text-green-600">
-                              {formatCurrency(building.total_comisiones)}
-                            </div>
-                            <div className="text-sm text-gray-500">Total Comisiones</div>
-                          </div>
+              <div className="grid gap-4">
+                {paginatedIncomeData.filter(building => building.total_transacciones > 0).map((building) => (
+                  <Card key={building.edificio_id} className="p-4">
+                    <div className="space-y-4">
+                      {/* Información del edificio */}
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h3 className="text-lg font-semibold">{building.edificio_nombre}</h3>
+                          <p className="text-sm text-gray-500">{building.edificio_direccion}</p>
                         </div>
-
-                        {/* Estadísticas de transacciones */}
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                          <div className="text-center">
-                            <div className="text-lg font-semibold">{building.total_transacciones}</div>
-                            <div className="text-sm text-gray-500">Transacciones</div>
+                        <div className="text-right">
+                          <div className="text-2xl font-bold text-green-600">
+                            {formatCurrency(building.total_comisiones)}
                           </div>
-                          <div className="text-center">
-                            <div className="text-lg font-semibold text-green-600">{building.total_ventas}</div>
-                            <div className="text-sm text-gray-500">Ventas</div>
-                          </div>
-                          <div className="text-center">
-                            <div className="text-lg font-semibold text-blue-600">{building.total_arriendos}</div>
-                            <div className="text-sm text-gray-500">Arriendos</div>
-                          </div>
-                          <div className="text-center">
-                            <div className="text-lg font-semibold">
-                              {formatCurrency(building.valor_total_transacciones)}
-                            </div>
-                            <div className="text-sm text-gray-500">Valor Total</div>
-                          </div>
+                          <div className="text-sm text-gray-500">Total Comisiones</div>
                         </div>
+                      </div>
 
-                        {/* Distribución de comisiones */}
-                        <div className="space-y-3">
-                          <h4 className="font-medium text-gray-700">Distribución de Comisiones</h4>
-                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div className="p-3 bg-blue-50 rounded-lg">
-                              <div className="flex items-center justify-between">
-                                <span className="text-sm font-medium text-blue-700">HomeState</span>
-                                <span className="text-sm font-semibold text-blue-800">
-                                  {formatCurrency(building.total_homestate)}
-                                </span>
-                              </div>
-                              <div className="flex items-center gap-2 mt-1">
-                                <Progress 
-                                  value={building.total_comisiones > 0 ? (building.total_homestate / building.total_comisiones) * 100 : 0} 
-                                  className="flex-1 h-2"
-                                />
-                                <span className="text-xs text-blue-600">
-                                  {safeNumberFormat(building.promedio_porcentaje_homestate)}%
-                                </span>
-                              </div>
+                      {/* Estadísticas de transacciones */}
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div className="text-center">
+                          <div className="text-lg font-semibold">{building.total_transacciones}</div>
+                          <div className="text-sm text-gray-500">Transacciones</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="text-lg font-semibold text-green-600">{building.total_ventas}</div>
+                          <div className="text-sm text-gray-500">Ventas</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="text-lg font-semibold text-blue-600">{building.total_arriendos}</div>
+                          <div className="text-sm text-gray-500">Arriendos</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="text-lg font-semibold">
+                            {formatCurrency(building.valor_total_transacciones)}
+                          </div>
+                          <div className="text-sm text-gray-500">Valor Total</div>
+                        </div>
+                      </div>
+
+                      {/* Distribución de comisiones */}
+                      <div className="space-y-3">
+                        <h4 className="font-medium text-gray-700">Distribución de Comisiones</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          <div className="p-3 bg-blue-50 rounded-lg">
+                            <div className="flex items-center justify-between">
+                              <span className="text-sm font-medium text-blue-700">HomeState</span>
+                              <span className="text-sm font-semibold text-blue-800">
+                                {formatCurrency(building.total_homestate)}
+                              </span>
                             </div>
-                            
-                            <div className="p-3 bg-green-50 rounded-lg">
-                              <div className="flex items-center justify-between">
-                                <span className="text-sm font-medium text-green-700">Bienes Raíces</span>
-                                <span className="text-sm font-semibold text-green-800">
-                                  {formatCurrency(building.total_bienes_raices)}
-                                </span>
-                              </div>
-                              <div className="flex items-center gap-2 mt-1">
-                                <Progress 
-                                  value={building.total_comisiones > 0 ? (building.total_bienes_raices / building.total_comisiones) * 100 : 0} 
-                                  className="flex-1 h-2"
-                                />
-                                <span className="text-xs text-green-600">
-                                  {safeNumberFormat(building.promedio_porcentaje_bienes_raices)}%
-                                </span>
-                              </div>
+                            <div className="flex items-center gap-2 mt-1">
+                              <Progress 
+                                value={building.total_comisiones > 0 ? (building.total_homestate / building.total_comisiones) * 100 : 0} 
+                                className="flex-1 h-2"
+                              />
+                              <span className="text-xs text-blue-600">
+                                {safeNumberFormat(building.promedio_porcentaje_homestate)}%
+                              </span>
                             </div>
-                            
-                            <div className="p-3 bg-purple-50 rounded-lg">
-                              <div className="flex items-center justify-between">
-                                <span className="text-sm font-medium text-purple-700">Admin Edificio</span>
-                                <span className="text-sm font-semibold text-purple-800">
-                                  {formatCurrency(building.total_admin_edificio)}
-                                </span>
-                              </div>
-                              <div className="flex items-center gap-2 mt-1">
-                                <Progress 
-                                  value={building.total_comisiones > 0 ? (building.total_admin_edificio / building.total_comisiones) * 100 : 0} 
-                                  className="flex-1 h-2"
-                                />
-                                <span className="text-xs text-purple-600">
-                                  {safeNumberFormat(building.promedio_porcentaje_admin_edificio)}%
-                                </span>
-                              </div>
+                          </div>
+                          
+                          <div className="p-3 bg-green-50 rounded-lg">
+                            <div className="flex items-center justify-between">
+                              <span className="text-sm font-medium text-green-700">Bienes Raíces</span>
+                              <span className="text-sm font-semibold text-green-800">
+                                {formatCurrency(building.total_bienes_raices)}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2 mt-1">
+                              <Progress 
+                                value={building.total_comisiones > 0 ? (building.total_bienes_raices / building.total_comisiones) * 100 : 0} 
+                                className="flex-1 h-2"
+                              />
+                              <span className="text-xs text-green-600">
+                                {safeNumberFormat(building.promedio_porcentaje_bienes_raices)}%
+                              </span>
+                            </div>
+                          </div>
+                          
+                          <div className="p-3 bg-purple-50 rounded-lg">
+                            <div className="flex items-center justify-between">
+                              <span className="text-sm font-medium text-purple-700">Admin Edificio</span>
+                              <span className="text-sm font-semibold text-purple-800">
+                                {formatCurrency(building.total_admin_edificio)}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2 mt-1">
+                              <Progress 
+                                value={building.total_comisiones > 0 ? (building.total_admin_edificio / building.total_comisiones) * 100 : 0} 
+                                className="flex-1 h-2"
+                              />
+                              <span className="text-xs text-purple-600">
+                                {safeNumberFormat(building.promedio_porcentaje_admin_edificio)}%
+                              </span>
                             </div>
                           </div>
                         </div>
                       </div>
-                    </Card>
-                  ))}
-                </div>
+                    </div>
+                  </Card>
+                ))}
+              </div>
             </div>
           )}
         </CardContent>
