@@ -266,6 +266,7 @@ export function BuildingIncomeReport() {
           <Button 
             variant="outline" 
             size="sm" 
+            className="bg-orange-500 hover:bg-orange-600 text-white border-orange-500 hover:border-orange-600"
             onClick={() => {
               setDateRange({
                 from: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
@@ -527,25 +528,30 @@ export function BuildingIncomeReport() {
               
               // Crear HTML del reporte simplificado para administrador
               const showBuildingColumn = selectedBuilding === "all"
-              const tableData = processedIncomeData
+              // Filtrar edificios con transacciones y evitar duplicados
+              const buildingsWithTransactions = processedIncomeData
                 .filter(building => building.total_transacciones > 0)
-                .map((building: BuildingIncome) => {
-                  const row = []
-                  if (showBuildingColumn) {
-                    row.push(building.edificio_nombre)
-                  }
-                  row.push(
-                    building.total_ventas.toString(),
-                    building.total_arriendos.toString(),
-                    formatCurrency(building.total_admin_edificio)
-                  )
-                  return row
-                })
+                .filter((building, index, self) => 
+                  index === self.findIndex(b => b.edificio_id === building.edificio_id)
+                )
               
-              // Calcular totales
-              const totalSales = processedIncomeData.reduce((sum, b) => sum + b.total_ventas, 0)
-              const totalRentals = processedIncomeData.reduce((sum, b) => sum + b.total_arriendos, 0)
-              const totalAdminEdificio = processedIncomeData.reduce((sum, b) => sum + b.total_admin_edificio, 0)
+              const tableData = buildingsWithTransactions.map((building: BuildingIncome) => {
+                const row = []
+                if (showBuildingColumn) {
+                  row.push(building.edificio_nombre)
+                }
+                row.push(
+                  building.total_ventas.toString(),
+                  building.total_arriendos.toString(),
+                  formatCurrency(building.total_admin_edificio)
+                )
+                return row
+              })
+              
+              // Calcular totales usando la lista filtrada
+              const totalSales = buildingsWithTransactions.reduce((sum, b) => sum + b.total_ventas, 0)
+              const totalRentals = buildingsWithTransactions.reduce((sum, b) => sum + b.total_arriendos, 0)
+              const totalAdminEdificio = buildingsWithTransactions.reduce((sum, b) => sum + b.total_admin_edificio, 0)
               
               // Agregar fila de totales
               const totalRow = []
@@ -608,7 +614,7 @@ export function BuildingIncomeReport() {
                         font-family: 'Poppins', sans-serif; 
                         font-weight: 300; 
                         font-size: 24px; 
-                        color: #3b82f6; 
+                        color:rgb(246, 149, 59); 
                       }
                       .title { 
                         margin-top: 10px; 
@@ -632,7 +638,7 @@ export function BuildingIncomeReport() {
                         word-wrap: break-word;
                       }
                       th { 
-                        background-color: #3b82f6; 
+                        background-color:rgb(246, 165, 59); 
                         color: white; 
                         font-weight: bold;
                       }
@@ -644,13 +650,13 @@ export function BuildingIncomeReport() {
                         font-weight: bold; 
                       }
                       .total-row td { 
-                        border-top: 2px solid #3b82f6; 
+                        border-top: 2px solid rgb(246, 165, 59); 
                       }
                       .print-button {
                         position: fixed;
                         top: 20px;
                         right: 20px;
-                        background: #3b82f6;
+                        background:rgb(118, 246, 59);
                         color: white;
                         border: none;
                         padding: 10px 20px;
@@ -676,17 +682,15 @@ export function BuildingIncomeReport() {
                     <div class="header">
                       <div class="header-content">
                         <img src="/logo-qr.png" alt="Homestate Logo" class="logo">
-                        <div>
-                          <div class="brand-text">HomEstate</div>
-                          <div class="title">${title}</div>
-                        </div>
+                        <div class="brand-text">HomEstate</div>
                       </div>
+                      <div class="title">${title}</div>
                     </div>
                     
-                    <div class="info">
-                      <p><strong>Fecha de generación:</strong> ${new Date().toLocaleDateString('es-CO')} a las ${new Date().toLocaleTimeString('es-CO')}</p>
-                      <p><strong>Total de edificios con transacciones:</strong> ${processedIncomeData.filter(b => b.total_transacciones > 0).length}</p>
-                    </div>
+                                         <div class="info">
+                       <p><strong>Fecha de generación:</strong> ${new Date().toLocaleDateString('es-CO')} a las ${new Date().toLocaleTimeString('es-CO')}</p>
+                       <p><strong>Total de edificios con transacciones:</strong> ${buildingsWithTransactions.length}</p>
+                     </div>
                     
                     <table>
                       <thead>
