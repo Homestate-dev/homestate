@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Settings, Phone, Link } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -12,21 +12,77 @@ import { toast } from "sonner"
 export function PageConfiguration() {
   const [whatsappNumber, setWhatsappNumber] = useState("")
   const [tallyLink, setTallyLink] = useState("")
+  const [loading, setLoading] = useState(false)
+  const [saving, setSaving] = useState(false)
   const isMobile = useIsMobile()
 
-  const handleSave = () => {
-    // Por ahora solo mostrar un mensaje de éxito
-    // En el futuro aquí se conectará con la base de datos
-    toast.success("Configuración guardada", {
-      description: "Los cambios han sido guardados exitosamente.",
-    })
+  // Cargar configuración existente al montar el componente
+  useEffect(() => {
+    fetchCurrentConfiguration()
+  }, [])
+
+  const fetchCurrentConfiguration = async () => {
+    try {
+      setLoading(true)
+      const response = await fetch('/api/page-configuration')
+      if (response.ok) {
+        const data = await response.json()
+        if (data.success && data.data) {
+          setWhatsappNumber(data.data.whatsapp_number || "")
+          setTallyLink(data.data.tally_link || "")
+        }
+      }
+    } catch (error) {
+      console.error('Error al cargar configuración:', error)
+      toast.error("Error al cargar la configuración actual")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleSave = async () => {
+    if (!whatsappNumber.trim() || !tallyLink.trim()) {
+      toast.error("Por favor, completa todos los campos")
+      return
+    }
+
+    try {
+      setSaving(true)
+      const response = await fetch('/api/page-configuration', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          whatsapp_number: whatsappNumber.trim(),
+          tally_link: tallyLink.trim()
+        })
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        if (data.success) {
+          toast.success("Configuración guardada", {
+            description: "Los cambios han sido guardados exitosamente en la base de datos.",
+          })
+        } else {
+          toast.error("Error al guardar la configuración")
+        }
+      } else {
+        toast.error("Error al guardar la configuración")
+      }
+    } catch (error) {
+      console.error('Error al guardar:', error)
+      toast.error("Error al guardar la configuración")
+    } finally {
+      setSaving(false)
+    }
   }
 
   const handleReset = () => {
-    setWhatsappNumber("")
-    setTallyLink("")
-    toast.info("Campos reiniciados", {
-      description: "Los campos han sido limpiados.",
+    fetchCurrentConfiguration()
+    toast.info("Campos restaurados", {
+      description: "Los campos han sido restaurados a la configuración actual.",
     })
   }
 
@@ -105,28 +161,31 @@ export function PageConfiguration() {
       <div className={`flex ${isMobile ? 'flex-col gap-2' : 'gap-4'}`}>
         <Button 
           onClick={handleSave}
+          disabled={saving || loading}
           className="bg-orange-600 hover:bg-orange-700 text-white"
         >
           <Settings className="h-4 w-4 mr-2" />
-          Guardar Configuración
+          {saving ? 'Guardando...' : 'Guardar Configuración'}
         </Button>
         <Button 
           variant="outline" 
           onClick={handleReset}
+          disabled={saving || loading}
         >
-          Limpiar Campos
+          Restaurar Campos
         </Button>
       </div>
 
       {/* Información adicional */}
-      <Card className="bg-blue-50 border-blue-200">
+      <Card className="bg-green-50 border-green-200">
         <CardContent className="pt-6">
           <div className="flex items-start gap-3">
-            <div className="w-2 h-2 bg-blue-600 rounded-full mt-2 flex-shrink-0"></div>
+            <div className="w-2 h-2 bg-green-600 rounded-full mt-2 flex-shrink-0"></div>
             <div>
-              <h4 className="font-medium text-blue-900 mb-1">Nota importante</h4>
-              <p className="text-sm text-blue-700">
-                Esta configuración se guardará localmente por el momento. En futuras versiones se conectará con la base de datos para persistir los cambios.
+              <h4 className="font-medium text-green-900 mb-1">Configuración activa</h4>
+              <p className="text-sm text-green-700">
+                Esta configuración se guarda en la base de datos y se aplica inmediatamente. 
+                El botón flotante de WhatsApp y los enlaces de Tally se actualizan automáticamente.
               </p>
             </div>
           </div>

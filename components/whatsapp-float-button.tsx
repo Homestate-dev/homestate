@@ -1,14 +1,47 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import { FaWhatsapp } from "react-icons/fa"
 
 export function WhatsAppFloatButton() {
+  const [whatsappNumber, setWhatsappNumber] = useState<string>("")
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetchWhatsAppNumber()
+  }, [])
+
+  const fetchWhatsAppNumber = async () => {
+    try {
+      const response = await fetch('/api/page-configuration')
+      if (response.ok) {
+        const data = await response.json()
+        if (data.success && data.data.whatsapp_number) {
+          setWhatsappNumber(data.data.whatsapp_number)
+        }
+      }
+    } catch (error) {
+      console.error('Error al obtener número de WhatsApp:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const handleWhatsAppClick = () => {
-    // Número de WhatsApp (puedes cambiarlo por el número real)
-    const phoneNumber = "56912345678" // Cambiar por el número real
-    const message = "Hola, me interesa conocer más sobre los departamentos disponibles."
-    const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`
+    if (!whatsappNumber) {
+      console.warn('Número de WhatsApp no configurado')
+      return
+    }
+    
+    // Limpiar el número (remover +, espacios, etc.)
+    const cleanNumber = whatsappNumber.replace(/[\s\+\-\(\)]/g, '')
+    const whatsappUrl = `https://wa.me/${cleanNumber}`
     window.open(whatsappUrl, '_blank')
+  }
+
+  // No mostrar el botón si no hay número configurado o está cargando
+  if (loading || !whatsappNumber) {
+    return null
   }
 
   return (
