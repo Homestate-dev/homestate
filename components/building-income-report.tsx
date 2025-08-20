@@ -526,14 +526,18 @@ export function BuildingIncomeReport() {
                 ? "Reporte de Administrador - Todos los Edificios"
                 : `Reporte de Administrador - ${buildingName || 'Edificio Seleccionado'}`
               
-              // Crear HTML del reporte simplificado para administrador
-              const showBuildingColumn = selectedBuilding === "all"
-              // Filtrar edificios con transacciones y evitar duplicados
-              const buildingsWithTransactions = processedIncomeData
-                .filter(building => building.total_transacciones > 0)
-                .filter((building, index, self) => 
-                  index === self.findIndex(b => b.edificio_id === building.edificio_id)
-                )
+                             // Crear HTML del reporte simplificado para administrador
+               const showBuildingColumn = selectedBuilding === "all"
+               // Filtrar edificios con transacciones y evitar duplicados
+               const buildingsWithTransactions = processedIncomeData
+                 .filter(building => building.total_transacciones > 0)
+                 .reduce((unique, building) => {
+                   const exists = unique.find(b => b.edificio_id === building.edificio_id)
+                   if (!exists) {
+                     unique.push(building)
+                   }
+                   return unique
+                 }, [] as BuildingIncome[])
               
               const tableData = buildingsWithTransactions.map((building: BuildingIncome) => {
                 const row = []
@@ -689,7 +693,7 @@ export function BuildingIncomeReport() {
                     
                                          <div class="info">
                        <p><strong>Fecha de generación:</strong> ${new Date().toLocaleDateString('es-CO')} a las ${new Date().toLocaleTimeString('es-CO')}</p>
-                       <p><strong>Total de edificios con transacciones:</strong> ${buildingsWithTransactions.length}</p>
+                       ${buildingsWithTransactions.length > 1 ? `<p><strong>Total de edificios con transacciones:</strong> ${buildingsWithTransactions.length}</p>` : ''}
                      </div>
                     
                     <table>
