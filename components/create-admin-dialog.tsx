@@ -3,7 +3,7 @@
 import type React from "react"
 
 import { useState, useEffect } from "react"
-import { UserPlus, User, Mail, Lock, Eye, EyeOff, Briefcase, Phone, CreditCard, Percent, Image, FileText } from "lucide-react"
+import { UserPlus, User, Mail, Lock, Eye, EyeOff } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -16,8 +16,6 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Textarea } from "@/components/ui/textarea"
 
 type CreateAdminDialogProps = {
   open: boolean
@@ -32,15 +30,7 @@ export function CreateAdminDialog({ open, onOpenChange, onSubmit, admin }: Creat
     nombre: "",
     email: "",
     password: "",
-    activo: true,
-    telefono: "",
-    cedula: "",
-    especialidad: "ambas",
-    comision_ventas: 3.00,
-    comision_arriendos: 10.00,
-    foto_perfil: "",
-    biografia: "",
-    es_agente: true
+    activo: true
   })
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [showPassword, setShowPassword] = useState(false)
@@ -52,15 +42,7 @@ export function CreateAdminDialog({ open, onOpenChange, onSubmit, admin }: Creat
         nombre: admin.nombre,
         email: admin.email,
         password: "", // No mostramos la contraseña actual por seguridad
-        activo: admin.activo,
-        telefono: admin.telefono || "",
-        cedula: admin.cedula || "",
-        especialidad: admin.especialidad || "ambas",
-        comision_ventas: admin.comision_ventas || 3.00,
-        comision_arriendos: admin.comision_arriendos || 10.00,
-        foto_perfil: admin.foto_perfil || "",
-        biografia: admin.biografia || "",
-        es_agente: admin.es_agente !== false // Por defecto true si no está definido
+        activo: admin.activo
       })
     } else {
       setFormData({
@@ -68,43 +50,28 @@ export function CreateAdminDialog({ open, onOpenChange, onSubmit, admin }: Creat
         nombre: "",
         email: "",
         password: "",
-        activo: true,
-        telefono: "",
-        cedula: "",
-        especialidad: "ambas",
-        comision_ventas: 3.00,
-        comision_arriendos: 10.00,
-        foto_perfil: "",
-        biografia: "",
-        es_agente: true
+        activo: true
       })
     }
     setErrors({})
   }, [admin, open])
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
-    const processedValue = (name === 'comision_ventas' || name === 'comision_arriendos') 
-      ? parseFloat(value) || 0 
-      : value
-    setFormData((prev) => ({ ...prev, [name]: processedValue }))
+    setFormData((prev) => ({ ...prev, [name]: value }))
     // Limpiar error cuando el usuario comienza a escribir
     if (errors[name]) {
       setErrors((prev) => ({ ...prev, [name]: "" }))
     }
   }
 
-  const handleSelectChange = (name: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [name]: value }))
-  }
+
 
   const handleSwitchChange = (checked: boolean) => {
     setFormData((prev) => ({ ...prev, activo: checked }))
   }
 
-  const handleAgentSwitchChange = (checked: boolean) => {
-    setFormData((prev) => ({ ...prev, es_agente: checked }))
-  }
+
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {}
@@ -156,7 +123,7 @@ export function CreateAdminDialog({ open, onOpenChange, onSubmit, admin }: Creat
           <DialogDescription>
             {admin
               ? "Actualice los datos del administrador seleccionado"
-              : "Complete el formulario para crear un nuevo administrador (también actuará como agente inmobiliario)"}
+              : "Complete el formulario para crear un nuevo administrador"}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="max-h-[80vh] overflow-y-auto">
@@ -232,166 +199,7 @@ export function CreateAdminDialog({ open, onOpenChange, onSubmit, admin }: Creat
               </div>
             </div>
 
-            {/* Información de agente inmobiliario */}
-            <div className="space-y-4">
-              <div className="flex items-center justify-between border-b pb-2">
-                <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                  <Briefcase className="h-5 w-5" />
-                  Información de Agente Inmobiliario
-                </h3>
-                <div className="flex items-center gap-2">
-                  <span className={`text-sm ${!formData.es_agente ? "text-red-500 font-medium" : "text-gray-500"}`}>
-                    No agente
-                  </span>
-                  <Switch 
-                    checked={formData.es_agente} 
-                    onCheckedChange={handleAgentSwitchChange}
-                  />
-                  <span className={`text-sm ${formData.es_agente ? "text-green-600 font-medium" : "text-gray-500"}`}>
-                    Es agente
-                  </span>
-                </div>
-              </div>
 
-              {formData.es_agente && (
-                <>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="telefono">Teléfono</Label>
-                      <div className="relative">
-                        <Phone className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
-                        <Input
-                          id="telefono"
-                          name="telefono"
-                          placeholder="+593 999 999 999"
-                          className="pl-9"
-                          value={formData.telefono}
-                          onChange={handleChange}
-                        />
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="cedula">Cédula</Label>
-                      <div className="relative">
-                        <CreditCard className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
-                        <Input
-                          id="cedula"
-                          name="cedula"
-                          placeholder="1234567890"
-                          className="pl-9"
-                          value={formData.cedula}
-                          onChange={handleChange}
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="especialidad">Especialidad *</Label>
-                      <Select 
-                        value={formData.especialidad} 
-                        onValueChange={(value) => handleSelectChange('especialidad', value)}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Seleccionar especialidad" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="ventas">
-                            <div className="flex items-center gap-2">
-                              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                              Solo Ventas
-                            </div>
-                          </SelectItem>
-                          <SelectItem value="arriendos">
-                            <div className="flex items-center gap-2">
-                              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                              Solo Arriendos
-                            </div>
-                          </SelectItem>
-                          <SelectItem value="ambas">
-                            <div className="flex items-center gap-2">
-                              <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-                              Ambas
-                            </div>
-                          </SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="comision_ventas">Comisión Ventas (%)</Label>
-                      <div className="relative">
-                        <Percent className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
-                        <Input
-                          id="comision_ventas"
-                          name="comision_ventas"
-                          type="number"
-                          step="0.01"
-                          min="0"
-                          max="100"
-                          placeholder="3.00"
-                          className="pl-9"
-                          value={formData.comision_ventas}
-                          onChange={handleChange}
-                        />
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="comision_arriendos">Comisión Arriendos (%)</Label>
-                      <div className="relative">
-                        <Percent className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
-                        <Input
-                          id="comision_arriendos"
-                          name="comision_arriendos"
-                          type="number"
-                          step="0.01"
-                          min="0"
-                          max="100"
-                          placeholder="10.00"
-                          className="pl-9"
-                          value={formData.comision_arriendos}
-                          onChange={handleChange}
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="foto_perfil">URL Foto de Perfil</Label>
-                    <div className="relative">
-                      <Image className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
-                      <Input
-                        id="foto_perfil"
-                        name="foto_perfil"
-                        placeholder="https://ejemplo.com/foto.jpg"
-                        className="pl-9"
-                        value={formData.foto_perfil}
-                        onChange={handleChange}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="biografia">Biografía Profesional</Label>
-                    <div className="relative">
-                      <FileText className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
-                      <Textarea
-                        id="biografia"
-                        name="biografia"
-                        placeholder="Descripción profesional, experiencia, especialidades..."
-                        className="pl-9 min-h-[80px] resize-none"
-                        rows={3}
-                        value={formData.biografia}
-                        onChange={handleChange}
-                      />
-                    </div>
-                  </div>
-                </>
-              )}
-            </div>
 
             {admin && (
               <div className="flex items-center justify-between border-t pt-4">
