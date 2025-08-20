@@ -121,7 +121,7 @@ export function PageConfiguration() {
                 className="font-mono"
               />
               <p className="text-xs text-gray-500">
-                Incluye el código de país (+56 para Chile)
+                No te olvides de incluir el código de país (+593 para Ecuador)
               </p>
             </div>
           </CardContent>

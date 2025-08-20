@@ -2,23 +2,69 @@
 
 import Link from "next/link"
 import Image from "next/image"
-import { ArrowLeft, ArrowRight, Star, Building2, Users, TrendingUp } from "lucide-react"
+import { useState, useEffect } from "react"
+import { ArrowLeft, ArrowRight, Star, Building2, Users, TrendingUp, ExternalLink } from "lucide-react"
 import { FaWhatsapp } from "react-icons/fa"
 import { Button } from "@/components/ui/button"
 import { Header } from "@/components/header"
 
 export default function ContactoPage() {
+  const [whatsappNumber, setWhatsappNumber] = useState("")
+  const [tallyLink, setTallyLink] = useState("")
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetchConfiguration()
+  }, [])
+
+  const fetchConfiguration = async () => {
+    try {
+      const response = await fetch('/api/page-configuration')
+      if (response.ok) {
+        const data = await response.json()
+        if (data.success && data.data) {
+          setWhatsappNumber(data.data.whatsapp_number || "")
+          setTallyLink(data.data.tally_link || "")
+        }
+      }
+    } catch (error) {
+      console.error('Error al cargar configuración:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const handleWhatsAppClick = () => {
-    const phoneNumber = "+5491112345678"
+    if (!whatsappNumber) {
+      console.warn('Número de WhatsApp no configurado')
+      return
+    }
+    
     const message = "Hola! Me interesa formar parte de HomEstate. ¿Podrían darme más información?"
-    const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`
+    const cleanNumber = whatsappNumber.replace(/[\s\+\-\(\)]/g, '')
+    const whatsappUrl = `https://wa.me/${cleanNumber}?text=${encodeURIComponent(message)}`
     window.open(whatsappUrl, "_blank")
+  }
+
+  const handleTallyClick = () => {
+    if (!tallyLink) {
+      console.warn('Enlace de Tally no configurado')
+      return
+    }
+    
+    window.open(tallyLink, "_blank")
   }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-orange-50">
       <Header />
 
+      {loading && (
+        <div className="fixed top-0 left-0 w-full bg-orange-500 text-white text-center py-2 z-50">
+          <p className="text-sm">🔄 Cargando configuración de contacto...</p>
+        </div>
+      )}
+      
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-16 space-y-16 sm:space-y-32">
         
         {/* Hero Section */}
@@ -133,15 +179,39 @@ export default function ContactoPage() {
                 </div>
                 
                 <div className="flex flex-wrap gap-3 sm:gap-4">
-                  <Button
-                    onClick={handleWhatsAppClick}
-                    className="bg-green-500 hover:bg-green-600 text-white text-sm sm:text-lg px-6 sm:px-8 py-3 sm:py-4 rounded-full shadow-lg hover:scale-105 transition-all duration-300"
-                  >
-                    <FaWhatsapp className="mr-2 sm:mr-3 h-4 w-4 sm:h-5 sm:w-5" />
-                    ¡Contáctanos Ahora!
-                  </Button>
+                  {whatsappNumber && (
+                    <Button
+                      onClick={handleWhatsAppClick}
+                      disabled={loading}
+                      className="bg-green-500 hover:bg-green-600 text-white text-sm sm:text-lg px-6 sm:px-8 py-3 sm:py-4 rounded-full shadow-lg hover:scale-105 transition-all duration-300"
+                    >
+                      <FaWhatsapp className="mr-2 sm:mr-3 h-4 w-4 sm:h-5 sm:w-5" />
+                      {loading ? 'Cargando...' : '¡Contáctanos Ahora!'}
+                    </Button>
+                  )}
                   
+                  {tallyLink && (
+                    <Button
+                      onClick={handleTallyClick}
+                      disabled={loading}
+                      variant="outline"
+                      className="border-pink-500 text-pink-600 hover:bg-pink-50 text-sm sm:text-lg px-6 sm:px-8 py-3 sm:py-4 rounded-full shadow-lg hover:scale-105 transition-all duration-300"
+                    >
+                      <ExternalLink className="mr-2 sm:mr-3 h-4 w-4 sm:h-5 sm:w-5" />
+                      {loading ? 'Cargando...' : 'Completar Formulario'}
+                    </Button>
+                  )}
                   
+                  {!loading && !whatsappNumber && !tallyLink && (
+                    <div className="text-center w-full">
+                      <div className="bg-orange-100 border border-orange-300 rounded-lg p-4">
+                        <p className="text-orange-800 text-sm">
+                          ⚠️ Configuración de contacto no disponible. 
+                          Contacta al administrador para configurar WhatsApp y Tally.
+                        </p>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
               
@@ -219,17 +289,39 @@ export default function ContactoPage() {
             Únete a los propietarios que ya confían en <span className="font-light">HomEstate</span> para maximizar sus inversiones
           </p>
           
-          <Button
-            onClick={handleWhatsAppClick}
-            className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white text-sm sm:text-lg md:text-xl px-8 sm:px-12 py-4 sm:py-6 rounded-full shadow-2xl hover:scale-105 transition-all duration-300 font-bold"
-          >
-            <FaWhatsapp className="mr-2 sm:mr-4 h-4 w-4 sm:h-6 sm:w-6" />
-            ¡Inicia tu Transformación Ahora!
-          </Button>
-          
-          <p className="mt-4 sm:mt-6 text-xs sm:text-sm text-gray-400">
-            Respuesta inmediata • Consulta sin compromiso • Soporte 24/7
-          </p>
+          {tallyLink ? (
+            <>
+              <Button
+                onClick={handleTallyClick}
+                disabled={loading}
+                className="bg-gradient-to-r from-pink-500 to-pink-600 hover:from-pink-600 hover:to-pink-700 text-white text-sm sm:text-lg md:text-xl px-8 sm:px-12 py-4 sm:py-6 rounded-full shadow-2xl hover:scale-105 transition-all duration-300 font-bold"
+              >
+                <ExternalLink className="mr-2 sm:mr-4 h-4 w-4 sm:h-6 sm:w-6" />
+                {loading ? 'Cargando...' : '¡Completa el Formulario!'}
+              </Button>
+              
+              <p className="mt-4 sm:mt-6 text-xs sm:text-sm text-gray-400">
+                Se abrirá una ventana con el formulario • Consulta sin compromiso • Respuesta en 24h
+              </p>
+            </>
+          ) : (
+            <>
+              <div className="bg-orange-100 border border-orange-300 rounded-lg p-4 mb-6">
+                <p className="text-orange-800 text-sm">
+                  ⚠️ Formulario de contacto no configurado. 
+                  Contacta al administrador para configurar el enlace de Tally.
+                </p>
+              </div>
+              
+              <Button
+                disabled
+                className="bg-gray-400 cursor-not-allowed text-white text-sm sm:text-lg md:text-xl px-8 sm:px-12 py-4 sm:py-6 rounded-full shadow-2xl font-bold"
+              >
+                <ExternalLink className="mr-2 sm:mr-4 h-4 w-4 sm:h-6 sm:w-6" />
+                Formulario No Disponible
+              </Button>
+            </>
+          )}
         </section>
       </div>
     </div>
