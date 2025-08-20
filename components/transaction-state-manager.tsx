@@ -42,6 +42,7 @@ interface TransactionState {
     motivo_cambio?: string
     datos_estado: any
     usuario_responsable: string
+    comentarios?: string
   }>
 }
 
@@ -176,14 +177,10 @@ export function TransactionStateManager({ transactionId, onStateChange }: Transa
         return
       }
 
-      const stateData = {}
+      const stateData: any = {}
       
       // Agregar datos específicos según el estado
-      if (nextState === 'reservado') {
-        stateData.valor_reserva = parseFloat(formData.valor_reserva)
-        stateData.fecha_reserva = formData.fecha_reserva
-        stateData.comentarios = formData.comentarios
-      } else if (nextState === 'promesa_compra_venta') {
+      if (nextState === 'promesa_compra_venta') {
         stateData.porcentaje_aplicado = parseFloat(formData.porcentaje_aplicado)
         stateData.comentarios = formData.comentarios
         // Calcular valor de promesa
@@ -191,7 +188,20 @@ export function TransactionStateManager({ transactionId, onStateChange }: Transa
         const porcentaje = parseFloat(formData.porcentaje_aplicado)
         stateData.valor_promesa = valorReserva * (porcentaje / 100)
       } else if (nextState === 'firma_escrituras') {
-        stateData.pago_total = parseFloat(formData.pago_total)
+        // Calcular pago total basado en el valor de la transacción y el porcentaje aplicado
+        const valorTransaccion = transactionState?.precio_final || 0
+        const porcentajeAplicado = transactionState?.datos_estado?.porcentaje_aplicado || 0
+        
+        if (valorTransaccion > 0 && porcentajeAplicado > 0) {
+          const pagoTotalCalculado = valorTransaccion * (porcentajeAplicado / 100)
+          stateData.pago_total = pagoTotalCalculado
+          // Actualizar el formulario para mostrar el valor calculado
+          setFormData(prev => ({ ...prev, pago_total: pagoTotalCalculado.toString() }))
+        } else {
+          // Si no hay datos suficientes, usar el valor del formulario
+          stateData.pago_total = parseFloat(formData.pago_total)
+        }
+        
         stateData.fecha_firma = formData.fecha_firma
         stateData.comentarios = formData.comentarios
       } else if (nextState === 'firma_y_pago') {
@@ -388,30 +398,6 @@ export function TransactionStateManager({ transactionId, onStateChange }: Transa
                     </DialogHeader>
                     
                     <div className="space-y-4">
-                      {nextState === 'reservado' && (
-                        <>
-                          <div>
-                            <Label htmlFor="valor_reserva">Valor de la Reserva</Label>
-                            <Input
-                              id="valor_reserva"
-                              type="number"
-                              value={formData.valor_reserva}
-                              onChange={(e) => setFormData(prev => ({ ...prev, valor_reserva: e.target.value }))}
-                              placeholder="25000000"
-                            />
-                          </div>
-                          <div>
-                            <Label htmlFor="fecha_reserva">Fecha de la Reserva</Label>
-                            <Input
-                              id="fecha_reserva"
-                              type="date"
-                              value={formData.fecha_reserva}
-                              onChange={(e) => setFormData(prev => ({ ...prev, fecha_reserva: e.target.value }))}
-                            />
-                          </div>
-                        </>
-                      )}
-                      
                       {nextState === 'promesa_compra_venta' && (
                         <>
                           <div>
@@ -438,14 +424,26 @@ export function TransactionStateManager({ transactionId, onStateChange }: Transa
                       {nextState === 'firma_escrituras' && (
                         <>
                           <div>
-                            <Label htmlFor="pago_total">Pago Total</Label>
+                            <Label htmlFor="pago_total">Pago Total (Calculado automáticamente)</Label>
                             <Input
                               id="pago_total"
                               type="number"
-                              value={formData.pago_total}
+                              value={(() => {
+                                const valorTransaccion = transactionState?.precio_final || 0
+                                const porcentajeAplicado = transactionState?.datos_estado?.porcentaje_aplicado || 0
+                                if (valorTransaccion > 0 && porcentajeAplicado > 0) {
+                                  return (valorTransaccion * (porcentajeAplicado / 100)).toString()
+                                }
+                                return formData.pago_total
+                              })()}
                               onChange={(e) => setFormData(prev => ({ ...prev, pago_total: e.target.value }))}
-                              placeholder="250000000"
+                              placeholder="Calculado automáticamente"
+                              readOnly
                             />
+                            <p className="text-xs text-gray-500 mt-1">
+                              Basado en el valor de la transacción ({formatCurrency(transactionState?.precio_final || 0)}) 
+                              y el porcentaje aplicado ({transactionState?.datos_estado?.porcentaje_aplicado || 0}%)
+                            </p>
                           </div>
                           <div>
                             <Label htmlFor="fecha_firma">Fecha de Firma</Label>
@@ -660,6 +658,12 @@ export function TransactionStateManager({ transactionId, onStateChange }: Transa
                   <p className="text-lg font-semibold">{formatCurrency(datos_estado.valor_amonestacion)}</p>
                 </div>
               )}
+              {datos_estado.comentarios && (
+                <div className="col-span-2">
+                  <Label className="text-sm font-medium text-gray-500">Comentarios</Label>
+                  <p className="text-sm text-gray-700 bg-gray-50 p-3 rounded-md">{datos_estado.comentarios}</p>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -687,9 +691,9 @@ export function TransactionStateManager({ transactionId, onStateChange }: Transa
                     {entry.motivo_cambio && (
                       <p className="text-sm text-gray-600 mt-1">{entry.motivo_cambio}</p>
                     )}
-                    <p className="text-xs text-gray-400 mt-1">
-                      Por: {entry.usuario_responsable}
-                    </p>
+                    {entry.comentarios && (
+                      <p className="text-xs text-gray-400 mt-1">Comentarios: {entry.comentarios}</p>
+                    )}
                   </div>
                 </div>
               ))}
