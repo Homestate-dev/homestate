@@ -299,44 +299,84 @@ export function BuildingIncomeReport() {
                     body { 
                       font-family: Arial, sans-serif; 
                       margin: 0; 
-                      padding: 20px;
-                      background: white;
-                    }
-                    .header {
-                      text-align: center;
-                      margin-bottom: 30px;
-                      border-bottom: 2px solid #333;
-                      padding-bottom: 20px;
-                    }
-                    .header h1 {
-                      margin: 0;
-                      color: #333;
-                      font-size: 24px;
-                    }
-                    .header p {
-                      margin: 5px 0 0 0;
-                      color: #666;
-                      font-size: 14px;
-                    }
-                    table {
-                      width: 100%;
-                      border-collapse: collapse;
-                      margin-top: 20px;
+                      padding: 0;
                       font-size: 12px;
                     }
-                    th, td {
-                      border: 1px solid #ddd;
-                      padding: 8px;
-                      text-align: left;
+                    .header { 
+                      text-align: center; 
+                      margin-bottom: 30px; 
+                      page-break-after: avoid;
                     }
-                    th {
-                      background-color: #f8f9fa;
-                      font-weight: bold;
-                      color: #333;
+                    .header-content { 
+                      display: flex; 
+                      align-items: center; 
+                      justify-content: center; 
+                      gap: 15px; 
                     }
-                    .total-row {
-                      background-color: #f0f0f0;
+                    .logo { 
+                      width: 64px; 
+                      height: 64px; 
+                    }
+                    .brand-text { 
+                      font-family: 'Poppins', sans-serif; 
+                      font-weight: 300; 
+                      font-size: 24px; 
+                      color: #3b82f6; 
+                    }
+                    .title { 
+                      margin-top: 10px; 
+                      font-size: 20px; 
+                      color: #333; 
+                    }
+                    .info { 
+                      margin-bottom: 20px; 
+                      page-break-after: avoid;
+                    }
+                    table { 
+                      width: 100%; 
+                      border-collapse: collapse; 
+                      margin-top: 20px; 
+                      font-size: 10px;
+                    }
+                    th, td { 
+                      border: 1px solid #ddd; 
+                      padding: 6px; 
+                      text-align: left; 
+                      word-wrap: break-word;
+                    }
+                    th { 
+                      background-color: #3b82f6; 
+                      color: white; 
                       font-weight: bold;
+                    }
+                    tr:nth-child(even) { 
+                      background-color: #f8f9fa; 
+                    }
+                    .total-row { 
+                      background-color: #e5f3ff !important; 
+                      font-weight: bold; 
+                    }
+                    .total-row td { 
+                      border-top: 2px solid #3b82f6; 
+                    }
+                    .footer { 
+                      margin-top: 30px; 
+                      text-align: center; 
+                      font-size: 10px; 
+                      color: #666; 
+                      page-break-before: avoid;
+                    }
+                    .print-button {
+                      position: fixed;
+                      top: 20px;
+                      right: 20px;
+                      background: #3b82f6;
+                      color: white;
+                      border: none;
+                      padding: 10px 20px;
+                      border-radius: 5px;
+                      cursor: pointer;
+                      font-size: 14px;
                     }
                     .currency {
                       text-align: right;
@@ -354,9 +394,26 @@ export function BuildingIncomeReport() {
                   </style>
                 </head>
                 <body>
+                  <button class="print-button no-print" onclick="window.print()">🖨️ Imprimir</button>
+                  
                   <div class="header">
-                    <h1>${title}</h1>
-                    <p>Generado el ${new Date().toLocaleDateString('es-CO')} a las ${new Date().toLocaleTimeString('es-CO')}</p>
+                    <div class="header-content">
+                      <div class="logo">
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M3 9L12 2L21 9V20C21 20.5304 20.7893 21.0391 20.4142 21.4142C20.0391 21.7893 19.5304 22 19 22H5C4.46957 22 3.96086 21.7893 3.58579 21.4142C3.21071 21.0391 3 20.5304 3 20V9Z" stroke="#3b82f6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                          <path d="M9 22V12H15V22" stroke="#3b82f6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                      </div>
+                      <div>
+                        <div class="brand-text">HomeState</div>
+                        <div class="title">${title}</div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div class="info">
+                    <p><strong>Fecha de generación:</strong> ${new Date().toLocaleDateString('es-CO')} a las ${new Date().toLocaleTimeString('es-CO')}</p>
+                    <p><strong>Total de edificios con transacciones:</strong> ${processedIncomeData.filter(b => b.total_transacciones > 0).length}</p>
                   </div>
                   
                   <table>
@@ -380,22 +437,9 @@ export function BuildingIncomeReport() {
                     </tbody>
                   </table>
                   
-                  <div style="margin-top: 30px; font-size: 12px; color: #666;">
-                    <p><strong>Resumen:</strong></p>
-                    <ul>
-                      <li>Total de edificios con transacciones: ${processedIncomeData.filter(b => b.total_transacciones > 0).length}</li>
-                      <li>Total de transacciones: ${totalTransactions}</li>
-                      <li>Total de ventas: ${totalSales}</li>
-                      <li>Total de arriendos: ${totalRentals}</li>
-                      <li>Valor total de transacciones: ${formatCurrency(totalValue)}</li>
-                      <li>Total de comisiones: ${formatCurrency(totalCommissions)}</li>
-                    </ul>
-                  </div>
-                  
-                  <div class="no-print" style="margin-top: 30px; text-align: center;">
-                    <button onclick="window.print()" style="padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer;">
-                      Imprimir Reporte
-                    </button>
+                  <div class="footer">
+                    <p>Reporte generado por HomeState - Sistema de Gestión Inmobiliaria</p>
+                    <p>© ${new Date().getFullYear()} HomeState. Todos los derechos reservados.</p>
                   </div>
                 </body>
               </html>
