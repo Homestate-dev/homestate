@@ -218,19 +218,18 @@ export function BuildingIncomeReport() {
                 if (showBuildingColumn) {
                   row.push(building.edificio_nombre)
                 }
-                row.push(
-                  building.total_transacciones.toString(),
-                  building.total_ventas.toString(),
-                  building.total_arriendos.toString(),
-                  formatCurrency(building.valor_total_transacciones),
-                  formatCurrency(building.total_comisiones),
-                  formatCurrency(building.total_homestate),
-                  formatCurrency(building.total_bienes_raices),
-                  formatCurrency(building.total_admin_edificio),
-                  `${safeNumberFormat(building.promedio_porcentaje_homestate)}%`,
-                  `${safeNumberFormat(building.promedio_porcentaje_bienes_raices)}%`,
-                  `${safeNumberFormat(building.promedio_porcentaje_admin_edificio)}%`
-                )
+                                 row.push(
+                   building.total_ventas.toString(),
+                   building.total_arriendos.toString(),
+                   formatCurrency(building.valor_total_transacciones),
+                   formatCurrency(building.total_comisiones),
+                   formatCurrency(building.total_homestate),
+                   formatCurrency(building.total_bienes_raices),
+                   formatCurrency(building.total_admin_edificio),
+                   `${safeNumberFormat(building.promedio_porcentaje_homestate)}%`,
+                   `${safeNumberFormat(building.promedio_porcentaje_bienes_raices)}%`,
+                   `${safeNumberFormat(building.promedio_porcentaje_admin_edificio)}%`
+                 )
                 return row
               })
             
@@ -249,19 +248,18 @@ export function BuildingIncomeReport() {
             if (showBuildingColumn) {
               totalRow.push('TOTAL')
             }
-            totalRow.push(
-              totalTransactions.toString(),
-              totalSales.toString(),
-              totalRentals.toString(),
-              formatCurrency(totalValue),
-              formatCurrency(totalCommissions),
-              formatCurrency(totalHomeState),
-              formatCurrency(totalBienesRaices),
-              formatCurrency(totalAdminEdificio),
-              '',
-              '',
-              ''
-            )
+                         totalRow.push(
+               totalSales.toString(),
+               totalRentals.toString(),
+               formatCurrency(totalValue),
+               formatCurrency(totalCommissions),
+               formatCurrency(totalHomeState),
+               formatCurrency(totalBienesRaices),
+               formatCurrency(totalAdminEdificio),
+               '',
+               '',
+               ''
+             )
             tableData.push(totalRow)
             
             // Preparar headers
@@ -269,19 +267,18 @@ export function BuildingIncomeReport() {
             if (showBuildingColumn) {
               headers.push('Edificio')
             }
-            headers.push(
-              'Transacciones',
-              'Ventas',
-              'Arriendos',
-              'Valor Total',
-              'Total Comisiones',
-              'HomeState',
-              'Bienes Raíces',
-              'Admin Edificio',
-              '% HomeState',
-              '% Bienes Raíces',
-              '% Admin Edificio'
-            )
+                         headers.push(
+               'Ventas',
+               'Arriendos',
+               'Valor Total',
+               'Total Comisiones',
+               'HomeState',
+               'Bienes Raíces',
+               'Admin Edificio',
+               '% HomeState',
+               '% Bienes Raíces',
+               '% Admin Edificio'
+             )
             
             // Crear HTML del reporte
             const htmlContent = `
@@ -321,7 +318,7 @@ export function BuildingIncomeReport() {
                       font-family: 'Poppins', sans-serif; 
                       font-weight: 300; 
                       font-size: 24px; 
-                      color: #3b82f6; 
+                      color:rgb(246, 134, 59); 
                     }
                     .title { 
                       margin-top: 10px; 
@@ -345,7 +342,7 @@ export function BuildingIncomeReport() {
                       word-wrap: break-word;
                     }
                     th { 
-                      background-color: #3b82f6; 
+                      background-color:rgb(246, 134, 59); 
                       color: white; 
                       font-weight: bold;
                     }
@@ -357,7 +354,7 @@ export function BuildingIncomeReport() {
                       font-weight: bold; 
                     }
                     .total-row td { 
-                      border-top: 2px solid #3b82f6; 
+                      border-top: 2px solidrgb(246, 149, 59); 
                     }
                     .footer { 
                       margin-top: 30px; 
@@ -370,7 +367,7 @@ export function BuildingIncomeReport() {
                       position: fixed;
                       top: 20px;
                       right: 20px;
-                      background: #3b82f6;
+                      background:rgb(59, 246, 153);
                       color: white;
                       border: none;
                       padding: 10px 20px;
@@ -396,20 +393,15 @@ export function BuildingIncomeReport() {
                 <body>
                   <button class="print-button no-print" onclick="window.print()">🖨️ Imprimir</button>
                   
-                  <div class="header">
-                    <div class="header-content">
-                      <div class="logo">
-                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                          <path d="M3 9L12 2L21 9V20C21 20.5304 20.7893 21.0391 20.4142 21.4142C20.0391 21.7893 19.5304 22 19 22H5C4.46957 22 3.96086 21.7893 3.58579 21.4142C3.21071 21.0391 3 20.5304 3 20V9Z" stroke="#3b82f6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                          <path d="M9 22V12H15V22" stroke="#3b82f6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
-                      </div>
-                      <div>
-                        <div class="brand-text">HomeState</div>
-                        <div class="title">${title}</div>
-                      </div>
-                    </div>
-                  </div>
+                                     <div class="header">
+                     <div class="header-content">
+                       <img src="/logo-qr.png" alt="Homestate Logo" class="logo">
+                       <div>
+                         <div class="brand-text">HomEstate</div>
+                         <div class="title">${title}</div>
+                       </div>
+                     </div>
+                   </div>
                   
                   <div class="info">
                     <p><strong>Fecha de generación:</strong> ${new Date().toLocaleDateString('es-CO')} a las ${new Date().toLocaleTimeString('es-CO')}</p>
@@ -425,22 +417,19 @@ export function BuildingIncomeReport() {
                     <tbody>
                       ${tableData.map(row => `
                         <tr class="${row[0] === 'TOTAL' ? 'total-row' : ''}">
-                          ${row.map((cell, index) => {
-                            const isCurrency = index >= 4 && index <= 7 && row[0] !== 'TOTAL'
-                            const isNumber = index >= 1 && index <= 3
-                            const isPercentage = index >= 8
-                            const className = isCurrency ? 'currency' : isNumber ? 'number' : isPercentage ? 'percentage' : ''
-                            return `<td class="${className}">${cell}</td>`
-                          }).join('')}
+                                                     ${row.map((cell, index) => {
+                             const isCurrency = index >= 3 && index <= 6 && row[0] !== 'TOTAL'
+                             const isNumber = index >= 1 && index <= 2
+                             const isPercentage = index >= 7
+                             const className = isCurrency ? 'currency' : isNumber ? 'number' : isPercentage ? 'percentage' : ''
+                             return `<td class="${className}">${cell}</td>`
+                           }).join('')}
                         </tr>
                       `).join('')}
                     </tbody>
                   </table>
                   
-                  <div class="footer">
-                    <p>Reporte generado por HomeState - Sistema de Gestión Inmobiliaria</p>
-                    <p>© ${new Date().getFullYear()} HomeState. Todos los derechos reservados.</p>
-                  </div>
+                  
                 </body>
               </html>
             `
