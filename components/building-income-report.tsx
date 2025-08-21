@@ -735,7 +735,9 @@ export function BuildingIncomeReport() {
                   try {
                     // Construir URL con filtros para la API de departamentos
                     const deptParams = new URLSearchParams()
+                    console.log('🔍 Before append - selectedBuilding:', selectedBuilding)
                     deptParams.append('buildingId', selectedBuilding)
+                    console.log('🔍 After append - deptParams.get("buildingId"):', deptParams.get('buildingId'))
                     
                     if (dateRange.from) {
                       deptParams.append('dateFrom', dateRange.from)
@@ -747,8 +749,12 @@ export function BuildingIncomeReport() {
                     
                     const deptUrl = `/api/sales-rentals/reports/building-departments?${deptParams.toString()}`
                     
-                    console.log('Calling API:', deptUrl)
-                    console.log('Date range:', dateRange)
+                    console.log('🔍 Debug info:')
+                    console.log('  - selectedBuilding:', selectedBuilding)
+                    console.log('  - selectedBuilding type:', typeof selectedBuilding)
+                    console.log('  - deptParams.toString():', deptParams.toString())
+                    console.log('  - deptUrl:', deptUrl)
+                    console.log('  - Date range:', dateRange)
                     
                     // Hacer la llamada a la API para obtener departamentos reales
                     const deptResponse = await fetch(deptUrl)

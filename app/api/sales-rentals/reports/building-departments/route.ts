@@ -4,12 +4,21 @@ import { query } from '@/lib/database'
 export async function GET(request: NextRequest) {
   try {
     console.log('🚀 API building-departments called')
+    console.log('🌐 Full URL received:', request.url)
     const { searchParams } = new URL(request.url)
+    console.log('🔗 Search params object:', searchParams)
+    console.log('🔗 Search params entries:', Array.from(searchParams.entries()))
+    console.log('🔗 Search params keys:', Array.from(searchParams.keys()))
+    console.log('🔗 Search params values:', Array.from(searchParams.values()))
     const buildingId = searchParams.get('buildingId')
     const dateFrom = searchParams.get('dateFrom')
     const dateTo = searchParams.get('dateTo')
 
     console.log('📋 Request parameters:', { buildingId, dateFrom, dateTo })
+    console.log('🔍 BuildingId type:', typeof buildingId)
+    console.log('🔍 BuildingId value (raw):', buildingId)
+    console.log('🔍 BuildingId value (parsed):', buildingId ? parseInt(buildingId) : 'null')
+    console.log('🔍 BuildingId value (Number):', buildingId ? Number(buildingId) : 'null')
 
     if (!buildingId) {
       console.log('❌ No buildingId provided')
