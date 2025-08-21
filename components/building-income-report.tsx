@@ -770,17 +770,30 @@ export function BuildingIncomeReport() {
                     
                     const departmentData = deptData.data
                     
+                    console.log('🔍 Raw department data:', departmentData)
+                    
                     // Crear tabla con datos reales (sin columna de comisión)
-                    const tableData = departmentData.map((dept: DepartmentData) => [
-                      dept.nombre || `Depto ${dept.numero}`,
-                      dept.piso || '',
-                      dept.numero || '',
-                      dept.tipo_principal || 'N/A',
-                      formatCurrency(dept.total_admin_edificio || 0)
-                    ])
+                    const tableData = departmentData.map((dept: any) => {
+                      console.log('🏠 Processing dept:', dept)
+                      console.log('🏠 Admin value (valor_admin_edificio):', dept.valor_admin_edificio)
+                      console.log('🏠 All dept keys:', Object.keys(dept))
+                      return [
+                        dept.departamento_nombre || `Depto ${dept.numero}`,
+                        dept.piso || '',
+                        dept.numero || '',
+                        dept.tipo_transaccion || 'N/A',
+                        formatCurrency(parseFloat(dept.valor_admin_edificio) || 0)
+                      ]
+                    })
                     
                     // Calcular total de administración de edificio
-                    const totalAdminEdificio = departmentData.reduce((sum: number, dept: DepartmentData) => sum + (dept.total_admin_edificio || 0), 0)
+                    const totalAdminEdificio = departmentData.reduce((sum: number, dept: any) => {
+                      const adminValue = parseFloat(dept.valor_admin_edificio) || 0
+                      console.log('💰 Adding admin value:', adminValue, 'Current sum:', sum)
+                      return sum + adminValue
+                    }, 0)
+                    
+                    console.log('💰 Final total admin edificio:', totalAdminEdificio)
                     
                     // Agregar fila de totales (solo administración edificio)
                     const totalRow = ['TOTAL', '', '', '', formatCurrency(totalAdminEdificio)]
