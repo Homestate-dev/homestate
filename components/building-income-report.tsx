@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Progress } from "@/components/ui/progress"
 import { toast } from "sonner"
@@ -69,6 +70,7 @@ export function BuildingIncomeReport() {
   const [buildings, setBuildings] = useState<Building[]>([])
   const [selectedBuilding, setSelectedBuilding] = useState<string>("all")
   const [loading, setLoading] = useState(true)
+  const [buildingSearchTerm, setBuildingSearchTerm] = useState("")
   
   // Estado para el paginador
   const [currentPage, setCurrentPage] = useState(1)
@@ -97,6 +99,11 @@ export function BuildingIncomeReport() {
     const num = parseFloat(value)
     return isNaN(num) ? 0 : num
   }
+
+  // Filtrar edificios basándose en el término de búsqueda
+  const filteredBuildings = buildings.filter(building =>
+    building.nombre.toLowerCase().includes(buildingSearchTerm.toLowerCase())
+  )
 
   // Procesar datos de ingresos para asegurar que los valores numéricos sean correctos
   const processedIncomeData = incomeData.map(building => ({
@@ -373,32 +380,59 @@ export function BuildingIncomeReport() {
           <Building2 size={16} className="text-gray-500" />
           <span className="text-sm font-medium">Edificio:</span>
         </div>
+        <div className="flex items-center gap-2">
+          {/* Campo de búsqueda */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+            <Input
+              placeholder="Buscar edificio..."
+              value={buildingSearchTerm}
+              onChange={(e) => setBuildingSearchTerm(e.target.value)}
+              className="pl-10 pr-10 w-[200px]"
+            />
+            {buildingSearchTerm && (
+              <button
+                onClick={() => setBuildingSearchTerm("")}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              >
+                ×
+              </button>
+            )}
+          </div>
+          
+          {/* Selector de edificios filtrado */}
         <Select value={selectedBuilding} onValueChange={setSelectedBuilding}>
           <SelectTrigger className="w-[300px]">
             <SelectValue placeholder="Seleccionar edificio" />
           </SelectTrigger>
-          <SelectContent>
+            <SelectContent className="max-h-64">
             <SelectItem value="all">Todos los edificios</SelectItem>
-            {buildings.map((building) => (
+              {filteredBuildings.map((building) => (
               <SelectItem key={building.id} value={building.id.toString()}>
                 {building.nombre}
               </SelectItem>
             ))}
-          </SelectContent>
-        </Select>
+              {filteredBuildings.length === 0 && buildingSearchTerm && (
+                <div className="px-2 py-1.5 text-sm text-gray-500">
+                  No se encontraron edificios
+                </div>
+              )}
+            </SelectContent>
+          </Select>
+        </div>
         
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium">Tipo Transacción:</span>
             <Select value={filterTransactionType} onValueChange={setFilterTransactionType}>
               <SelectTrigger className="w-[200px]">
                 <SelectValue placeholder="Todas las transacciones" />
-              </SelectTrigger>
-              <SelectContent>
+          </SelectTrigger>
+          <SelectContent>
                 <SelectItem value="all">Todas las transacciones</SelectItem>
                 <SelectItem value="venta">Solo ventas</SelectItem>
                 <SelectItem value="arriendo">Solo arriendos</SelectItem>
-              </SelectContent>
-            </Select>
+          </SelectContent>
+        </Select>
           </div>
         </div>
         
