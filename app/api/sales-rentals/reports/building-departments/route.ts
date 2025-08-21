@@ -55,6 +55,9 @@ export async function GET(request: NextRequest) {
     console.log('Building ID:', buildingId)
     console.log('Date From:', dateFrom)
     console.log('Date To:', dateTo)
+    console.log('Date From (parsed):', dateFrom ? new Date(dateFrom) : 'null')
+    console.log('Date To (parsed):', dateTo ? new Date(dateTo) : 'null')
+    console.log('Current date:', new Date().toISOString())
 
     // Primero hacer una consulta de prueba para ver qué hay en la base
     const testQuery = `
@@ -65,6 +68,36 @@ export async function GET(request: NextRequest) {
     `
     const testResult = await query(testQuery, [buildingId])
     console.log('Total transactions for building (no date filter):', testResult.rows[0]?.total_transactions)
+
+    // Verificar si hay transacciones en absoluto para este edificio
+    if (testResult.rows[0]?.total_transactions === 0) {
+      console.log('No transactions found for building. Checking if building exists and has departments...')
+      
+      // Verificar si el edificio existe
+      const buildingQuery = `SELECT id, nombre FROM edificios WHERE id = $1`
+      const buildingResult = await query(buildingQuery, [buildingId])
+      console.log('Building exists:', buildingResult.rows.length > 0, buildingResult.rows[0])
+      
+      // Verificar si hay departamentos para este edificio
+      const deptQuery = `SELECT COUNT(*) as total_depts FROM departamentos WHERE edificio_id = $1`
+      const deptResult = await query(deptQuery, [buildingId])
+      console.log('Total departments for building:', deptResult.rows[0]?.total_depts)
+      
+      // Verificar si hay transacciones en absoluto (sin filtros)
+      const allTransQuery = `SELECT COUNT(*) as total_all FROM transacciones_ventas_arriendos`
+      const allTransResult = await query(allTransQuery, [])
+      console.log('Total transactions in system:', allTransResult.rows[0]?.total_all)
+      
+      // Verificar algunas transacciones de ejemplo para ver el formato de fecha
+      const sampleTransQuery = `
+        SELECT t.fecha_transaccion, t.tipo_transaccion, d.numero, d.edificio_id
+        FROM transacciones_ventas_arriendos t 
+        INNER JOIN departamentos d ON d.id = t.departamento_id 
+        LIMIT 3
+      `
+      const sampleTransResult = await query(sampleTransQuery, [])
+      console.log('Sample transactions from any building:', sampleTransResult.rows)
+    }
 
     // Consulta adicional para ver el formato de las fechas
     const dateTestQuery = `
@@ -81,26 +114,39 @@ export async function GET(request: NextRequest) {
     
     console.log('Query results count:', results ? results.rows.length : 0)
 
-    // Si no hay resultados con filtros de fecha, probar sin filtros
+        // Si no hay resultados con filtros de fecha, probar sin filtros
     if (!results || !results.rows || results.rows.length === 0) {
       console.log('No results with date filters, trying without date filters...')
-                                                       const noDateSql = `
-           SELECT DISTINCT
-             d.id as departamento_id,
-             d.nombre as departamento_nombre,
-             d.piso,
-             d.numero,
-             t.tipo_transaccion,
-             t.valor_transaccion,
-             t.comision_valor as comision_total,
-             t.valor_administracion as valor_admin_edificio,
-             t.fecha_transaccion,
-             CAST(d.numero AS INTEGER) as numero_orden
-           FROM departamentos d
-           INNER JOIN transacciones_ventas_arriendos t ON d.id = t.departamento_id
-           WHERE d.edificio_id = $1
-           ORDER BY numero_orden ASC
-         `
+      
+      // Primero verificar si hay transacciones sin filtros de fecha
+      const simpleQuery = `
+        SELECT t.fecha_transaccion, t.tipo_transaccion, d.numero, d.edificio_id
+        FROM transacciones_ventas_arriendos t 
+        INNER JOIN departamentos d ON d.id = t.departamento_id 
+        WHERE d.edificio_id = $1
+        ORDER BY t.fecha_transaccion DESC
+        LIMIT 10
+      `
+      const simpleResult = await query(simpleQuery, [buildingId])
+      console.log('Simple query results (no date filters):', simpleResult.rows)
+      
+      const noDateSql = `
+        SELECT DISTINCT
+          d.id as departamento_id,
+          d.nombre as departamento_nombre,
+          d.piso,
+          d.numero,
+          t.tipo_transaccion,
+          t.valor_transaccion,
+          t.comision_valor as comision_total,
+          t.valor_administracion as valor_admin_edificio,
+          t.fecha_transaccion,
+          CAST(d.numero AS INTEGER) as numero_orden
+        FROM departamentos d
+        INNER JOIN transacciones_ventas_arriendos t ON d.id = t.departamento_id
+        WHERE d.edificio_id = $1
+        ORDER BY numero_orden ASC
+      `
       const noDateResults = await query(noDateSql, [buildingId])
       console.log('No date filter results count:', noDateResults ? noDateResults.rows.length : 0)
       
