@@ -19,6 +19,7 @@ export async function GET(request: NextRequest) {
     console.log('🔍 BuildingId value (raw):', buildingId)
     console.log('🔍 BuildingId value (parsed):', buildingId ? parseInt(buildingId) : 'null')
     console.log('🔍 BuildingId value (Number):', buildingId ? Number(buildingId) : 'null')
+    console.log('⚠️ IMPORTANTE: Excluyendo transacciones con estado "reservado"')
 
     if (!buildingId) {
       console.log('❌ No buildingId provided')
@@ -44,6 +45,7 @@ export async function GET(request: NextRequest) {
       FROM departamentos d
       INNER JOIN transacciones_departamentos t ON d.id = t.departamento_id
       WHERE d.edificio_id = $1
+        AND t.estado_actual != 'reservado'
     `
 
     const params: any[] = [buildingId]
@@ -79,6 +81,7 @@ export async function GET(request: NextRequest) {
       FROM transacciones_departamentos t 
       INNER JOIN departamentos d ON d.id = t.departamento_id 
       WHERE d.edificio_id = $1
+        AND t.estado_actual != 'reservado'
     `
     console.log('📝 Test query:', testQuery)
     console.log('🔢 Test query params:', [buildingId])
@@ -107,9 +110,9 @@ export async function GET(request: NextRequest) {
       console.log('✅ Department query result:', deptResult)
       console.log('🏠 Total departments for building:', deptResult.rows[0]?.total_depts)
       
-      // Verificar si hay transacciones en absoluto (sin filtros)
-      console.log('💼 Checking total transactions in system...')
-      const allTransQuery = `SELECT COUNT(*) as total_all FROM transacciones_departamentos`
+      // Verificar si hay transacciones en absoluto (sin filtros, pero excluyendo reservados)
+      console.log('💼 Checking total transactions in system (excluding reserved)...')
+      const allTransQuery = `SELECT COUNT(*) as total_all FROM transacciones_departamentos WHERE estado_actual != 'reservado'`
       console.log('📝 All transactions query:', allTransQuery)
       const allTransResult = await query(allTransQuery, [])
       console.log('✅ All transactions query result:', allTransResult)
@@ -118,9 +121,10 @@ export async function GET(request: NextRequest) {
       // Verificar algunas transacciones de ejemplo para ver el formato de fecha
       console.log('📅 Checking sample transactions for date format...')
       const sampleTransQuery = `
-        SELECT t.fecha_transaccion, t.tipo_transaccion, d.numero, d.edificio_id
+        SELECT t.fecha_transaccion, t.tipo_transaccion, d.numero, d.edificio_id, t.estado_actual
         FROM transacciones_departamentos t 
         INNER JOIN departamentos d ON d.id = t.departamento_id 
+        WHERE t.estado_actual != 'reservado'
         LIMIT 3
       `
       console.log('📝 Sample transactions query:', sampleTransQuery)
@@ -131,10 +135,11 @@ export async function GET(request: NextRequest) {
 
     // Consulta adicional para ver el formato de las fechas
     const dateTestQuery = `
-      SELECT t.fecha_transaccion, t.tipo_transaccion, d.numero, t.comision_valor, t.valor_admin_edificio
+      SELECT t.fecha_transaccion, t.tipo_transaccion, d.numero, t.comision_valor, t.valor_admin_edificio, t.estado_actual
       FROM transacciones_departamentos t 
       INNER JOIN departamentos d ON d.id = t.departamento_id 
       WHERE d.edificio_id = $1
+        AND t.estado_actual != 'reservado'
       LIMIT 5
     `
     const dateTestResult = await query(dateTestQuery, [buildingId])
@@ -156,10 +161,11 @@ export async function GET(request: NextRequest) {
       // Primero verificar si hay transacciones sin filtros de fecha
       console.log('🔍 Executing simple query without date filters...')
       const simpleQuery = `
-        SELECT t.fecha_transaccion, t.tipo_transaccion, d.numero, d.edificio_id
+        SELECT t.fecha_transaccion, t.tipo_transaccion, d.numero, d.edificio_id, t.estado_actual
         FROM transacciones_departamentos t 
         INNER JOIN departamentos d ON d.id = t.departamento_id 
         WHERE d.edificio_id = $1
+          AND t.estado_actual != 'reservado'
         ORDER BY t.fecha_transaccion DESC
         LIMIT 10
       `
@@ -184,6 +190,7 @@ export async function GET(request: NextRequest) {
         FROM departamentos d
         INNER JOIN transacciones_departamentos t ON d.id = t.departamento_id
         WHERE d.edificio_id = $1
+          AND t.estado_actual != 'reservado'
         ORDER BY numero_orden ASC
       `
       console.log('📝 Final fallback query:', noDateSql)
