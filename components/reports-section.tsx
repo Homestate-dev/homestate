@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Plus, MapPin, Car, Users, Eye, Edit, QrCode, Trash2, UserCog, Activity, ExternalLink, Search, Briefcase, Building2, Settings } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Logo } from "@/components/ui/logo"
@@ -37,7 +38,7 @@ export function ReportsSection() {
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="building-transactions" className="flex items-center gap-2">
-            <Logo size={16} />
+            <Building2 size={16} />
             Por Edificio
           </TabsTrigger>
           <TabsTrigger value="financial" className="flex items-center gap-2">

@@ -198,7 +198,7 @@ export function BuildingTransactionsReport() {
       {/* Filtros */}
       <div className="flex items-center gap-4">
         <div className="flex items-center gap-2">
-          <Logo size={16} className="text-gray-500" />
+          <Building2 size={16} className="text-gray-500" />
           <span className="text-sm font-medium">Edificio:</span>
         </div>
         <Select value={selectedBuilding} onValueChange={setSelectedBuilding}>
@@ -493,7 +493,7 @@ export function BuildingTransactionsReport() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <FileText className="h-5 w-5" />
-            Transacciones por Edificio
+            Listado de transacciones
           </CardTitle>
         </CardHeader>
         <CardContent>

@@ -10,6 +10,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Progress } from "@/components/ui/progress"
 import { toast } from "sonner"
 import { Logo } from "@/components/ui/logo"
+import { Plus, MapPin, Car, Users, Eye, Edit, QrCode, Trash2, UserCog, Activity, ExternalLink, Search, Briefcase, Building2, Settings } from "lucide-react"
+
 import {
   DollarSign, 
   TrendingUp,
@@ -368,7 +370,7 @@ export function BuildingIncomeReport() {
         {/* Primera fila de filtros */}
       <div className="flex items-center gap-4">
         <div className="flex items-center gap-2">
-          <Logo size={16} className="text-gray-500" />
+          <Building2 size={16} className="text-gray-500" />
           <span className="text-sm font-medium">Edificio:</span>
         </div>
         <Select value={selectedBuilding} onValueChange={setSelectedBuilding}>
@@ -884,7 +886,7 @@ export function BuildingIncomeReport() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <BarChart3 className="h-5 w-5" />
-            Ingresos por Edificio
+            Listado de ingresos
           </CardTitle>
         </CardHeader>
         <CardContent>
