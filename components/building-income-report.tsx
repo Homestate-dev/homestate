@@ -44,6 +44,24 @@ interface Building {
   direccion: string
 }
 
+interface DepartmentData {
+  departamento_id: number
+  nombre: string
+  piso: string
+  numero: string
+  tipo_principal: string
+  total_comision: number
+  total_admin_edificio: number
+  cantidad_transacciones: number
+  transacciones: Array<{
+    tipo: string
+    valor_transaccion: number
+    comision_total: number
+    valor_admin_edificio: number
+    fecha: string
+  }>
+}
+
 export function BuildingIncomeReport() {
   const [incomeData, setIncomeData] = useState<BuildingIncome[]>([])
   const [buildings, setBuildings] = useState<Building[]>([])
@@ -659,7 +677,7 @@ export function BuildingIncomeReport() {
                                 <Button 
              variant="outline" 
              size="sm" 
-             onClick={() => {
+             onClick={async () => {
                // Abrir el reporte de administrador en una nueva ventana
                const buildingName = buildings.find((b: Building) => b.id.toString() === selectedBuilding)?.nombre
                const title = selectedBuilding === "all" 
@@ -712,46 +730,70 @@ export function BuildingIncomeReport() {
                    newWindow.document.write(htmlContent)
                    newWindow.document.close()
                  }
-               } else {
-                 // Reporte para un edificio específico - nueva estructura por departamentos
-                 // Aquí necesitarías hacer una llamada a la API para obtener los departamentos del edificio
-                 // Por ahora, crearemos un reporte de ejemplo
-                 
-                 // Simular datos de departamentos (esto debería venir de la API)
-                 const departmentData = [
-                   { nombre: 'Departamento A', piso: '1', numero: '101', tipo: 'Venta', admin_edificio: 1855000 },
-                   { nombre: 'Departamento B', piso: '2', numero: '201', tipo: 'Arriendo', admin_edificio: 1200000 },
-                   { nombre: 'Departamento C', piso: '3', numero: '301', tipo: 'Venta', admin_edificio: 2100000 }
-                 ]
-                 
-                 const tableData = departmentData.map(dept => [
-                   dept.nombre,
-                   dept.piso,
-                   dept.numero,
-                   dept.tipo,
-                   formatCurrency(dept.admin_edificio)
-                 ])
-                 
-                 // Calcular total de administración del edificio
-                 const totalAdminEdificio = departmentData.reduce((sum, dept) => sum + dept.admin_edificio, 0)
-                 
-                 // Agregar fila de totales
-                 const totalRow = ['TOTAL', '', '', '', formatCurrency(totalAdminEdificio)]
-                 tableData.push(totalRow)
-                 
-                 // Headers para reporte por departamentos
-                 const headers = ['Departamento', 'Piso', 'Número', 'Tipo', 'Administración Edificio']
-                 
-                 // Crear HTML del reporte por departamentos
-                 const htmlContent = createAdminReportHTML(title, headers, tableData, false)
-                 
-                 // Abrir en nueva ventana
-                 const newWindow = window.open('', '_blank')
-                 if (newWindow) {
-                   newWindow.document.write(htmlContent)
-                   newWindow.document.close()
-                 }
-               }
+                               } else {
+                  // Reporte para un edificio específico - obtener datos reales de la API
+                  try {
+                    // Construir URL con filtros para la API de departamentos
+                    const deptParams = new URLSearchParams()
+                    deptParams.append('buildingId', selectedBuilding)
+                    
+                    if (dateRange.from) {
+                      deptParams.append('dateFrom', dateRange.from)
+                    }
+                    
+                    if (dateRange.to) {
+                      deptParams.append('dateTo', dateRange.to)
+                    }
+                    
+                    const deptUrl = `/api/sales-rentals/reports/building-departments?${deptParams.toString()}`
+                    
+                    // Hacer la llamada a la API para obtener departamentos reales
+                    const deptResponse = await fetch(deptUrl)
+                    const deptData = await deptResponse.json()
+                    
+                    if (!deptData.success || !deptData.data || deptData.data.length === 0) {
+                      toast.error('No se encontraron departamentos con transacciones para el edificio seleccionado en el rango de fechas especificado')
+                      return
+                    }
+                    
+                    const departmentData = deptData.data
+                    
+                    // Crear tabla con datos reales
+                    const tableData = departmentData.map((dept: DepartmentData) => [
+                      dept.nombre || `Depto ${dept.numero}`,
+                      dept.piso || '',
+                      dept.numero || '',
+                      dept.tipo_principal || 'N/A',
+                      formatCurrency(dept.total_admin_edificio || 0),
+                      formatCurrency(dept.total_comision || 0)
+                    ])
+                    
+                    // Calcular totales
+                    const totalAdminEdificio = departmentData.reduce((sum: number, dept: DepartmentData) => sum + (dept.total_admin_edificio || 0), 0)
+                    const totalComisiones = departmentData.reduce((sum: number, dept: DepartmentData) => sum + (dept.total_comision || 0), 0)
+                    
+                    // Agregar fila de totales
+                    const totalRow = ['TOTAL', '', '', '', formatCurrency(totalAdminEdificio), formatCurrency(totalComisiones)]
+                    tableData.push(totalRow)
+                    
+                    // Headers para reporte por departamentos con comisiones
+                    const headers = ['Departamento', 'Piso', 'Número', 'Tipo', 'Administración Edificio', 'Comisión Total']
+                    
+                    // Crear HTML del reporte por departamentos
+                    const htmlContent = createAdminReportHTML(title, headers, tableData, false)
+                    
+                    // Abrir en nueva ventana
+                    const newWindow = window.open('', '_blank')
+                    if (newWindow) {
+                      newWindow.document.write(htmlContent)
+                      newWindow.document.close()
+                    }
+                    
+                  } catch (error) {
+                    console.error('Error al obtener datos de departamentos:', error)
+                    toast.error('Error al generar el reporte de departamentos')
+                  }
+                }
              }}
            >
              <BarChart3 className="h-4 w-4 mr-2" />
