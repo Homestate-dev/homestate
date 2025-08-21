@@ -132,8 +132,8 @@ export function BuildingIncomeReport() {
     toast.info('Función de exportación en desarrollo')
   }
 
-   // Función para crear el HTML del reporte de administrador
-   const createAdminReportHTML = (title: string, headers: string[], tableData: any[][], isAllBuildings: boolean) => {
+     // Función para crear el HTML del reporte de administrador
+  const createAdminReportHTML = (title: string, headers: string[], tableData: any[][], isAllBuildings: boolean, dateFrom?: string, dateTo?: string) => {
      return `
        <!DOCTYPE html>
        <html>
@@ -246,6 +246,7 @@ export function BuildingIncomeReport() {
            
            <div class="info">
              <p><strong>Fecha de generación:</strong> ${new Date().toLocaleDateString('es-CO')} a las ${new Date().toLocaleTimeString('es-CO')}</p>
+             ${dateFrom && dateTo ? `<p><strong>Rango de fechas:</strong> ${new Date(dateFrom).toLocaleDateString('es-CO')} - ${new Date(dateTo).toLocaleDateString('es-CO')}</p>` : ''}
            </div>
            
            <table>
@@ -258,8 +259,8 @@ export function BuildingIncomeReport() {
                ${tableData.map(row => `
                  <tr class="${row[0] === 'TOTAL' ? 'total-row' : ''}">
                    ${row.map((cell, index) => {
-                     const isCurrency = isAllBuildings ? (index === 3) : (index === 4)
-                     const isNumber = isAllBuildings ? (index === 1 || index === 2) : (index === 1 || index === 2)
+                     const isCurrency = isAllBuildings ? (index === 1 || index === 2 || index === 3) : (index === 4)
+                     const isNumber = isAllBuildings ? false : (index === 1 || index === 2)
                      const className = isCurrency ? 'currency' : isNumber ? 'number' : ''
                      return `<td class="${className}">${cell}</td>`
                    }).join('')}
@@ -722,7 +723,7 @@ export function BuildingIncomeReport() {
                  const headers = ['Edificio', 'Ventas', 'Arriendos', 'Administración Edificio']
                  
                  // Crear HTML del reporte para todos los edificios
-                 const htmlContent = createAdminReportHTML(title, headers, tableData, true)
+                 const htmlContent = createAdminReportHTML(title, headers, tableData, true, dateRange.from, dateRange.to)
                  
                  // Abrir en nueva ventana
                  const newWindow = window.open('', '_blank')
@@ -769,29 +770,27 @@ export function BuildingIncomeReport() {
                     
                     const departmentData = deptData.data
                     
-                    // Crear tabla con datos reales
+                    // Crear tabla con datos reales (sin columna de comisión)
                     const tableData = departmentData.map((dept: DepartmentData) => [
                       dept.nombre || `Depto ${dept.numero}`,
                       dept.piso || '',
                       dept.numero || '',
                       dept.tipo_principal || 'N/A',
-                      formatCurrency(dept.total_admin_edificio || 0),
-                      formatCurrency(dept.total_comision || 0)
+                      formatCurrency(dept.total_admin_edificio || 0)
                     ])
                     
-                    // Calcular totales
+                    // Calcular total de administración de edificio
                     const totalAdminEdificio = departmentData.reduce((sum: number, dept: DepartmentData) => sum + (dept.total_admin_edificio || 0), 0)
-                    const totalComisiones = departmentData.reduce((sum: number, dept: DepartmentData) => sum + (dept.total_comision || 0), 0)
                     
-                    // Agregar fila de totales
-                    const totalRow = ['TOTAL', '', '', '', formatCurrency(totalAdminEdificio), formatCurrency(totalComisiones)]
+                    // Agregar fila de totales (solo administración edificio)
+                    const totalRow = ['TOTAL', '', '', '', formatCurrency(totalAdminEdificio)]
                     tableData.push(totalRow)
                     
-                    // Headers para reporte por departamentos con comisiones
-                    const headers = ['Departamento', 'Piso', 'Número', 'Tipo', 'Administración Edificio', 'Comisión Total']
+                    // Headers para reporte por departamentos (sin comisiones)
+                    const headers = ['Departamento', 'Piso', 'Número', 'Tipo', 'Administración Edificio']
                     
                     // Crear HTML del reporte por departamentos
-                    const htmlContent = createAdminReportHTML(title, headers, tableData, false)
+                    const htmlContent = createAdminReportHTML(title, headers, tableData, false, dateRange.from, dateRange.to)
                     
                     // Abrir en nueva ventana
                     const newWindow = window.open('', '_blank')
