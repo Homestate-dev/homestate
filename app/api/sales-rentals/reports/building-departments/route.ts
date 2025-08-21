@@ -29,28 +29,86 @@ export async function GET(request: NextRequest) {
         t.fecha_transaccion
       FROM departamentos d
       INNER JOIN transacciones_ventas_arriendos t ON d.id = t.departamento_id
-      WHERE d.edificio_id = ?
+      WHERE d.edificio_id = $1
     `
 
     const params: any[] = [buildingId]
 
     // Agregar filtros de fecha si están presentes
-    if (dateFrom) {
-      sql += ' AND DATE(t.fecha_transaccion) >= ?'
+    if (dateFrom && dateTo) {
+      sql += ` AND CAST(t.fecha_transaccion AS DATE) >= $${params.length + 1}::DATE AND CAST(t.fecha_transaccion AS DATE) <= $${params.length + 2}::DATE`
+      params.push(dateFrom, dateTo)
+    } else if (dateFrom) {
+      sql += ` AND CAST(t.fecha_transaccion AS DATE) >= $${params.length + 1}::DATE`
       params.push(dateFrom)
-    }
-    
-    if (dateTo) {
-      sql += ' AND DATE(t.fecha_transaccion) <= ?'
+    } else if (dateTo) {
+      sql += ` AND CAST(t.fecha_transaccion AS DATE) <= $${params.length + 1}::DATE`
       params.push(dateTo)
     }
 
     // Ordenar por número de departamento ascendente
     sql += ' ORDER BY CAST(d.numero AS UNSIGNED) ASC'
 
-    const results = await query(sql, params)
+    console.log('SQL Query:', sql)
+    console.log('Parameters:', params)
+    console.log('Building ID:', buildingId)
+    console.log('Date From:', dateFrom)
+    console.log('Date To:', dateTo)
 
-    if (!results || results.length === 0) {
+    // Primero hacer una consulta de prueba para ver qué hay en la base
+    const testQuery = `
+      SELECT COUNT(*) as total_transactions 
+      FROM transacciones_ventas_arriendos t 
+      INNER JOIN departamentos d ON d.id = t.departamento_id 
+      WHERE d.edificio_id = $1
+    `
+    const testResult = await query(testQuery, [buildingId])
+    console.log('Total transactions for building (no date filter):', testResult.rows[0]?.total_transactions)
+
+    // Consulta adicional para ver el formato de las fechas
+    const dateTestQuery = `
+      SELECT t.fecha_transaccion, t.tipo_transaccion, d.numero
+      FROM transacciones_ventas_arriendos t 
+      INNER JOIN departamentos d ON d.id = t.departamento_id 
+      WHERE d.edificio_id = $1
+      LIMIT 5
+    `
+    const dateTestResult = await query(dateTestQuery, [buildingId])
+    console.log('Sample dates and transactions:', dateTestResult.rows)
+
+    let results = await query(sql, params)
+    
+    console.log('Query results count:', results ? results.rows.length : 0)
+
+    // Si no hay resultados con filtros de fecha, probar sin filtros
+    if (!results || !results.rows || results.rows.length === 0) {
+      console.log('No results with date filters, trying without date filters...')
+      const noDateSql = `
+        SELECT DISTINCT
+          d.id as departamento_id,
+          d.nombre as departamento_nombre,
+          d.piso,
+          d.numero,
+          t.tipo_transaccion,
+          t.valor_transaccion,
+          t.comision_total,
+          t.valor_admin_edificio,
+          t.fecha_transaccion
+        FROM departamentos d
+        INNER JOIN transacciones_ventas_arriendos t ON d.id = t.departamento_id
+        WHERE d.edificio_id = $1
+        ORDER BY CAST(d.numero AS UNSIGNED) ASC
+      `
+      const noDateResults = await query(noDateSql, [buildingId])
+      console.log('No date filter results count:', noDateResults ? noDateResults.rows.length : 0)
+      
+      if (noDateResults && noDateResults.rows && noDateResults.rows.length > 0) {
+        console.log('Found results without date filters, using those instead')
+        results = noDateResults
+      }
+    }
+
+    if (!results || !results.rows || results.rows.length === 0) {
       return NextResponse.json({ 
         success: true, 
         data: [],
@@ -61,7 +119,7 @@ export async function GET(request: NextRequest) {
     // Procesar los resultados para agrupar por departamento y calcular totales
     const departmentMap = new Map()
 
-    results.forEach((row: any) => {
+    results.rows.forEach((row: any) => {
       const deptKey = row.departamento_id
       
       if (!departmentMap.has(deptKey)) {

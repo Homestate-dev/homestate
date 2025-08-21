@@ -747,9 +747,14 @@ export function BuildingIncomeReport() {
                     
                     const deptUrl = `/api/sales-rentals/reports/building-departments?${deptParams.toString()}`
                     
+                    console.log('Calling API:', deptUrl)
+                    console.log('Date range:', dateRange)
+                    
                     // Hacer la llamada a la API para obtener departamentos reales
                     const deptResponse = await fetch(deptUrl)
                     const deptData = await deptResponse.json()
+                    
+                    console.log('API Response:', deptData)
                     
                     if (!deptData.success || !deptData.data || deptData.data.length === 0) {
                       toast.error('No se encontraron departamentos con transacciones para el edificio seleccionado en el rango de fechas especificado')
