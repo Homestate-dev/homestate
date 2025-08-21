@@ -775,20 +775,24 @@ export function BuildingIncomeReport() {
                     // Crear tabla con datos reales (sin columna de comisión)
                     const tableData = departmentData.map((dept: any) => {
                       console.log('🏠 Processing dept:', dept)
-                      console.log('🏠 Admin value (valor_admin_edificio):', dept.valor_admin_edificio)
                       console.log('🏠 All dept keys:', Object.keys(dept))
+                      
+                      // Identificar el campo correcto para admin edificio
+                      const adminValue = dept.valor_admin_edificio || dept.total_admin_edificio || 0
+                      console.log('🏠 Admin value found:', adminValue)
+                      
                       return [
-                        dept.departamento_nombre || `Depto ${dept.numero}`,
+                        dept.departamento_nombre || dept.nombre || `Depto ${dept.numero}`,
                         dept.piso || '',
                         dept.numero || '',
-                        dept.tipo_transaccion || 'N/A',
-                        formatCurrency(parseFloat(dept.valor_admin_edificio) || 0)
+                        dept.tipo_transaccion || dept.tipo_principal || 'N/A',
+                        formatCurrency(parseFloat(adminValue) || 0)
                       ]
                     })
                     
                     // Calcular total de administración de edificio
                     const totalAdminEdificio = departmentData.reduce((sum: number, dept: any) => {
-                      const adminValue = parseFloat(dept.valor_admin_edificio) || 0
+                      const adminValue = parseFloat(dept.valor_admin_edificio || dept.total_admin_edificio || 0)
                       console.log('💰 Adding admin value:', adminValue, 'Current sum:', sum)
                       return sum + adminValue
                     }, 0)
