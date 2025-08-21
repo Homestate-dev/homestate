@@ -439,6 +439,20 @@ export function BuildingIncomeReport() {
           </Button>
         </div>
         
+        {/* Cartel de aviso para reporte de administrador */}
+        {selectedBuilding === "all" && (
+          <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 flex items-start gap-3">
+            <div className="flex-shrink-0 w-5 h-5 rounded-full bg-orange-100 flex items-center justify-center mt-0.5">
+              <span className="text-orange-600 text-sm font-bold">!</span>
+            </div>
+            <div className="flex-1">
+              <p className="text-orange-800 text-sm font-medium">
+                <strong>Información importante:</strong> Para generar el <strong>informe al administrador del edificio</strong>, elige primero un edificio específico y luego pulsa "Ver reporte para administrador".
+              </p>
+            </div>
+          </div>
+        )}
+        
         {/* Botones de reporte */}
         <div className="flex items-center gap-3">
           <Button 
@@ -674,7 +688,7 @@ export function BuildingIncomeReport() {
             }}
           >
           <Download className="h-4 w-4 mr-2" />
-            Ver Reporte
+            Ver Reporte para HomEstate
           </Button>
           
                                 <Button 
