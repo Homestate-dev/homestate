@@ -109,10 +109,150 @@ export function BuildingIncomeReport() {
     }).format(amount)
   }
 
-  const exportReport = () => {
-    // Implementar exportación
-    toast.info('Función de exportación en desarrollo')
-  }
+     const exportReport = () => {
+     // Implementar exportación
+     toast.info('Función de exportación en desarrollo')
+   }
+
+   // Función para crear el HTML del reporte de administrador
+   const createAdminReportHTML = (title: string, headers: string[], tableData: any[][], isAllBuildings: boolean) => {
+     return `
+       <!DOCTYPE html>
+       <html>
+         <head>
+           <meta charset="utf-8">
+           <title>${title}</title>
+           <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300&display=swap" rel="stylesheet">
+           <style>
+             @page {
+               size: A4;
+               margin: 20mm;
+             }
+             body { 
+               font-family: Arial, sans-serif; 
+               margin: 0; 
+               padding: 0;
+               font-size: 12px;
+             }
+             .header { 
+               text-align: center; 
+               margin-bottom: 30px; 
+               page-break-after: avoid;
+             }
+             .header-content { 
+               display: flex; 
+               align-items: center; 
+               justify-content: center; 
+               gap: 15px; 
+             }
+             .logo { 
+               width: 64px; 
+               height: 64px; 
+             }
+             .brand-text { 
+               font-family: 'Poppins', sans-serif; 
+               font-weight: 300; 
+               font-size: 24px; 
+               color: rgb(246, 149, 59); 
+             }
+             .title { 
+               margin-top: 10px; 
+               font-size: 20px; 
+               color: #333; 
+             }
+             .info { 
+               margin-bottom: 20px; 
+               page-break-after: avoid;
+             }
+             table { 
+               width: 100%; 
+               border-collapse: collapse; 
+               margin-top: 20px; 
+               font-size: 10px;
+             }
+             th, td { 
+               border: 1px solid #ddd; 
+               padding: 6px; 
+               text-align: left; 
+               word-wrap: break-word;
+             }
+             th { 
+               background-color: rgb(246, 165, 59); 
+               color: white; 
+               font-weight: bold;
+             }
+             tr:nth-child(even) { 
+               background-color: #f8f9fa; 
+             }
+             .total-row { 
+               background-color: #e5f3ff !important; 
+               font-weight: bold; 
+             }
+             .total-row td { 
+               border-top: 2px solid rgb(246, 165, 59); 
+             }
+             .print-button {
+               position: fixed;
+               top: 20px;
+               right: 20px;
+               background: rgb(118, 246, 59);
+               color: white;
+               border: none;
+               padding: 10px 20px;
+               border-radius: 5px;
+               cursor: pointer;
+               font-size: 14px;
+             }
+             .currency {
+               text-align: right;
+             }
+             .number {
+               text-align: center;
+             }
+             @media print {
+               body { margin: 0; }
+               .no-print { display: none; }
+             }
+           </style>
+         </head>
+         <body>
+           <button class="print-button no-print" onclick="window.print()">🖨️ Imprimir</button>
+           
+           <div class="header">
+             <div class="header-content">
+               <img src="/logo-qr.png" alt="Homestate Logo" class="logo">
+               <div class="brand-text">HomEstate</div>
+             </div>
+             <div class="title">${title}</div>
+           </div>
+           
+           <div class="info">
+             <p><strong>Fecha de generación:</strong> ${new Date().toLocaleDateString('es-CO')} a las ${new Date().toLocaleTimeString('es-CO')}</p>
+           </div>
+           
+           <table>
+             <thead>
+               <tr>
+                 ${headers.map(header => `<th>${header}</th>`).join('')}
+               </tr>
+             </thead>
+             <tbody>
+               ${tableData.map(row => `
+                 <tr class="${row[0] === 'TOTAL' ? 'total-row' : ''}">
+                   ${row.map((cell, index) => {
+                     const isCurrency = isAllBuildings ? (index === 3) : (index === 4)
+                     const isNumber = isAllBuildings ? (index === 1 || index === 2) : (index === 1 || index === 2)
+                     const className = isCurrency ? 'currency' : isNumber ? 'number' : ''
+                     return `<td class="${className}">${cell}</td>`
+                   }).join('')}
+                 </tr>
+               `).join('')}
+             </tbody>
+           </table>
+         </body>
+       </html>
+     `
+   }
 
   const getTotalIncome = () => {
     return processedIncomeData.reduce((sum, building) => sum + building.total_comisiones, 0)
@@ -516,220 +656,107 @@ export function BuildingIncomeReport() {
             Ver Reporte
           </Button>
           
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={() => {
-              // Abrir el reporte de administrador en una nueva ventana
-              const buildingName = buildings.find((b: Building) => b.id.toString() === selectedBuilding)?.nombre
-              const title = selectedBuilding === "all" 
-                ? "Reporte de Administrador - Todos los Edificios"
-                : `Reporte de Administrador - ${buildingName || 'Edificio Seleccionado'}`
-              
-                             // Crear HTML del reporte simplificado para administrador
-               const showBuildingColumn = selectedBuilding === "all"
-               // Filtrar edificios con transacciones y evitar duplicados
-               const buildingsWithTransactions = processedIncomeData
-                 .filter(building => building.total_transacciones > 0)
-                 .reduce((unique, building) => {
-                   const exists = unique.find(b => b.edificio_id === building.edificio_id)
-                   if (!exists) {
-                     unique.push(building)
-                   }
-                   return unique
-                 }, [] as BuildingIncome[])
-              
-              const tableData = buildingsWithTransactions.map((building: BuildingIncome) => {
-                const row = []
-                if (showBuildingColumn) {
-                  row.push(building.edificio_nombre)
-                }
-                row.push(
-                  building.total_ventas.toString(),
-                  building.total_arriendos.toString(),
-                  formatCurrency(building.total_admin_edificio)
-                )
-                return row
-              })
-              
-              // Calcular totales usando la lista filtrada
-              const totalSales = buildingsWithTransactions.reduce((sum, b) => sum + b.total_ventas, 0)
-              const totalRentals = buildingsWithTransactions.reduce((sum, b) => sum + b.total_arriendos, 0)
-              const totalAdminEdificio = buildingsWithTransactions.reduce((sum, b) => sum + b.total_admin_edificio, 0)
-              
-              // Agregar fila de totales
-              const totalRow = []
-              if (showBuildingColumn) {
-                totalRow.push('TOTAL')
-              }
-              totalRow.push(
-                totalSales.toString(),
-                totalRentals.toString(),
-                formatCurrency(totalAdminEdificio)
-              )
-              tableData.push(totalRow)
-              
-              // Preparar headers simplificados
-              const headers = []
-              if (showBuildingColumn) {
-                headers.push('Edificio')
-              }
-              headers.push(
-                'Ventas',
-                'Arriendos',
-                'Administración Edificio'
-              )
-              
-              // Crear HTML del reporte simplificado
-              const htmlContent = `
-                <!DOCTYPE html>
-                <html>
-                  <head>
-                    <meta charset="utf-8">
-                    <title>${title}</title>
-                    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300&display=swap" rel="stylesheet">
-                    <style>
-                      @page {
-                        size: A4;
-                        margin: 20mm;
-                      }
-                      body { 
-                        font-family: Arial, sans-serif; 
-                        margin: 0; 
-                        padding: 0;
-                        font-size: 12px;
-                      }
-                      .header { 
-                        text-align: center; 
-                        margin-bottom: 30px; 
-                        page-break-after: avoid;
-                      }
-                      .header-content { 
-                        display: flex; 
-                        align-items: center; 
-                        justify-content: center; 
-                        gap: 15px; 
-                      }
-                      .logo { 
-                        width: 64px; 
-                        height: 64px; 
-                      }
-                      .brand-text { 
-                        font-family: 'Poppins', sans-serif; 
-                        font-weight: 300; 
-                        font-size: 24px; 
-                        color:rgb(246, 149, 59); 
-                      }
-                      .title { 
-                        margin-top: 10px; 
-                        font-size: 20px; 
-                        color: #333; 
-                      }
-                      .info { 
-                        margin-bottom: 20px; 
-                        page-break-after: avoid;
-                      }
-                      table { 
-                        width: 100%; 
-                        border-collapse: collapse; 
-                        margin-top: 20px; 
-                        font-size: 10px;
-                      }
-                      th, td { 
-                        border: 1px solid #ddd; 
-                        padding: 6px; 
-                        text-align: left; 
-                        word-wrap: break-word;
-                      }
-                      th { 
-                        background-color:rgb(246, 165, 59); 
-                        color: white; 
-                        font-weight: bold;
-                      }
-                      tr:nth-child(even) { 
-                        background-color: #f8f9fa; 
-                      }
-                      .total-row { 
-                        background-color: #e5f3ff !important; 
-                        font-weight: bold; 
-                      }
-                      .total-row td { 
-                        border-top: 2px solid rgb(246, 165, 59); 
-                      }
-                      .print-button {
-                        position: fixed;
-                        top: 20px;
-                        right: 20px;
-                        background:rgb(118, 246, 59);
-                        color: white;
-                        border: none;
-                        padding: 10px 20px;
-                        border-radius: 5px;
-                        cursor: pointer;
-                        font-size: 14px;
-                      }
-                      .currency {
-                        text-align: right;
-                      }
-                      .number {
-                        text-align: center;
-                      }
-                      @media print {
-                        body { margin: 0; }
-                        .no-print { display: none; }
-                      }
-                    </style>
-                  </head>
-                  <body>
-                    <button class="print-button no-print" onclick="window.print()">🖨️ Imprimir</button>
-                    
-                    <div class="header">
-                      <div class="header-content">
-                        <img src="/logo-qr.png" alt="Homestate Logo" class="logo">
-                        <div class="brand-text">HomEstate</div>
-                      </div>
-                      <div class="title">${title}</div>
-                    </div>
-                    
-                                         <div class="info">
-                       <p><strong>Fecha de generación:</strong> ${new Date().toLocaleDateString('es-CO')} a las ${new Date().toLocaleTimeString('es-CO')}</p>
-                       ${buildingsWithTransactions.length > 1 ? `<p><strong>Total de edificios con transacciones:</strong> ${buildingsWithTransactions.length}</p>` : ''}
-                     </div>
-                    
-                    <table>
-                      <thead>
-                        <tr>
-                          ${headers.map(header => `<th>${header}</th>`).join('')}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        ${tableData.map(row => `
-                          <tr class="${row[0] === 'TOTAL' ? 'total-row' : ''}">
-                            ${row.map((cell, index) => {
-                              const isCurrency = index === (showBuildingColumn ? 2 : 1) && row[0] !== 'TOTAL'
-                              const isNumber = index === (showBuildingColumn ? 1 : 0) || index === (showBuildingColumn ? 2 : 1)
-                              const className = isCurrency ? 'currency' : isNumber ? 'number' : ''
-                              return `<td class="${className}">${cell}</td>`
-                            }).join('')}
-                          </tr>
-                        `).join('')}
-                      </tbody>
-                    </table>
-                  </body>
-                </html>
-              `
-              
-              // Abrir en nueva ventana
-              const newWindow = window.open('', '_blank')
-              if (newWindow) {
-                newWindow.document.write(htmlContent)
-                newWindow.document.close()
-              }
-            }}
-          >
-            <BarChart3 className="h-4 w-4 mr-2" />
-            Ver Reporte para Administrador
-          </Button>
+                                <Button 
+             variant="outline" 
+             size="sm" 
+             onClick={() => {
+               // Abrir el reporte de administrador en una nueva ventana
+               const buildingName = buildings.find((b: Building) => b.id.toString() === selectedBuilding)?.nombre
+               const title = selectedBuilding === "all" 
+                 ? "Reporte de Administrador - Todos los Edificios"
+                 : `Reporte de Administrador - ${buildingName || 'Edificio Seleccionado'}`
+               
+               if (selectedBuilding === "all") {
+                 // Reporte para todos los edificios - mantener estructura actual
+                 const showBuildingColumn = true
+                 // Filtrar edificios con transacciones y evitar duplicados
+                 const buildingsWithTransactions = processedIncomeData
+                   .filter(building => building.total_transacciones > 0)
+                   .reduce((unique, building) => {
+                     const exists = unique.find(b => b.edificio_id === building.edificio_id)
+                     if (!exists) {
+                       unique.push(building)
+                     }
+                     return unique
+                   }, [] as BuildingIncome[])
+                 
+                 const tableData = buildingsWithTransactions.map((building: BuildingIncome) => {
+                   const row = []
+                   row.push(building.edificio_nombre)
+                   row.push(
+                     building.total_ventas.toString(),
+                     building.total_arriendos.toString(),
+                     formatCurrency(building.total_admin_edificio)
+                   )
+                   return row
+                 })
+                 
+                 // Calcular totales usando la lista filtrada
+                 const totalSales = buildingsWithTransactions.reduce((sum, b) => sum + b.total_ventas, 0)
+                 const totalRentals = buildingsWithTransactions.reduce((sum, b) => sum + b.total_arriendos, 0)
+                 const totalAdminEdificio = buildingsWithTransactions.reduce((sum, b) => sum + b.total_admin_edificio, 0)
+                 
+                 // Agregar fila de totales
+                 const totalRow = ['TOTAL', totalSales.toString(), totalRentals.toString(), formatCurrency(totalAdminEdificio)]
+                 tableData.push(totalRow)
+                 
+                 // Preparar headers para todos los edificios
+                 const headers = ['Edificio', 'Ventas', 'Arriendos', 'Administración Edificio']
+                 
+                 // Crear HTML del reporte para todos los edificios
+                 const htmlContent = createAdminReportHTML(title, headers, tableData, true)
+                 
+                 // Abrir en nueva ventana
+                 const newWindow = window.open('', '_blank')
+                 if (newWindow) {
+                   newWindow.document.write(htmlContent)
+                   newWindow.document.close()
+                 }
+               } else {
+                 // Reporte para un edificio específico - nueva estructura por departamentos
+                 // Aquí necesitarías hacer una llamada a la API para obtener los departamentos del edificio
+                 // Por ahora, crearemos un reporte de ejemplo
+                 
+                 // Simular datos de departamentos (esto debería venir de la API)
+                 const departmentData = [
+                   { nombre: 'Departamento A', piso: '1', numero: '101', tipo: 'Venta', admin_edificio: 1855000 },
+                   { nombre: 'Departamento B', piso: '2', numero: '201', tipo: 'Arriendo', admin_edificio: 1200000 },
+                   { nombre: 'Departamento C', piso: '3', numero: '301', tipo: 'Venta', admin_edificio: 2100000 }
+                 ]
+                 
+                 const tableData = departmentData.map(dept => [
+                   dept.nombre,
+                   dept.piso,
+                   dept.numero,
+                   dept.tipo,
+                   formatCurrency(dept.admin_edificio)
+                 ])
+                 
+                 // Calcular total de administración del edificio
+                 const totalAdminEdificio = departmentData.reduce((sum, dept) => sum + dept.admin_edificio, 0)
+                 
+                 // Agregar fila de totales
+                 const totalRow = ['TOTAL', '', '', '', formatCurrency(totalAdminEdificio)]
+                 tableData.push(totalRow)
+                 
+                 // Headers para reporte por departamentos
+                 const headers = ['Departamento', 'Piso', 'Número', 'Tipo', 'Administración Edificio']
+                 
+                 // Crear HTML del reporte por departamentos
+                 const htmlContent = createAdminReportHTML(title, headers, tableData, false)
+                 
+                 // Abrir en nueva ventana
+                 const newWindow = window.open('', '_blank')
+                 if (newWindow) {
+                   newWindow.document.write(htmlContent)
+                   newWindow.document.close()
+                 }
+               }
+             }}
+           >
+             <BarChart3 className="h-4 w-4 mr-2" />
+             Ver Reporte para Administrador
+           </Button>
         </div>
       </div>
 
