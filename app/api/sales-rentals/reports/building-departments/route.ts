@@ -36,13 +36,13 @@ export async function GET(request: NextRequest) {
         d.piso,
         d.numero,
         t.tipo_transaccion,
-        t.valor_transaccion,
+        t.precio_final as valor_transaccion,
         t.comision_valor as comision_total,
-        t.valor_administracion as valor_admin_edificio,
+        t.valor_admin_edificio,
         t.fecha_transaccion,
         CAST(d.numero AS INTEGER) as numero_orden
       FROM departamentos d
-      INNER JOIN transacciones_ventas_arriendos t ON d.id = t.departamento_id
+      INNER JOIN transacciones_departamentos t ON d.id = t.departamento_id
       WHERE d.edificio_id = $1
     `
 
@@ -50,13 +50,13 @@ export async function GET(request: NextRequest) {
 
     // Agregar filtros de fecha si están presentes
     if (dateFrom && dateTo) {
-      sql += ` AND CAST(t.fecha_transaccion AS DATE) >= $${params.length + 1}::DATE AND CAST(t.fecha_transaccion AS DATE) <= $${params.length + 2}::DATE`
+      sql += ` AND DATE(t.fecha_transaccion) >= $${params.length + 1}::DATE AND DATE(t.fecha_transaccion) <= $${params.length + 2}::DATE`
       params.push(dateFrom, dateTo)
     } else if (dateFrom) {
-      sql += ` AND CAST(t.fecha_transaccion AS DATE) >= $${params.length + 1}::DATE`
+      sql += ` AND DATE(t.fecha_transaccion) >= $${params.length + 1}::DATE`
       params.push(dateFrom)
     } else if (dateTo) {
-      sql += ` AND CAST(t.fecha_transaccion AS DATE) <= $${params.length + 1}::DATE`
+      sql += ` AND DATE(t.fecha_transaccion) <= $${params.length + 1}::DATE`
       params.push(dateTo)
     }
 
@@ -76,7 +76,7 @@ export async function GET(request: NextRequest) {
     console.log('🔍 Executing test query to count transactions...')
     const testQuery = `
       SELECT COUNT(*) as total_transactions 
-      FROM transacciones_ventas_arriendos t 
+      FROM transacciones_departamentos t 
       INNER JOIN departamentos d ON d.id = t.departamento_id 
       WHERE d.edificio_id = $1
     `
@@ -109,7 +109,7 @@ export async function GET(request: NextRequest) {
       
       // Verificar si hay transacciones en absoluto (sin filtros)
       console.log('💼 Checking total transactions in system...')
-      const allTransQuery = `SELECT COUNT(*) as total_all FROM transacciones_ventas_arriendos`
+      const allTransQuery = `SELECT COUNT(*) as total_all FROM transacciones_departamentos`
       console.log('📝 All transactions query:', allTransQuery)
       const allTransResult = await query(allTransQuery, [])
       console.log('✅ All transactions query result:', allTransResult)
@@ -119,7 +119,7 @@ export async function GET(request: NextRequest) {
       console.log('📅 Checking sample transactions for date format...')
       const sampleTransQuery = `
         SELECT t.fecha_transaccion, t.tipo_transaccion, d.numero, d.edificio_id
-        FROM transacciones_ventas_arriendos t 
+        FROM transacciones_departamentos t 
         INNER JOIN departamentos d ON d.id = t.departamento_id 
         LIMIT 3
       `
@@ -131,8 +131,8 @@ export async function GET(request: NextRequest) {
 
     // Consulta adicional para ver el formato de las fechas
     const dateTestQuery = `
-      SELECT t.fecha_transaccion, t.tipo_transaccion, d.numero, t.comision_valor, t.valor_administracion
-      FROM transacciones_ventas_arriendos t 
+      SELECT t.fecha_transaccion, t.tipo_transaccion, d.numero, t.comision_valor, t.valor_admin_edificio
+      FROM transacciones_departamentos t 
       INNER JOIN departamentos d ON d.id = t.departamento_id 
       WHERE d.edificio_id = $1
       LIMIT 5
@@ -157,7 +157,7 @@ export async function GET(request: NextRequest) {
       console.log('🔍 Executing simple query without date filters...')
       const simpleQuery = `
         SELECT t.fecha_transaccion, t.tipo_transaccion, d.numero, d.edificio_id
-        FROM transacciones_ventas_arriendos t 
+        FROM transacciones_departamentos t 
         INNER JOIN departamentos d ON d.id = t.departamento_id 
         WHERE d.edificio_id = $1
         ORDER BY t.fecha_transaccion DESC
@@ -176,13 +176,13 @@ export async function GET(request: NextRequest) {
           d.piso,
           d.numero,
           t.tipo_transaccion,
-          t.valor_transaccion,
+          t.precio_final as valor_transaccion,
           t.comision_valor as comision_total,
-          t.valor_administracion as valor_admin_edificio,
+          t.valor_admin_edificio,
           t.fecha_transaccion,
           CAST(d.numero AS INTEGER) as numero_orden
         FROM departamentos d
-        INNER JOIN transacciones_ventas_arriendos t ON d.id = t.departamento_id
+        INNER JOIN transacciones_departamentos t ON d.id = t.departamento_id
         WHERE d.edificio_id = $1
         ORDER BY numero_orden ASC
       `
