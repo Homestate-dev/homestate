@@ -26,7 +26,8 @@ export async function GET(request: NextRequest) {
         t.valor_transaccion,
         t.comision_valor as comision_total,
         t.valor_administracion as valor_admin_edificio,
-        t.fecha_transaccion
+        t.fecha_transaccion,
+        CAST(d.numero AS INTEGER) as numero_orden
       FROM departamentos d
       INNER JOIN transacciones_ventas_arriendos t ON d.id = t.departamento_id
       WHERE d.edificio_id = $1
@@ -47,7 +48,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Ordenar por número de departamento ascendente
-    sql += ' ORDER BY CAST(d.numero AS INTEGER) ASC'
+    sql += ' ORDER BY numero_orden ASC'
 
     console.log('SQL Query:', sql)
     console.log('Parameters:', params)
@@ -83,22 +84,23 @@ export async function GET(request: NextRequest) {
     // Si no hay resultados con filtros de fecha, probar sin filtros
     if (!results || !results.rows || results.rows.length === 0) {
       console.log('No results with date filters, trying without date filters...')
-                           const noDateSql = `
-          SELECT DISTINCT
-            d.id as departamento_id,
-            d.nombre as departamento_nombre,
-            d.piso,
-            d.numero,
-            t.tipo_transaccion,
-            t.valor_transaccion,
-            t.comision_valor as comision_total,
-            t.valor_administracion as valor_admin_edificio,
-            t.fecha_transaccion
-          FROM departamentos d
-          INNER JOIN transacciones_ventas_arriendos t ON d.id = t.departamento_id
-          WHERE d.edificio_id = $1
-                     ORDER BY CAST(d.numero AS INTEGER) ASC
-        `
+                                                       const noDateSql = `
+           SELECT DISTINCT
+             d.id as departamento_id,
+             d.nombre as departamento_nombre,
+             d.piso,
+             d.numero,
+             t.tipo_transaccion,
+             t.valor_transaccion,
+             t.comision_valor as comision_total,
+             t.valor_administracion as valor_admin_edificio,
+             t.fecha_transaccion,
+             CAST(d.numero AS INTEGER) as numero_orden
+           FROM departamentos d
+           INNER JOIN transacciones_ventas_arriendos t ON d.id = t.departamento_id
+           WHERE d.edificio_id = $1
+           ORDER BY numero_orden ASC
+         `
       const noDateResults = await query(noDateSql, [buildingId])
       console.log('No date filter results count:', noDateResults ? noDateResults.rows.length : 0)
       
