@@ -47,7 +47,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Ordenar por número de departamento ascendente
-    sql += ' ORDER BY CAST(d.numero AS UNSIGNED) ASC'
+    sql += ' ORDER BY CAST(d.numero AS INTEGER) ASC'
 
     console.log('SQL Query:', sql)
     console.log('Parameters:', params)
@@ -97,7 +97,7 @@ export async function GET(request: NextRequest) {
           FROM departamentos d
           INNER JOIN transacciones_ventas_arriendos t ON d.id = t.departamento_id
           WHERE d.edificio_id = $1
-          ORDER BY CAST(d.numero AS UNSIGNED) ASC
+                     ORDER BY CAST(d.numero AS INTEGER) ASC
         `
       const noDateResults = await query(noDateSql, [buildingId])
       console.log('No date filter results count:', noDateResults ? noDateResults.rows.length : 0)
