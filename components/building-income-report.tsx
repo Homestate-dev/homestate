@@ -127,10 +127,10 @@ export function BuildingIncomeReport() {
     }).format(amount)
   }
 
-     const exportReport = () => {
-     // Implementar exportación
-     toast.info('Función de exportación en desarrollo')
-   }
+  const exportReport = () => {
+    // Implementar exportación
+    toast.info('Función de exportación en desarrollo')
+  }
 
    // Función para crear el HTML del reporte de administrador
    const createAdminReportHTML = (title: string, headers: string[], tableData: any[][], isAllBuildings: boolean) => {
@@ -270,7 +270,7 @@ export function BuildingIncomeReport() {
          </body>
        </html>
      `
-   }
+  }
 
   const getTotalIncome = () => {
     return processedIncomeData.reduce((sum, building) => sum + building.total_comisiones, 0)
@@ -365,25 +365,25 @@ export function BuildingIncomeReport() {
       {/* Filtros */}
       <div className="space-y-4">
         {/* Primera fila de filtros */}
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
-            <Logo size={16} className="text-gray-500" />
-            <span className="text-sm font-medium">Edificio:</span>
-          </div>
-          <Select value={selectedBuilding} onValueChange={setSelectedBuilding}>
-            <SelectTrigger className="w-[300px]">
-              <SelectValue placeholder="Seleccionar edificio" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos los edificios</SelectItem>
-              {buildings.map((building) => (
-                <SelectItem key={building.id} value={building.id.toString()}>
-                  {building.nombre}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          
+      <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2">
+          <Logo size={16} className="text-gray-500" />
+          <span className="text-sm font-medium">Edificio:</span>
+        </div>
+        <Select value={selectedBuilding} onValueChange={setSelectedBuilding}>
+          <SelectTrigger className="w-[300px]">
+            <SelectValue placeholder="Seleccionar edificio" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos los edificios</SelectItem>
+            {buildings.map((building) => (
+              <SelectItem key={building.id} value={building.id.toString()}>
+                {building.nombre}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium">Tipo Transacción:</span>
             <Select value={filterTransactionType} onValueChange={setFilterTransactionType}>
@@ -670,7 +670,7 @@ export function BuildingIncomeReport() {
               }
             }}
           >
-            <Download className="h-4 w-4 mr-2" />
+          <Download className="h-4 w-4 mr-2" />
             Ver Reporte
           </Button>
           
@@ -803,7 +803,7 @@ export function BuildingIncomeReport() {
            >
              <BarChart3 className="h-4 w-4 mr-2" />
              Ver Reporte para Administrador
-           </Button>
+        </Button>
         </div>
       </div>
 
@@ -924,106 +924,106 @@ export function BuildingIncomeReport() {
 
               <div className="grid gap-4">
                 {paginatedIncomeData.filter(building => building.total_transacciones > 0).map((building) => (
-                  <Card key={building.edificio_id} className="p-4">
-                    <div className="space-y-4">
-                      {/* Información del edificio */}
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <h3 className="text-lg font-semibold">{building.edificio_nombre}</h3>
-                          <p className="text-sm text-gray-500">{building.edificio_direccion}</p>
-                        </div>
-                        <div className="text-right">
-                          <div className="text-2xl font-bold text-green-600">
-                            {formatCurrency(building.total_comisiones)}
-                          </div>
-                          <div className="text-sm text-gray-500">Total Comisiones</div>
-                        </div>
+                <Card key={building.edificio_id} className="p-4">
+                  <div className="space-y-4">
+                    {/* Información del edificio */}
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="text-lg font-semibold">{building.edificio_nombre}</h3>
+                        <p className="text-sm text-gray-500">{building.edificio_direccion}</p>
                       </div>
-
-                      {/* Estadísticas de transacciones */}
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        <div className="text-center">
-                          <div className="text-lg font-semibold">{building.total_transacciones}</div>
-                          <div className="text-sm text-gray-500">Transacciones</div>
+                      <div className="text-right">
+                        <div className="text-2xl font-bold text-green-600">
+                          {formatCurrency(building.total_comisiones)}
                         </div>
-                        <div className="text-center">
-                          <div className="text-lg font-semibold text-green-600">{building.total_ventas}</div>
-                          <div className="text-sm text-gray-500">Ventas</div>
-                        </div>
-                        <div className="text-center">
-                          <div className="text-lg font-semibold text-blue-600">{building.total_arriendos}</div>
-                          <div className="text-sm text-gray-500">Arriendos</div>
-                        </div>
-                        <div className="text-center">
-                          <div className="text-lg font-semibold">
-                            {formatCurrency(building.valor_total_transacciones)}
-                          </div>
-                          <div className="text-sm text-gray-500">Valor Total</div>
-                        </div>
+                        <div className="text-sm text-gray-500">Total Comisiones</div>
                       </div>
+                    </div>
 
-                      {/* Distribución de comisiones */}
-                      <div className="space-y-3">
-                        <h4 className="font-medium text-gray-700">Distribución de Comisiones</h4>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                          <div className="p-3 bg-blue-50 rounded-lg">
-                            <div className="flex items-center justify-between">
-                              <span className="text-sm font-medium text-blue-700">HomeState</span>
-                              <span className="text-sm font-semibold text-blue-800">
-                                {formatCurrency(building.total_homestate)}
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-2 mt-1">
-                              <Progress 
-                                value={building.total_comisiones > 0 ? (building.total_homestate / building.total_comisiones) * 100 : 0} 
-                                className="flex-1 h-2"
-                              />
-                              <span className="text-xs text-blue-600">
-                                {safeNumberFormat(building.promedio_porcentaje_homestate)}%
-                              </span>
-                            </div>
+                    {/* Estadísticas de transacciones */}
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      <div className="text-center">
+                        <div className="text-lg font-semibold">{building.total_transacciones}</div>
+                        <div className="text-sm text-gray-500">Transacciones</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-lg font-semibold text-green-600">{building.total_ventas}</div>
+                        <div className="text-sm text-gray-500">Ventas</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-lg font-semibold text-blue-600">{building.total_arriendos}</div>
+                        <div className="text-sm text-gray-500">Arriendos</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-lg font-semibold">
+                          {formatCurrency(building.valor_total_transacciones)}
+                        </div>
+                        <div className="text-sm text-gray-500">Valor Total</div>
+                      </div>
+                    </div>
+
+                    {/* Distribución de comisiones */}
+                    <div className="space-y-3">
+                      <h4 className="font-medium text-gray-700">Distribución de Comisiones</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="p-3 bg-blue-50 rounded-lg">
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm font-medium text-blue-700">HomeState</span>
+                            <span className="text-sm font-semibold text-blue-800">
+                              {formatCurrency(building.total_homestate)}
+                            </span>
                           </div>
-                          
-                          <div className="p-3 bg-green-50 rounded-lg">
-                            <div className="flex items-center justify-between">
-                              <span className="text-sm font-medium text-green-700">Bienes Raíces</span>
-                              <span className="text-sm font-semibold text-green-800">
-                                {formatCurrency(building.total_bienes_raices)}
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-2 mt-1">
-                              <Progress 
-                                value={building.total_comisiones > 0 ? (building.total_bienes_raices / building.total_comisiones) * 100 : 0} 
-                                className="flex-1 h-2"
-                              />
-                              <span className="text-xs text-green-600">
-                                {safeNumberFormat(building.promedio_porcentaje_bienes_raices)}%
-                              </span>
-                            </div>
+                          <div className="flex items-center gap-2 mt-1">
+                            <Progress 
+                              value={building.total_comisiones > 0 ? (building.total_homestate / building.total_comisiones) * 100 : 0} 
+                              className="flex-1 h-2"
+                            />
+                            <span className="text-xs text-blue-600">
+                              {safeNumberFormat(building.promedio_porcentaje_homestate)}%
+                            </span>
                           </div>
-                          
-                          <div className="p-3 bg-purple-50 rounded-lg">
-                            <div className="flex items-center justify-between">
-                              <span className="text-sm font-medium text-purple-700">Admin Edificio</span>
-                              <span className="text-sm font-semibold text-purple-800">
-                                {formatCurrency(building.total_admin_edificio)}
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-2 mt-1">
-                              <Progress 
-                                value={building.total_comisiones > 0 ? (building.total_admin_edificio / building.total_comisiones) * 100 : 0} 
-                                className="flex-1 h-2"
-                              />
-                              <span className="text-xs text-purple-600">
-                                {safeNumberFormat(building.promedio_porcentaje_admin_edificio)}%
-                              </span>
-                            </div>
+                        </div>
+                        
+                        <div className="p-3 bg-green-50 rounded-lg">
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm font-medium text-green-700">Bienes Raíces</span>
+                            <span className="text-sm font-semibold text-green-800">
+                              {formatCurrency(building.total_bienes_raices)}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2 mt-1">
+                            <Progress 
+                              value={building.total_comisiones > 0 ? (building.total_bienes_raices / building.total_comisiones) * 100 : 0} 
+                              className="flex-1 h-2"
+                            />
+                            <span className="text-xs text-green-600">
+                              {safeNumberFormat(building.promedio_porcentaje_bienes_raices)}%
+                            </span>
+                          </div>
+                        </div>
+                        
+                        <div className="p-3 bg-purple-50 rounded-lg">
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm font-medium text-purple-700">Admin Edificio</span>
+                            <span className="text-sm font-semibold text-purple-800">
+                              {formatCurrency(building.total_admin_edificio)}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2 mt-1">
+                            <Progress 
+                              value={building.total_comisiones > 0 ? (building.total_admin_edificio / building.total_comisiones) * 100 : 0} 
+                              className="flex-1 h-2"
+                            />
+                            <span className="text-xs text-purple-600">
+                              {safeNumberFormat(building.promedio_porcentaje_admin_edificio)}%
+                            </span>
                           </div>
                         </div>
                       </div>
                     </div>
-                  </Card>
-                ))}
+                  </div>
+                </Card>
+              ))}
               </div>
             </div>
           )}
