@@ -510,12 +510,7 @@ export function TransactionStateManager({ transactionId, onStateChange }: Transa
                   {/* Solo mostrar el botón Finalizar en estados específicos donde se puede finalizar */}
                   {(estado_actual === 'firma_escrituras' || estado_actual === 'firma_y_pago') && (
                     <Dialog open={showFinalizeDialog} onOpenChange={setShowFinalizeDialog}>
-                      <DialogTrigger asChild>
-                        <Button size="sm" variant="outline" className="text-green-600 border-green-600 hover:bg-green-50">
-                          <Check className="mr-2 h-4 w-4" />
-                          Finalizar
-                        </Button>
-                      </DialogTrigger>
+                      
                       <DialogContent>
                         <DialogHeader>
                           <DialogTitle>Finalizar Transacción</DialogTitle>
