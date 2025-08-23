@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Progress } from "@/components/ui/progress"
@@ -739,10 +740,14 @@ export function BuildingIncomeReport() {
             Ver Reporte para HomEstate
           </Button>
           
-                                <Button 
-             variant="outline" 
-             size="sm" 
-             onClick={async () => {
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Button 
+                                        variant="outline" 
+                                        size="sm" 
+                                        disabled={selectedBuilding === "all"}
+                                        onClick={async () => {
                // Abrir el reporte de administrador en una nueva ventana
                const buildingName = buildings.find((b: Building) => b.id.toString() === selectedBuilding)?.nombre
                const title = selectedBuilding === "all" 
@@ -894,7 +899,17 @@ export function BuildingIncomeReport() {
            >
              <BarChart3 className="h-4 w-4 mr-2" />
              Ver Reporte para Administrador
-        </Button>
+                                      </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      <p>
+                                        {selectedBuilding === "all" 
+                                          ? "Selecciona un edificio específico para generar el reporte de administrador"
+                                          : "Generar reporte detallado para el administrador del edificio"}
+                                      </p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
         </div>
       </div>
 
