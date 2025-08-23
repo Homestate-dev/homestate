@@ -136,6 +136,20 @@ export function BuildingIncomeReport() {
     }).format(amount)
   }
 
+  const formatDate = (dateString: string | null) => {
+    if (!dateString) return ''
+    try {
+      const date = new Date(dateString)
+      return date.toLocaleDateString('es-CO', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+      })
+    } catch (error) {
+      return ''
+    }
+  }
+
   const exportReport = () => {
     // Implementar exportación
     toast.info('Función de exportación en desarrollo')
@@ -831,8 +845,13 @@ export function BuildingIncomeReport() {
                       const adminValue = dept.valor_admin_edificio || dept.total_admin_edificio || 0
                       console.log('🏠 Admin value found:', adminValue)
                       
+                      // Formatear la fecha del estado
+                      const fechaEstado = formatDate(dept.fecha_estado)
+                      console.log('🏠 Fecha estado found:', dept.fecha_estado, 'formatted:', fechaEstado)
+                      
                       return [
                         dept.departamento_nombre || dept.nombre || `Depto ${dept.numero}`,
+                        fechaEstado,
                         dept.piso || '',
                         dept.numero || '',
                         dept.tipo_transaccion || dept.tipo_principal || 'N/A',
@@ -850,11 +869,11 @@ export function BuildingIncomeReport() {
                     console.log('💰 Final total admin edificio:', totalAdminEdificio)
                     
                     // Agregar fila de totales (solo administración edificio)
-                    const totalRow = ['TOTAL', '', '', '', formatCurrency(totalAdminEdificio)]
+                    const totalRow = ['TOTAL', '', '', '', '', formatCurrency(totalAdminEdificio)]
                     tableData.push(totalRow)
                     
                     // Headers para reporte por departamentos (sin comisiones)
-                    const headers = ['Departamento', 'Piso', 'Número', 'Tipo', 'Administración Edificio']
+                    const headers = ['Departamento', 'Fecha', 'Piso', 'Número', 'Tipo', 'Administración Edificio']
                     
                     // Crear HTML del reporte por departamentos
                     const htmlContent = createAdminReportHTML(title, headers, tableData, false, dateRange.from, dateRange.to)

@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
     console.log('🔍 BuildingId value (raw):', buildingId)
     console.log('🔍 BuildingId value (parsed):', buildingId ? parseInt(buildingId) : 'null')
     console.log('🔍 BuildingId value (Number):', buildingId ? Number(buildingId) : 'null')
-    console.log('⚠️ IMPORTANTE: Excluyendo transacciones con estado "reservado"')
+    console.log('⚠️ IMPORTANTE: Incluyendo solo transacciones con estados: promesa_compra_venta, firma_escrituras, firma_y_pago')
 
     if (!buildingId) {
       console.log('❌ No buildingId provided')
@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
       }, { status: 400 })
     }
 
-    // Construir la consulta SQL con filtros de fecha
+    // Construir la consulta SQL con filtros de fecha y estados válidos
     let sql = `
       SELECT DISTINCT
         d.id as departamento_id,
@@ -41,11 +41,14 @@ export async function GET(request: NextRequest) {
         t.comision_valor as comision_total,
         t.valor_admin_edificio,
         t.fecha_transaccion,
+        t.estado_actual,
+        t.datos_estado,
+        t.fecha_ultimo_estado,
         CAST(d.numero AS INTEGER) as numero_orden
       FROM departamentos d
       INNER JOIN transacciones_departamentos t ON d.id = t.departamento_id
       WHERE d.edificio_id = $1
-        AND t.estado_actual != 'reservado'
+        AND t.estado_actual IN ('promesa_compra_venta', 'firma_escrituras', 'firma_y_pago')
     `
 
     const params: any[] = [buildingId]
@@ -81,7 +84,7 @@ export async function GET(request: NextRequest) {
       FROM transacciones_departamentos t 
       INNER JOIN departamentos d ON d.id = t.departamento_id 
       WHERE d.edificio_id = $1
-        AND t.estado_actual != 'reservado'
+        AND t.estado_actual IN ('promesa_compra_venta', 'firma_escrituras', 'firma_y_pago')
     `
     console.log('📝 Test query:', testQuery)
     console.log('🔢 Test query params:', [buildingId])
@@ -110,9 +113,9 @@ export async function GET(request: NextRequest) {
       console.log('✅ Department query result:', deptResult)
       console.log('🏠 Total departments for building:', deptResult.rows[0]?.total_depts)
       
-      // Verificar si hay transacciones en absoluto (sin filtros, pero excluyendo reservados)
-      console.log('💼 Checking total transactions in system (excluding reserved)...')
-      const allTransQuery = `SELECT COUNT(*) as total_all FROM transacciones_departamentos WHERE estado_actual != 'reservado'`
+      // Verificar si hay transacciones en absoluto (sin filtros, solo estados válidos)
+      console.log('💼 Checking total transactions in system (valid states only)...')
+      const allTransQuery = `SELECT COUNT(*) as total_all FROM transacciones_departamentos WHERE estado_actual IN ('promesa_compra_venta', 'firma_escrituras', 'firma_y_pago')`
       console.log('📝 All transactions query:', allTransQuery)
       const allTransResult = await query(allTransQuery, [])
       console.log('✅ All transactions query result:', allTransResult)
@@ -124,7 +127,7 @@ export async function GET(request: NextRequest) {
         SELECT t.fecha_transaccion, t.tipo_transaccion, d.numero, d.edificio_id, t.estado_actual
         FROM transacciones_departamentos t 
         INNER JOIN departamentos d ON d.id = t.departamento_id 
-        WHERE t.estado_actual != 'reservado'
+        WHERE t.estado_actual IN ('promesa_compra_venta', 'firma_escrituras', 'firma_y_pago')
         LIMIT 3
       `
       console.log('📝 Sample transactions query:', sampleTransQuery)
@@ -135,11 +138,11 @@ export async function GET(request: NextRequest) {
 
     // Consulta adicional para ver el formato de las fechas
     const dateTestQuery = `
-      SELECT t.fecha_transaccion, t.tipo_transaccion, d.numero, t.comision_valor, t.valor_admin_edificio, t.estado_actual
+      SELECT t.fecha_transaccion, t.tipo_transaccion, d.numero, t.comision_valor, t.valor_admin_edificio, t.estado_actual, t.datos_estado
       FROM transacciones_departamentos t 
       INNER JOIN departamentos d ON d.id = t.departamento_id 
       WHERE d.edificio_id = $1
-        AND t.estado_actual != 'reservado'
+        AND t.estado_actual IN ('promesa_compra_venta', 'firma_escrituras', 'firma_y_pago')
       LIMIT 5
     `
     const dateTestResult = await query(dateTestQuery, [buildingId])
@@ -165,7 +168,7 @@ export async function GET(request: NextRequest) {
         FROM transacciones_departamentos t 
         INNER JOIN departamentos d ON d.id = t.departamento_id 
         WHERE d.edificio_id = $1
-          AND t.estado_actual != 'reservado'
+          AND t.estado_actual IN ('promesa_compra_venta', 'firma_escrituras', 'firma_y_pago')
         ORDER BY t.fecha_transaccion DESC
         LIMIT 10
       `
@@ -186,11 +189,14 @@ export async function GET(request: NextRequest) {
           t.comision_valor as comision_total,
           t.valor_admin_edificio,
           t.fecha_transaccion,
+          t.estado_actual,
+          t.datos_estado,
+          t.fecha_ultimo_estado,
           CAST(d.numero AS INTEGER) as numero_orden
         FROM departamentos d
         INNER JOIN transacciones_departamentos t ON d.id = t.departamento_id
         WHERE d.edificio_id = $1
-          AND t.estado_actual != 'reservado'
+          AND t.estado_actual IN ('promesa_compra_venta', 'firma_escrituras', 'firma_y_pago')
         ORDER BY numero_orden ASC
       `
       console.log('📝 Final fallback query:', noDateSql)
@@ -234,12 +240,37 @@ export async function GET(request: NextRequest) {
       }
 
       const dept = departmentMap.get(deptKey)
+      // Calcular la fecha según el estado actual de la transacción
+      let fechaEstado = null
+      try {
+        const datosEstado = typeof row.datos_estado === 'string' ? JSON.parse(row.datos_estado) : row.datos_estado
+        
+        if (row.estado_actual === 'promesa_compra_venta') {
+          // Para promesa de compraventa, usar la fecha del último estado
+          fechaEstado = row.fecha_ultimo_estado
+        } else if (row.estado_actual === 'firma_escrituras' && datosEstado?.fecha_firma) {
+          // Para firma de escrituras, usar la fecha de firma del JSON
+          fechaEstado = datosEstado.fecha_firma
+        } else if (row.estado_actual === 'firma_y_pago' && datosEstado?.fecha) {
+          // Para firma y pago (arriendo), usar la fecha del JSON
+          fechaEstado = datosEstado.fecha
+        } else {
+          // Fallback a fecha del último estado
+          fechaEstado = row.fecha_ultimo_estado
+        }
+      } catch (error) {
+        console.error('Error parsing datos_estado:', error)
+        fechaEstado = row.fecha_ultimo_estado
+      }
+
       dept.transacciones.push({
         tipo: row.tipo_transaccion,
         valor_transaccion: row.valor_transaccion,
         comision_total: row.comision_total,
         valor_admin_edificio: row.valor_admin_edificio,
-        fecha: row.fecha_transaccion
+        fecha: row.fecha_transaccion,
+        estado_actual: row.estado_actual,
+        fecha_estado: fechaEstado
       })
     })
 
@@ -254,12 +285,21 @@ export async function GET(request: NextRequest) {
       const hasVentas = dept.transacciones.some((t: any) => t.tipo === 'venta')
       const tipoPrincipal = hasVentas ? 'Venta' : 'Arriendo'
 
+      // Obtener la fecha más reciente del estado
+      const fechasEstado = dept.transacciones
+        .map((t: any) => t.fecha_estado)
+        .filter((fecha: any) => fecha !== null)
+        .sort((a: any, b: any) => new Date(b).getTime() - new Date(a).getTime())
+      
+      const fechaEstadoMasReciente = fechasEstado.length > 0 ? fechasEstado[0] : null
+
       return {
         ...dept,
         tipo_principal: tipoPrincipal,
         total_comision: totalComision,
         total_admin_edificio: totalAdminEdificio,
-        cantidad_transacciones: dept.transacciones.length
+        cantidad_transacciones: dept.transacciones.length,
+        fecha_estado: fechaEstadoMasReciente
       }
     })
 
