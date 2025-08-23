@@ -488,8 +488,8 @@ export function BuildingTransactionsReport() {
         </Card>
       </div>
 
-      {/* Tabla de transacciones */}
-      <Card>
+      {/* Tabla de transacciones - TEMPORALMENTE OCULTA */}
+      <Card style={{ display: 'none' }}>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <FileText className="h-5 w-5" />
