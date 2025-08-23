@@ -634,58 +634,6 @@ export function SalesRentalsManagement() {
             Nueva Transacción
           </Button>
         </div>
-
-        {/* Estadísticas */}
-        {processedStats && (
-          <div className={`grid ${isMobile ? 'grid-cols-2 gap-2' : 'grid-cols-2 md:grid-cols-4 gap-4'}`}>
-            <Card>
-              <CardContent className={`${isMobile ? 'p-3' : 'p-4'}`}>
-                <div className="flex items-center gap-2">
-                  <DollarSign className={`${isMobile ? 'h-4 w-4' : 'h-5 w-5'} text-green-600`} />
-                  <div>
-                    <p className={`${isMobile ? 'text-xs' : 'text-sm'} text-gray-600`}>Total Transacciones</p>
-                    <p className={`${isMobile ? 'text-lg' : 'text-2xl'} font-bold`}>{processedStats.total_transacciones}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className={`${isMobile ? 'p-3' : 'p-4'}`}>
-                <div className="flex items-center gap-2">
-                  <TrendingUp className={`${isMobile ? 'h-4 w-4' : 'h-5 w-5'} text-blue-600`} />
-                  <div>
-                    <p className={`${isMobile ? 'text-xs' : 'text-sm'} text-gray-600`}>Ventas</p>
-                    <p className={`${isMobile ? 'text-lg' : 'text-2xl'} font-bold`}>{processedStats.ventas_completadas}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className={`${isMobile ? 'p-3' : 'p-4'}`}>
-                <div className="flex items-center gap-2">
-                  <Users className={`${isMobile ? 'h-4 w-4' : 'h-5 w-5'} text-purple-600`} />
-                  <div>
-                    <p className={`${isMobile ? 'text-xs' : 'text-sm'} text-gray-600`}>Arriendos</p>
-                    <p className={`${isMobile ? 'text-lg' : 'text-2xl'} font-bold`}>{processedStats.arriendos_completados}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className={`${isMobile ? 'p-3' : 'p-4'}`}>
-                <div className="flex items-center gap-2">
-                  <BarChart3 className={`${isMobile ? 'h-4 w-4' : 'h-5 w-5'} text-orange-600`} />
-                  <div>
-                    <p className={`${isMobile ? 'text-xs' : 'text-sm'} text-gray-600`}>Comisiones</p>
-                    <p className={`${isMobile ? 'text-sm' : 'text-lg'} font-bold`}>
-                      {formatCurrency(processedStats.comisiones_generadas)}
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        )}
       </div>
 
       {/* Filtros y búsqueda */}
