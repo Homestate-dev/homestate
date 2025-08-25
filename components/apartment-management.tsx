@@ -3,7 +3,7 @@
 import type React from "react"
 
 import { useState, useEffect, useRef } from "react"
-import { Plus, Eye, Edit, EyeOff, Home, Maximize, Upload, X, Loader2, ChevronLeft, ChevronRight, ToggleLeft, ToggleRight } from "lucide-react"
+import { Plus, Eye, Edit, EyeOff, Home, Maximize, Upload, X, Loader2, ChevronLeft, ChevronRight, ToggleLeft, ToggleRight, Search, Filter, RotateCcw } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -64,6 +64,14 @@ interface ApartmentManagementProps {
 export function ApartmentManagement({ buildingId, buildingName, buildingPermalink }: ApartmentManagementProps) {
   const [departamentos, setDepartamentos] = useState<Department[]>([])
   const [loading, setLoading] = useState(true)
+  
+  // Estados para el buscador y filtros
+  const [searchTerm, setSearchTerm] = useState("")
+  const [filters, setFilters] = useState({
+    piso: "todos",
+    habitaciones: "todas", 
+    tipo: "todos"
+  })
   const [showCreateForm, setShowCreateForm] = useState(false)
   const [showViewDialog, setShowViewDialog] = useState(false)
   const [showEditDialog, setShowEditDialog] = useState(false)
@@ -82,6 +90,40 @@ export function ApartmentManagement({ buildingId, buildingName, buildingPermalin
   const [agents, setAgents] = useState([])
   const [isDragActive, setIsDragActive] = useState(false)
   const dropRef = useRef<HTMLDivElement>(null)
+  
+  // Función para filtrar departamentos
+  const filteredDepartamentos = departamentos.filter(dept => {
+    // Filtrar por término de búsqueda (nombre o número)
+    const matchesSearch = !searchTerm || 
+      dept.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      dept.numero.toLowerCase().includes(searchTerm.toLowerCase())
+    
+    // Filtrar por piso
+    const matchesPiso = filters.piso === "todos" || dept.piso.toString() === filters.piso
+    
+    // Filtrar por habitaciones
+    const matchesHabitaciones = filters.habitaciones === "todas" || dept.cantidad_habitaciones === filters.habitaciones
+    
+    // Filtrar por tipo
+    const matchesTipo = filters.tipo === "todos" || dept.tipo === filters.tipo
+    
+    return matchesSearch && matchesPiso && matchesHabitaciones && matchesTipo
+  })
+  
+  // Función para limpiar filtros
+  const clearFilters = () => {
+    setSearchTerm("")
+    setFilters({
+      piso: "todos",
+      habitaciones: "todas",
+      tipo: "todos"
+    })
+  }
+  
+  // Obtener valores únicos para los filtros
+  const uniqueFloors = [...new Set(departamentos.map(dept => dept.piso))].sort((a, b) => a - b)
+  const uniqueRooms = [...new Set(departamentos.map(dept => dept.cantidad_habitaciones))]
+  const uniqueTypes = [...new Set(departamentos.map(dept => dept.tipo))]
 
   // Opciones predefinidas para ambientes y adicionales
   const ambientesYAdicionalesDisponibles = [
@@ -551,6 +593,112 @@ export function ApartmentManagement({ buildingId, buildingName, buildingPermalin
         </Button>
       </div>
 
+      {/* Buscador y Filtros */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Search className="h-5 w-5 text-orange-600" />
+            Buscar y Filtrar Departamentos
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Campo de búsqueda */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+            <Input
+              type="text"
+              placeholder="Buscar por nombre o número de departamento..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+          
+          {/* Filtros */}
+          <div className={`grid ${isMobile ? 'grid-cols-1 gap-3' : 'grid-cols-4 gap-4'}`}>
+            {/* Filtro por piso */}
+            <div>
+              <Label className="text-sm font-medium text-gray-700">Piso</Label>
+              <Select value={filters.piso} onValueChange={(value) => setFilters(prev => ({ ...prev, piso: value }))}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Todos los pisos" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="todos">Todos los pisos</SelectItem>
+                  {uniqueFloors.map(piso => (
+                    <SelectItem key={piso} value={piso.toString()}>
+                      Piso {piso}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            {/* Filtro por habitaciones */}
+            <div>
+              <Label className="text-sm font-medium text-gray-700">Habitaciones</Label>
+              <Select value={filters.habitaciones} onValueChange={(value) => setFilters(prev => ({ ...prev, habitaciones: value }))}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Todas" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="todas">Todas</SelectItem>
+                  {uniqueRooms.map(rooms => (
+                    <SelectItem key={rooms} value={rooms}>
+                      {rooms}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            {/* Filtro por tipo */}
+            <div>
+              <Label className="text-sm font-medium text-gray-700">Tipo</Label>
+              <Select value={filters.tipo} onValueChange={(value) => setFilters(prev => ({ ...prev, tipo: value }))}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Todos los tipos" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="todos">Todos los tipos</SelectItem>
+                  {uniqueTypes.map(tipo => (
+                    <SelectItem key={tipo} value={tipo}>
+                      {tipo}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            {/* Botón limpiar filtros */}
+            <div className="flex items-end">
+              <Button 
+                variant="outline" 
+                onClick={clearFilters}
+                className="w-full flex items-center gap-2"
+                disabled={!searchTerm && filters.piso === "todos" && filters.habitaciones === "todas" && filters.tipo === "todos"}
+              >
+                <RotateCcw className="h-4 w-4" />
+                Limpiar
+              </Button>
+            </div>
+          </div>
+          
+          {/* Resumen de filtros activos */}
+          {(searchTerm || filters.piso !== "todos" || filters.habitaciones !== "todas" || filters.tipo !== "todos") && (
+            <div className="flex items-center gap-2 text-sm text-gray-600">
+              <Filter className="h-4 w-4" />
+              <span>Filtros activos:</span>
+              {searchTerm && <Badge variant="secondary">Búsqueda: "{searchTerm}"</Badge>}
+              {filters.piso !== "todos" && <Badge variant="secondary">Piso {filters.piso}</Badge>}
+              {filters.habitaciones !== "todas" && <Badge variant="secondary">{filters.habitaciones}</Badge>}
+              {filters.tipo !== "todos" && <Badge variant="secondary">{filters.tipo}</Badge>}
+              <Badge variant="outline">{filteredDepartamentos.length} resultado{filteredDepartamentos.length !== 1 ? 's' : ''}</Badge>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       {/* Estadísticas */}
       <div className={`grid ${isMobile ? 'grid-cols-2 gap-3' : 'grid-cols-1 md:grid-cols-4 gap-4'}`}>
         <Card>
@@ -621,6 +769,24 @@ export function ApartmentManagement({ buildingId, buildingName, buildingPermalin
                 Crea el primer departamento para este edificio
               </p>
             </div>
+          ) : filteredDepartamentos.length === 0 ? (
+            <div className="text-center py-8">
+              <Search className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <p className="text-gray-600">No se encontraron departamentos</p>
+              <p className="text-sm text-gray-500 mt-2">
+                {searchTerm || filters.piso !== "todos" || filters.habitaciones !== "todas" || filters.tipo !== "todos" 
+                  ? "Intenta ajustar los filtros de búsqueda"
+                  : "No hay departamentos que coincidan con los criterios"
+                }
+              </p>
+              <Button 
+                variant="outline" 
+                onClick={clearFilters}
+                className="mt-4"
+              >
+                Limpiar filtros
+              </Button>
+            </div>
           ) : (
             <Table>
               <TableHeader>
@@ -637,7 +803,7 @@ export function ApartmentManagement({ buildingId, buildingName, buildingPermalin
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {departamentos.map((dept) => (
+                {filteredDepartamentos.map((dept) => (
                   <TableRow key={dept.id}>
                     <TableCell className="font-medium">{dept.numero}</TableCell>
                     <TableCell>{dept.nombre}</TableCell>
