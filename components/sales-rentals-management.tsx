@@ -58,6 +58,8 @@ interface Transaction {
   valor_admin_edificio?: number
   fecha_transaccion: string
   fecha_firma_contrato?: string
+  datos_estado?: any
+  fecha_ultimo_estado?: string
   cliente_nombre: string
   cliente_email?: string
   cliente_telefono?: string
@@ -581,6 +583,39 @@ export function SalesRentalsManagement() {
     }).format(amount)
   }
 
+  // Función para obtener la fecha del estado actual
+  const getStateDate = (transaction: Transaction) => {
+    try {
+      const datosEstado = typeof transaction.datos_estado === 'string' 
+        ? JSON.parse(transaction.datos_estado) 
+        : transaction.datos_estado
+
+      // Si no hay datos_estado o está vacío, usar fecha_ultimo_estado como fallback
+      if (!datosEstado || Object.keys(datosEstado).length === 0) {
+        return transaction.fecha_ultimo_estado || transaction.fecha_transaccion
+      }
+
+      // Calcular la fecha según el estado actual
+      if (transaction.estado_actual === 'promesa_compra_venta') {
+        // Para promesa de compraventa, usar la fecha del último estado
+        return transaction.fecha_ultimo_estado || transaction.fecha_transaccion
+      } else if (transaction.estado_actual === 'firma_escrituras' && datosEstado?.fecha_firma) {
+        // Para firma de escrituras, usar la fecha de firma del JSON
+        return datosEstado.fecha_firma
+      } else if (transaction.estado_actual === 'firma_y_pago' && datosEstado?.fecha) {
+        // Para firma y pago (arriendo), usar la fecha del JSON
+        return datosEstado.fecha
+      } else {
+        // Fallback a fecha del último estado o fecha de transacción
+        return transaction.fecha_ultimo_estado || transaction.fecha_transaccion
+      }
+    } catch (error) {
+      console.error('Error parsing datos_estado:', error)
+      // Fallback a fecha del último estado o fecha de transacción
+      return transaction.fecha_ultimo_estado || transaction.fecha_transaccion
+    }
+  }
+
   // Función para procesar datos numéricos de forma segura
   const safeNumber = (value: any): number => {
     if (value === null || value === undefined || value === '') {
@@ -821,7 +856,10 @@ export function SalesRentalsManagement() {
                           <TableCell>{transaction.agente_nombre}</TableCell>
                           <TableCell>{getStatusBadge(transaction.estado_actual)}</TableCell>
                           <TableCell>
-                            {transaction.fecha_transaccion ? new Date(transaction.fecha_transaccion).toLocaleDateString('es-CO') : 'N/A'}
+                            {(() => {
+                              const stateDate = getStateDate(transaction)
+                              return stateDate ? new Date(stateDate).toLocaleDateString('es-CO') : 'N/A'
+                            })()}
                           </TableCell>
                           <TableCell>
                             <div className="flex gap-2">
