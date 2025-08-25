@@ -5,17 +5,17 @@ import { AuthProvider } from "@/contexts/auth-context"
 import { Toaster } from "sonner"
 
 export const metadata: Metadata = {
-  title: "HomEstate Back Office",
-  description: "Panel administrativo para gestión de edificios y departamentos",
+  title: "HomEstate",
+  description: "Busca tu departamento ideal",
   generator: 'v0.dev',
   icons: {
     icon: [
-      { url: '/favicon.ico', sizes: 'any' },
-      { url: '/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
-      { url: '/favicon-32x32.png', sizes: '32x32', type: 'image/png' }
+      { url: 'https://firebasestorage.googleapis.com/v0/b/homestate-web.firebasestorage.app/o/icono-logos%2Ffavicon.ico?alt=media&token=70b8327f-6cb4-4965-82ef-8a3afacd1d71', sizes: 'any' },
+      { url: 'https://firebasestorage.googleapis.com/v0/b/homestate-web.firebasestorage.app/o/icono-logos%2Ffavicon-16x16.png?alt=media&token=2b767f00-a615-4201-80a6-992ebf1cec94', sizes: '16x16', type: 'image/png' },
+      { url: 'https://firebasestorage.googleapis.com/v0/b/homestate-web.firebasestorage.app/o/icono-logos%2Ffavicon-32x32.png?alt=media&token=f9f9499f-d5af-48eb-8c3a-1ff080756f1e', sizes: '32x32', type: 'image/png' }
     ],
     apple: [
-      { url: '/favicon-32x32.png', sizes: '32x32', type: 'image/png' }
+      { url: 'https://firebasestorage.googleapis.com/v0/b/homestate-web.firebasestorage.app/o/icono-logos%2Ffavicon-32x32.png?alt=media&token=f9f9499f-d5af-48eb-8c3a-1ff080756f1e', sizes: '32x32', type: 'image/png' }
     ]
   }
 }

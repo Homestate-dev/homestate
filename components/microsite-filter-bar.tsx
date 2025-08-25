@@ -256,7 +256,7 @@ export function MicrositeFilterBar({ onFiltersChange, departmentsCount }: Micros
                 {isLoading && window.innerWidth < 768 ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Buscando los mejores departamentos para ti...
+                    Buscando departamentos...
                   </>
                 ) : (
                   "Aplicar filtros"
