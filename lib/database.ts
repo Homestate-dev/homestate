@@ -311,6 +311,7 @@ export async function getBuildings() {
       e.areas_comunales,
       e.seguridad,
       e.aparcamiento,
+      e.descripcion,
       e.url_imagen_principal,
       e.imagenes_secundarias,
       e.fecha_creacion,
@@ -413,6 +414,7 @@ export async function getBuildingById(id: number) {
       e.areas_comunales,
       e.seguridad,
       e.aparcamiento,
+      e.descripcion,
       e.url_imagen_principal,
       e.imagenes_secundarias,
       e.fecha_creacion,
@@ -463,6 +465,7 @@ export async function updateBuilding(id: number, updates: {
   areas_comunales?: string[]
   seguridad?: string[]
   aparcamiento?: string[]
+  descripcion?: string
   url_imagen_principal?: string
   imagenes_secundarias?: string[]
 }) {
@@ -503,6 +506,12 @@ export async function updateBuilding(id: number, updates: {
   if (updates.aparcamiento !== undefined) {
     setClauses.push(`aparcamiento = $${paramIndex}`)
     values.push(JSON.stringify(updates.aparcamiento))
+    paramIndex++
+  }
+
+  if (updates.descripcion !== undefined) {
+    setClauses.push(`descripcion = $${paramIndex}`)
+    values.push(updates.descripcion)
     paramIndex++
   }
 

@@ -372,16 +372,6 @@ export function BuildingSettings({ building, onBuildingDeleted }: BuildingSettin
                 placeholder="Ej: 15.50"
               />
             </div>
-
-            <div>
-              <Label htmlFor="politica_mascotas">Política de mascotas</Label>
-              <Input
-                id="politica_mascotas"
-                value={buildingData.politica_mascotas || ""}
-                onChange={(e) => handleInputChange("politica_mascotas", e.target.value)}
-                placeholder="Ej: Se permiten mascotas pequeñas"
-              />
-            </div>
           </CardContent>
         </Card>
 

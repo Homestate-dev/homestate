@@ -36,6 +36,7 @@ async function getBuildingByPermalink(permalink: string) {
         areas_comunales,
         seguridad,
         aparcamiento,
+        descripcion,
         url_imagen_principal,
         imagenes_secundarias,
         fecha_creacion
@@ -273,6 +274,7 @@ export async function PUT(
     if (areas_comunales !== undefined) updateData.areas_comunales = areas_comunales
     if (seguridad !== undefined) updateData.seguridad = seguridad
     if (aparcamiento !== undefined) updateData.aparcamiento = aparcamiento
+    if (descripcion !== undefined) updateData.descripcion = descripcion
     if (url_imagen_principal !== undefined) updateData.url_imagen_principal = url_imagen_principal
     if (imagenes_secundarias !== undefined) updateData.imagenes_secundarias = imagenes_secundarias
 

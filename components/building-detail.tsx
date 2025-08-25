@@ -29,7 +29,7 @@ export const BuildingDetail: React.FC<BuildingDetailProps> = ({ building, initia
         </TabsTrigger>
         <TabsTrigger value="settings" className={`flex items-center gap-2 ${isMobile ? 'text-xs p-2' : ''}`}>
           <Settings className="h-4 w-4" />
-          {isMobile ? 'Config' : 'Configuración'}
+          {isMobile ? 'Config' : 'Editar Edificio'}
         </TabsTrigger>
       </TabsList>
       <TabsContent value="apartments">
