@@ -207,7 +207,6 @@ export function MicrositeContent({ building, departments }: MicrositeContentProp
       filters.tipo === "todos" &&
       filters.habitaciones === "todas" &&
       filters.estado === "todos" &&
-      filters.idealPara === "todos" &&
       filters.priceRange[0] === 0 && filters.priceRange[1] === 500000 &&
       filters.rentRange[0] === 0 && filters.rentRange[1] === 5000 &&
       filters.areaRange[0] === 0 && filters.areaRange[1] === 200
@@ -248,10 +247,7 @@ export function MicrositeContent({ building, departments }: MicrositeContentProp
       filtered = filtered.filter(dept => dept.estado === filters.estado)
     }
 
-    // Filtrar por ideal para
-    if (filters.idealPara !== "todos") {
-      filtered = filtered.filter(dept => dept.ideal_para === filters.idealPara)
-    }
+    // Filtro "ideal para" removido según solicitud del usuario
 
     // Solo aplicar filtros de rango si los filtros no están limpios
     if (!areFiltersClean(filters)) {
@@ -316,7 +312,20 @@ export function MicrositeContent({ building, departments }: MicrositeContentProp
               {building.descripcion && (
                 <p className="text-white italic text-lg md:text-xl mb-4">{building.descripcion}</p>
               )}
-              <MicrositeShareButton buildingName={building.nombre} buildingAddress={building.direccion} />
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                <MicrositeShareButton buildingName={building.nombre} buildingAddress={building.direccion} />
+                {/* Botón para móvil que lleva a los departamentos */}
+                <Button
+                  onClick={() => {
+                    const element = document.getElementById('departamentos-disponibles')
+                    element?.scrollIntoView({ behavior: 'smooth' })
+                  }}
+                  variant="outline"
+                  className="md:hidden bg-white text-orange-600 border-white hover:bg-orange-50 px-6 py-3 text-base font-medium"
+                >
+                  Ver departamentos disponibles
+                </Button>
+              </div>
             </div>
           </div>
         </section>
@@ -392,7 +401,7 @@ export function MicrositeContent({ building, departments }: MicrositeContentProp
           </div>
 
           {/* Listado de departamentos */}
-          <div className="space-y-6">
+          <div id="departamentos-disponibles" className="space-y-6">
             <div className="flex items-center justify-between">
               <h2 className="text-2xl font-bold text-gray-900">
                 Departamentos Disponibles
@@ -414,7 +423,6 @@ export function MicrositeContent({ building, departments }: MicrositeContentProp
                     tipo: "todos",
                     habitaciones: "todas",
                     estado: "todos",
-                    idealPara: "todos",
                     priceRange: [0, 500000],
                     rentRange: [0, 5000],
                     areaRange: [0, 200]

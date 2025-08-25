@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Filter } from "lucide-react"
+import { Filter, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Slider } from "@/components/ui/slider"
@@ -20,7 +20,6 @@ interface FilterState {
   tipo: string
   habitaciones: string
   estado: string
-  idealPara: string
   priceRange: number[]
   rentRange: number[]
   areaRange: number[]
@@ -36,11 +35,12 @@ export function MicrositeFilterBar({ onFiltersChange, departmentsCount }: Micros
     tipo: "todos",
     habitaciones: "todas",
     estado: "todos",
-    idealPara: "todos",
     priceRange: [0, 500000],
     rentRange: [0, 5000],
     areaRange: [0, 200]
   })
+
+  const [isLoading, setIsLoading] = useState(false)
 
   const [isOpen, setIsOpen] = useState(false)
 
@@ -57,7 +57,6 @@ export function MicrositeFilterBar({ onFiltersChange, departmentsCount }: Micros
       tipo: "todos",
       habitaciones: "todas",
       estado: "todos",
-      idealPara: "todos",
       priceRange: [0, 500000],
       rentRange: [0, 5000],
       areaRange: [0, 200]
@@ -69,8 +68,7 @@ export function MicrositeFilterBar({ onFiltersChange, departmentsCount }: Micros
   const hasActiveFilters = 
     filters.tipo !== "todos" || 
     filters.habitaciones !== "todas" || 
-    filters.estado !== "todos" || 
-    filters.idealPara !== "todos"
+    filters.estado !== "todos"
 
   return (
     <div className="flex items-center justify-between mb-6">
@@ -99,70 +97,95 @@ export function MicrositeFilterBar({ onFiltersChange, departmentsCount }: Micros
               <DialogTitle className="text-orange-600 text-xl">Filtros inteligentes</DialogTitle>
             </DialogHeader>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+            <div className="space-y-4 mt-4">
               <div>
-                <label className="text-sm font-medium text-gray-700 mb-1 block">Tipo de operación</label>
-                <Select value={filters.tipo} onValueChange={(value) => handleFilterChange('tipo', value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Seleccionar" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="todos">Todos</SelectItem>
-                    <SelectItem value="venta">Venta</SelectItem>
-                    <SelectItem value="arriendo">Arriendo</SelectItem>
-                    <SelectItem value="arriendo y venta">Venta y Arriendo</SelectItem>
-                  </SelectContent>
-                </Select>
+                <label className="text-sm font-medium text-gray-700 mb-3 block">Tipo de operación</label>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    type="button"
+                    variant={filters.tipo === "todos" ? "default" : "outline"}
+                    onClick={() => handleFilterChange('tipo', 'todos')}
+                    className={`${
+                      filters.tipo === "todos" 
+                        ? "bg-orange-600 hover:bg-orange-700 text-white border-orange-600" 
+                        : "border-orange-200 text-orange-600 hover:bg-orange-50"
+                    } transition-all duration-200`}
+                  >
+                    Todos
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={filters.tipo === "venta" ? "default" : "outline"}
+                    onClick={() => handleFilterChange('tipo', 'venta')}
+                    className={`${
+                      filters.tipo === "venta" 
+                        ? "bg-orange-600 hover:bg-orange-700 text-white border-orange-600" 
+                        : "border-orange-200 text-orange-600 hover:bg-orange-50"
+                    } transition-all duration-200`}
+                  >
+                    Venta
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={filters.tipo === "arriendo" ? "default" : "outline"}
+                    onClick={() => handleFilterChange('tipo', 'arriendo')}
+                    className={`${
+                      filters.tipo === "arriendo" 
+                        ? "bg-orange-600 hover:bg-orange-700 text-white border-orange-600" 
+                        : "border-orange-200 text-orange-600 hover:bg-orange-50"
+                    } transition-all duration-200`}
+                  >
+                    Arriendo
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={filters.tipo === "arriendo y venta" ? "default" : "outline"}
+                    onClick={() => handleFilterChange('tipo', 'arriendo y venta')}
+                    className={`${
+                      filters.tipo === "arriendo y venta" 
+                        ? "bg-orange-600 hover:bg-orange-700 text-white border-orange-600" 
+                        : "border-orange-200 text-orange-600 hover:bg-orange-50"
+                    } transition-all duration-200`}
+                  >
+                    Ambos
+                  </Button>
+                </div>
               </div>
 
-              <div>
-                <label className="text-sm font-medium text-gray-700 mb-1 block">Habitaciones</label>
-                <Select value={filters.habitaciones} onValueChange={(value) => handleFilterChange('habitaciones', value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Seleccionar" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="todas">Todas</SelectItem>
-                    <SelectItem value="Loft">Loft</SelectItem>
-                    <SelectItem value="Suite">Suite</SelectItem>
-                    <SelectItem value="2">2 habitaciones</SelectItem>
-                    <SelectItem value="3">3 habitaciones</SelectItem>
-                    <SelectItem value="4">4+ habitaciones</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium text-gray-700 mb-1 block">Habitaciones</label>
+                  <Select value={filters.habitaciones} onValueChange={(value) => handleFilterChange('habitaciones', value)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Seleccionar" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="todas">Todas</SelectItem>
+                      <SelectItem value="Loft">Loft</SelectItem>
+                      <SelectItem value="Suite">Suite</SelectItem>
+                      <SelectItem value="2">2 habitaciones</SelectItem>
+                      <SelectItem value="3">3 habitaciones</SelectItem>
+                      <SelectItem value="4">4+ habitaciones</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
 
-              <div>
-                <label className="text-sm font-medium text-gray-700 mb-1 block">Estado</label>
-                <Select value={filters.estado} onValueChange={(value) => handleFilterChange('estado', value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Seleccionar" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="todos">Todos</SelectItem>
-                    <SelectItem value="nuevo">Nuevo</SelectItem>
-                    <SelectItem value="poco_uso">Poco uso</SelectItem>
-                    <SelectItem value="un_ano">Un año</SelectItem>
-                    <SelectItem value="mas_de_un_ano">Más de un año</SelectItem>
-                    <SelectItem value="remodelar">Para remodelar</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <label className="text-sm font-medium text-gray-700 mb-1 block">Ideal para</label>
-                <Select value={filters.idealPara} onValueChange={(value) => handleFilterChange('idealPara', value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Seleccionar" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="todos">Todos</SelectItem>
-                    <SelectItem value="familia">Familia</SelectItem>
-                    <SelectItem value="pareja">Pareja</SelectItem>
-                    <SelectItem value="persona_sola">Una persona</SelectItem>
-                    <SelectItem value="profesional">Profesional</SelectItem>
-                  </SelectContent>
-                </Select>
+                <div>
+                  <label className="text-sm font-medium text-gray-700 mb-1 block">Estado</label>
+                  <Select value={filters.estado} onValueChange={(value) => handleFilterChange('estado', value)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Seleccionar" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="todos">Todos</SelectItem>
+                      <SelectItem value="nuevo">Nuevo</SelectItem>
+                      <SelectItem value="poco_uso">Poco uso</SelectItem>
+                      <SelectItem value="un_ano">Un año</SelectItem>
+                      <SelectItem value="mas_de_un_ano">Más de un año</SelectItem>
+                      <SelectItem value="remodelar">Para remodelar</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
             </div>
 
@@ -200,7 +223,7 @@ export function MicrositeFilterBar({ onFiltersChange, departmentsCount }: Micros
                 <Slider 
                   value={filters.areaRange}
                   onValueChange={(value) => handleFilterChange('areaRange', value)}
-                  max={200} 
+                  max={450} 
                   step={5} 
                   className="py-2" 
                 />
@@ -209,28 +232,42 @@ export function MicrositeFilterBar({ onFiltersChange, departmentsCount }: Micros
 
 
 
-            <div className="mt-6 flex justify-between">
+            <div className="mt-6 flex flex-col sm:flex-row gap-3 sm:justify-between">
               <Button 
                 variant="outline" 
                 onClick={resetFilters}
-                className="px-6 py-2"
+                className="px-6 py-3 text-sm border-gray-300 text-gray-600 hover:bg-gray-50"
               >
                 Limpiar filtros
               </Button>
               <Button 
-                className="bg-orange-600 hover:bg-orange-700 text-white px-6 py-2 rounded-full shadow"
-                onClick={() => setIsOpen(false)}
+                className="bg-orange-600 hover:bg-orange-700 text-white px-8 py-3 rounded-lg shadow-lg font-medium text-base transition-all duration-200 transform hover:scale-105"
+                onClick={async () => {
+                  setIsLoading(true)
+                  // Simular delay de búsqueda en móviles
+                  if (window.innerWidth < 768) {
+                    await new Promise(resolve => setTimeout(resolve, 1500))
+                  }
+                  setIsOpen(false)
+                  setIsLoading(false)
+                }}
+                disabled={isLoading}
               >
-                Aplicar filtros
+                {isLoading && window.innerWidth < 768 ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Buscando los mejores departamentos para ti...
+                  </>
+                ) : (
+                  "Aplicar filtros"
+                )}
               </Button>
             </div>
           </DialogContent>
         </Dialog>
       </div>
 
-      <div className="text-sm text-gray-600">
-        {departmentsCount} departamento{departmentsCount !== 1 ? 's' : ''} disponible{departmentsCount !== 1 ? 's' : ''}
-      </div>
+      
     </div>
   )
 }
