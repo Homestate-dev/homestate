@@ -69,7 +69,7 @@ export async function generateMetadata({
       openGraph: {
         title: `${departamento.nombre} - Depto ${departamento.numero} - HomEstate`,
         description: `${habitaciones}, ${departamento.area_total}m² en ${departamento.edificio_nombre || 'edificio'}${precioTexto}`,
-        images: ["https://firebasestorage.googleapis.com/v0/b/homestate-web.firebasestorage.app/o/icono-logos%2Ffavicon-16x16.png?alt=media&token=2b767f00-a615-4201-80a6-992ebf1cec94"],
+        images: ["/favicon.ico"],
       },
     }
   } catch (error) {
