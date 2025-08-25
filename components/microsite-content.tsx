@@ -325,11 +325,13 @@ export function MicrositeContent({ building, departments }: MicrositeContentProp
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Información del edificio */}
           <div className="bg-white rounded-lg shadow-sm mb-8">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 p-6">
-              {/* Carrusel de imágenes */}
-              <div>
-                <BuildingImagesCarousel images={buildingImages} buildingName={building.nombre} />
-              </div>
+            <div className={`grid ${buildingImages.length > 0 ? 'grid-cols-1 lg:grid-cols-2' : 'grid-cols-1'} gap-8 p-6`}>
+              {/* Carrusel de imágenes - solo mostrar si hay imágenes */}
+              {buildingImages.length > 0 && (
+                <div>
+                  <BuildingImagesCarousel images={buildingImages} buildingName={building.nombre} />
+                </div>
+              )}
               
               {/* Información del edificio */}
               <div>
