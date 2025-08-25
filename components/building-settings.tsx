@@ -116,6 +116,11 @@ export function BuildingSettings({ building, onBuildingDeleted }: BuildingSettin
     setHasChanges(true)
   }
 
+  const handleArrayChange = (field: string, items: string[]) => {
+    setBuildingData((prev) => ({ ...prev, [field]: items }))
+    setHasChanges(true)
+  }
+
   const handleMainImageUpload = (event: React.ChangeEvent<HTMLInputElement> | { target: { files: FileList } }) => {
     const files = event.target.files
     if (files && files[0]) {
@@ -388,7 +393,7 @@ export function BuildingSettings({ building, onBuildingDeleted }: BuildingSettin
               placeholder="Seleccionar área comunal..."
               selectedItems={buildingData.areas_comunales}
               availableItems={areasComunalesDisponibles}
-              onItemsChange={(items) => setBuildingData(prev => ({ ...prev, areas_comunales: items }))}
+              onItemsChange={(items) => handleArrayChange("areas_comunales", items)}
             />
 
             <Separator />
@@ -399,7 +404,7 @@ export function BuildingSettings({ building, onBuildingDeleted }: BuildingSettin
               placeholder="Seleccionar tipo de seguridad..."
               selectedItems={buildingData.seguridad}
               availableItems={seguridadDisponible}
-              onItemsChange={(items) => setBuildingData(prev => ({ ...prev, seguridad: items }))}
+              onItemsChange={(items) => handleArrayChange("seguridad", items)}
             />
 
             <Separator />
@@ -410,7 +415,7 @@ export function BuildingSettings({ building, onBuildingDeleted }: BuildingSettin
               placeholder="Seleccionar características..."
               selectedItems={buildingData.aparcamiento}
               availableItems={aparcamientoDisponible}
-              onItemsChange={(items) => setBuildingData(prev => ({ ...prev, aparcamiento: items }))}
+              onItemsChange={(items) => handleArrayChange("aparcamiento", items)}
             />
           </CardContent>
         </Card>
