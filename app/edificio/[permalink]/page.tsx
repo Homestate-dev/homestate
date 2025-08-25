@@ -98,7 +98,7 @@ export async function generateMetadata({
       openGraph: {
         title: `${building.nombre} - HomEstate`,
         description: `Micrositio del edificio ${building.nombre} con ${departments.length} departamentos`,
-        images: building.url_imagen_principal ? [building.url_imagen_principal] : [],
+        images: ["https://firebasestorage.googleapis.com/v0/b/homestate-web.firebasestorage.app/o/icono-logos%2Ffavicon-16x16.png?alt=media&token=2b767f00-a615-4201-80a6-992ebf1cec94"],
       },
     }
   } catch (error) {

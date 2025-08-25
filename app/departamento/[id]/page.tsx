@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation"
 import Link from "next/link"
+import type { Metadata } from "next"
 import { ArrowLeft, Bed, Bath, Maximize, MapPin, Users, Video, Check, X, Package, Home } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -16,6 +17,67 @@ import React from "react"
 
 interface PageProps {
   params: Promise<{ id: string }>
+}
+
+// Generar metadata dinámico para SEO
+export async function generateMetadata({ 
+  params 
+}: { 
+  params: Promise<{ id: string }> 
+}): Promise<Metadata> {
+  try {
+    const { id } = await params
+    const departmentId = parseInt(id)
+
+    if (isNaN(departmentId)) {
+      return {
+        title: 'Departamento no encontrado - HomEstate',
+      }
+    }
+
+    const departamento = await getDepartmentById(departmentId)
+
+    if (!departamento || !departamento.nombre) {
+      return {
+        title: 'Departamento no encontrado - HomEstate',
+      }
+    }
+
+    // Construir precio para la descripción
+    const precios = []
+    if (departamento.valor_venta && departamento.valor_venta > 0) {
+      precios.push(`Venta: $${departamento.valor_venta.toLocaleString()}`)
+    }
+    if (departamento.valor_arriendo && departamento.valor_arriendo > 0) {
+      precios.push(`Arriendo: $${departamento.valor_arriendo.toLocaleString()}/mes`)
+    }
+    const precioTexto = precios.length > 0 ? ` - ${precios.join(' | ')}` : ''
+
+    // Mapear habitaciones
+    const habitacionesMap: Record<string, string> = {
+      'Loft': "Loft",
+      'Suite': "Suite", 
+      '2': "2 habitaciones",
+      '3': "3 habitaciones",
+      '4': "4+ habitaciones"
+    }
+    const habitaciones = habitacionesMap[departamento.cantidad_habitaciones] || departamento.cantidad_habitaciones
+
+    return {
+      title: `${departamento.nombre} - Depto ${departamento.numero}, Piso ${departamento.piso} - HomEstate`,
+      description: `${departamento.nombre} en ${departamento.edificio_nombre || 'edificio'}. ${habitaciones}, ${departamento.cantidad_banos || 1} baño${(departamento.cantidad_banos || 1) > 1 ? 's' : ''}, ${departamento.area_total}m²${precioTexto}. Ubicado en ${departamento.edificio_direccion || 'excelente ubicación'}.`,
+      openGraph: {
+        title: `${departamento.nombre} - Depto ${departamento.numero} - HomEstate`,
+        description: `${habitaciones}, ${departamento.area_total}m² en ${departamento.edificio_nombre || 'edificio'}${precioTexto}`,
+        images: ["https://firebasestorage.googleapis.com/v0/b/homestate-web.firebasestorage.app/o/icono-logos%2Ffavicon-16x16.png?alt=media&token=2b767f00-a615-4201-80a6-992ebf1cec94"],
+      },
+    }
+  } catch (error) {
+    console.error('Error generating metadata for department:', error)
+    return {
+      title: 'Error - HomEstate',
+    }
+  }
 }
 
 export default async function DepartamentoPage({ params }: PageProps) {
