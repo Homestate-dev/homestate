@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation"
 import Link from "next/link"
-import { ArrowLeft, Bed, Bath, Maximize, MapPin, Users, Home, Check, X, Package } from "lucide-react"
+import { ArrowLeft, Bed, Bath, Maximize, MapPin, Users, Video, Check, X, Package } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -289,7 +289,7 @@ export default async function DepartamentoPage({ params }: PageProps) {
             <Card>
               <CardHeader>
                 <CardTitle className="text-xl flex items-center">
-                  <Home className="h-5 w-5 mr-2" />
+                  <Video className="h-5 w-5 mr-2" />
                   Videos
                 </CardTitle>
               </CardHeader>
