@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation"
 import Link from "next/link"
-import { ArrowLeft, Bed, Bath, Maximize, MapPin, Users, Video, Check, X, Package } from "lucide-react"
+import { ArrowLeft, Bed, Bath, Maximize, MapPin, Users, Video, Check, X, Package, Home } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
