@@ -15,19 +15,28 @@ const dbConfig = {
 const pool = new Pool(dbConfig)
 
 export async function executeQuery(query: string, params: any[] = []) {
-  console.log('🔧 [DATABASE DEBUG] Ejecutando consulta:', {
-    query: query.substring(0, 100) + '...',
-    paramsCount: params.length,
-    params: params
-  })
+  // Solo log detallado para consultas de transacciones
+  const isTransactionQuery = query.includes('transacciones_') || query.includes('information_schema')
+  
+  if (isTransactionQuery) {
+    console.log('🔧 [DATABASE DEBUG] Ejecutando consulta:', {
+      query: query.substring(0, 150) + (query.length > 150 ? '...' : ''),
+      paramsCount: params.length,
+      params: params
+    })
+  }
   
   const client = await pool.connect()
   try {
     const result = await client.query(query, params)
-    console.log('✅ [DATABASE DEBUG] Consulta exitosa:', {
-      rowCount: result.rowCount,
-      fieldsCount: result.fields?.length || 0
-    })
+    
+    if (isTransactionQuery) {
+      console.log('✅ [DATABASE DEBUG] Consulta exitosa:', {
+        rowCount: result.rowCount,
+        fieldsCount: result.fields?.length || 0
+      })
+    }
+    
     return result
   } catch (error) {
     console.error('❌ [DATABASE DEBUG] Error en consulta:', error)

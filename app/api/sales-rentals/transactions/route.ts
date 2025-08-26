@@ -4,14 +4,17 @@ import { query, logAdminAction } from '@/lib/database'
 // Función auxiliar para verificar si la columna es_agente existe
 async function checkColumnExists(): Promise<boolean> {
   try {
+    console.log('🔍 [DEBUG] Verificando columna es_agente en tabla administradores')
     const result = await query(`
       SELECT column_name 
       FROM information_schema.columns 
       WHERE table_name = 'administradores' AND column_name = 'es_agente'
     `)
-    return result.rows.length > 0
+    const exists = result.rows.length > 0
+    console.log(`📋 [DEBUG] Columna es_agente existe: ${exists}`)
+    return exists
   } catch (error) {
-    console.warn('Error checking column existence:', error)
+    console.error('❌ [DEBUG] Error checking column existence:', error)
     return false
   }
 }
@@ -19,6 +22,7 @@ async function checkColumnExists(): Promise<boolean> {
 // Helper: verifica si una tabla existe en la BD
 async function tableExists(tableName: string): Promise<boolean> {
   try {
+    console.log(`🔍 [DEBUG] Verificando existencia de tabla: ${tableName}`)
     const res = await query(
       `SELECT EXISTS (
          SELECT 1
@@ -27,9 +31,11 @@ async function tableExists(tableName: string): Promise<boolean> {
        ) AS exists`,
       [tableName]
     )
-    return res.rows[0]?.exists === true
+    const exists = res.rows[0]?.exists === true
+    console.log(`📋 [DEBUG] Tabla ${tableName} existe: ${exists}`)
+    return exists
   } catch (error) {
-    console.warn(`Error checking if table ${tableName} exists:`, error)
+    console.error(`❌ [DEBUG] Error checking if table ${tableName} exists:`, error)
     return false
   }
 }
@@ -159,6 +165,46 @@ export async function GET(request: Request) {
       rowCount: result?.rows?.length || 0,
       firstRow: result?.rows?.[0] ? Object.keys(result.rows[0]) : 'N/A'
     })
+
+    // Debug adicional: Si no hay resultados, vamos a investigar por qué
+    if (!result || result.rows.length === 0) {
+      console.log('🔍 [DEBUG] No hay resultados, investigando...')
+      
+      // Verificar cuántas transacciones hay en total
+      const totalCountQuery = `SELECT COUNT(*) as total FROM ${tableName}`
+      const totalCountResult = await query(totalCountQuery, [])
+      console.log('📊 [DEBUG] Total de registros en tabla:', totalCountResult.rows[0])
+      
+      // Verificar sin filtros para ver si hay datos
+      const simpleQuery = `
+        SELECT ${tableAlias}.id, ${tableAlias}.cliente_nombre, ${tableAlias}.tipo_transaccion
+        FROM ${tableName} ${tableAlias}
+        LIMIT 3
+      `
+      const simpleResult = await query(simpleQuery, [])
+      console.log('🎯 [DEBUG] Registros sin filtros:', simpleResult.rows)
+      
+      // Verificar si el problema está en los JOINs
+      const joinTestQuery = `
+        SELECT COUNT(*) as total
+        FROM ${tableName} ${tableAlias}
+        LEFT JOIN administradores a ON ${tableAlias}.agente_id = a.id
+        LEFT JOIN departamentos d ON ${tableAlias}.departamento_id = d.id
+        LEFT JOIN edificios e ON d.edificio_id = e.id
+      `
+      const joinTestResult = await query(joinTestQuery, [])
+      console.log('🔗 [DEBUG] Registros después de JOINs:', joinTestResult.rows[0])
+      
+      // Verificar si el problema está en whereConditions
+      console.log('🧭 [DEBUG] Verificando condiciones WHERE:', whereConditions)
+      const whereTestQuery = `
+        SELECT COUNT(*) as total
+        FROM ${tableName} ${tableAlias}
+        WHERE ${whereConditions.join(' AND ')}
+      `
+      const whereTestResult = await query(whereTestQuery, queryParams)
+      console.log('⚖️ [DEBUG] Registros después de WHERE:', whereTestResult.rows[0])
+    }
 
     // Sanitizar los datos para evitar errores en el frontend
     const safeData = result.rows.map(row => {
