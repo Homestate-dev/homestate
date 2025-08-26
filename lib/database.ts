@@ -1215,7 +1215,8 @@ export async function getBuildingIncomeReport(
   dateFrom?: string,
   dateTo?: string
 ) {
-  let whereConditions = ['1=1']
+  // Construir las condiciones WHERE
+  let whereConditions: string[] = []
   let params: any[] = []
   let paramCount = 0
 
@@ -1226,7 +1227,7 @@ export async function getBuildingIncomeReport(
     params.push(buildingId)
   }
 
-  // Filtro por tipo de transacción
+  // Filtro por tipo de transacción (solo aplicar si se especifica)
   if (transactionType && transactionType !== 'all') {
     paramCount++
     whereConditions.push(`t.tipo_transaccion = $${paramCount}`)
@@ -1247,7 +1248,8 @@ export async function getBuildingIncomeReport(
     params.push(dateTo)
   }
 
-  const whereClause = whereConditions.length > 1 ? `WHERE ${whereConditions.slice(1).join(' AND ')}` : ''
+  // Construir cláusula WHERE solo si hay condiciones
+  const whereClause = whereConditions.length > 0 ? `WHERE ${whereConditions.join(' AND ')}` : ''
   
   const query = `
     SELECT 
