@@ -213,7 +213,8 @@ export function ApartmentManagement({ buildingId, buildingName, buildingPermalin
     
     setEditingDepartment({ 
       ...department, 
-      area_total: areaTotal 
+      area_total: areaTotal,
+      descripcion: department.descripcion || '' // Asegurar que siempre tenga un valor
     })
     setShowEditDialog(true)
   }
@@ -999,6 +1000,18 @@ export function ApartmentManagement({ buildingId, buildingName, buildingPermalin
                   </div>
                 )}
               </div>
+
+              <Separator />
+
+              {/* Descripción */}
+              {selectedDepartment.descripcion && (
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">Descripción</h3>
+                  <p className="text-gray-700 leading-relaxed">
+                    {selectedDepartment.descripcion}
+                  </p>
+                </div>
+              )}
 
               <Separator />
 
