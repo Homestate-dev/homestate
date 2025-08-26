@@ -1209,9 +1209,45 @@ export async function getBuildingTransactionsReport(buildingId?: number) {
 }
 
 // Reporte de ingresos por edificio
-export async function getBuildingIncomeReport(buildingId?: number) {
-  const whereClause = buildingId ? 'WHERE e.id = $1' : ''
-  const params = buildingId ? [buildingId] : []
+export async function getBuildingIncomeReport(
+  buildingId?: number,
+  transactionType?: string,
+  dateFrom?: string,
+  dateTo?: string
+) {
+  let whereConditions = ['1=1']
+  let params: any[] = []
+  let paramCount = 0
+
+  // Filtro por edificio
+  if (buildingId) {
+    paramCount++
+    whereConditions.push(`e.id = $${paramCount}`)
+    params.push(buildingId)
+  }
+
+  // Filtro por tipo de transacción
+  if (transactionType && transactionType !== 'all') {
+    paramCount++
+    whereConditions.push(`t.tipo_transaccion = $${paramCount}`)
+    params.push(transactionType)
+  }
+
+  // Filtro por fecha desde
+  if (dateFrom) {
+    paramCount++
+    whereConditions.push(`DATE(t.fecha_transaccion) >= $${paramCount}::DATE`)
+    params.push(dateFrom)
+  }
+
+  // Filtro por fecha hasta
+  if (dateTo) {
+    paramCount++
+    whereConditions.push(`DATE(t.fecha_transaccion) <= $${paramCount}::DATE`)
+    params.push(dateTo)
+  }
+
+  const whereClause = whereConditions.length > 1 ? `WHERE ${whereConditions.slice(1).join(' AND ')}` : ''
   
   const query = `
     SELECT 

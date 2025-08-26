@@ -11,10 +11,11 @@ export async function GET(request: NextRequest) {
     console.log('🔗 Search params keys:', Array.from(searchParams.keys()))
     console.log('🔗 Search params values:', Array.from(searchParams.values()))
     const buildingId = searchParams.get('buildingId')
+    const transactionType = searchParams.get('transactionType')
     const dateFrom = searchParams.get('dateFrom')
     const dateTo = searchParams.get('dateTo')
 
-    console.log('📋 Request parameters:', { buildingId, dateFrom, dateTo })
+    console.log('📋 Request parameters:', { buildingId, transactionType, dateFrom, dateTo })
     console.log('🔍 BuildingId type:', typeof buildingId)
     console.log('🔍 BuildingId value (raw):', buildingId)
     console.log('🔍 BuildingId value (parsed):', buildingId ? parseInt(buildingId) : 'null')
@@ -29,7 +30,7 @@ export async function GET(request: NextRequest) {
       }, { status: 400 })
     }
 
-    // Construir la consulta SQL con filtros de fecha y estados válidos
+    // Construir la consulta SQL con filtros de fecha, tipo de transacción y estados válidos
     let sql = `
       SELECT DISTINCT
         d.id as departamento_id,
@@ -52,6 +53,12 @@ export async function GET(request: NextRequest) {
     `
 
     const params: any[] = [buildingId]
+
+    // Agregar filtro de tipo de transacción si está presente
+    if (transactionType && transactionType !== 'all') {
+      sql += ` AND t.tipo_transaccion = $${params.length + 1}`
+      params.push(transactionType)
+    }
 
     // Agregar filtros de fecha si están presentes
     if (dateFrom && dateTo) {

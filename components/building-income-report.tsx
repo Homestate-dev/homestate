@@ -157,7 +157,7 @@ export function BuildingIncomeReport() {
   }
 
      // Función para crear el HTML del reporte de administrador
-  const createAdminReportHTML = (title: string, headers: string[], tableData: any[][], isAllBuildings: boolean, dateFrom?: string, dateTo?: string) => {
+  const createAdminReportHTML = (title: string, headers: string[], tableData: any[][], isAllBuildings: boolean, dateFrom?: string, dateTo?: string, showTipoColumn: boolean = true) => {
      return `
        <!DOCTYPE html>
        <html>
@@ -283,8 +283,23 @@ export function BuildingIncomeReport() {
                ${tableData.map(row => `
                  <tr class="${row[0] === 'TOTAL' ? 'total-row' : ''}">
                    ${row.map((cell, index) => {
-                     const isCurrency = isAllBuildings ? (index === 1 || index === 2 || index === 3) : (index === 4)
-                     const isNumber = isAllBuildings ? false : (index === 1 || index === 2)
+                     let isCurrency = false
+                     let isNumber = false
+                     
+                     if (isAllBuildings) {
+                       // Para reporte de todos los edificios
+                       isCurrency = (index === 1 || index === 2 || index === 3)
+                     } else {
+                       // Para reporte de edificio específico
+                       if (showTipoColumn) {
+                         // Con columna Tipo: Administración Edificio está en posición 5
+                         isCurrency = (index === 5)
+                       } else {
+                         // Sin columna Tipo: Administración Edificio está en posición 4
+                         isCurrency = (index === 4)
+                       }
+                     }
+                     
                      const className = isCurrency ? 'currency' : isNumber ? 'number' : ''
                      return `<td class="${className}">${cell}</td>`
                    }).join('')}
@@ -516,6 +531,8 @@ export function BuildingIncomeReport() {
               
               // Crear HTML del reporte
               const showBuildingColumn = selectedBuilding === "all"
+              const showTipoColumnHomeState = filterTransactionType === 'all'
+              
               const tableData = processedIncomeData
                 .filter(building => building.total_transacciones > 0)
                 .map((building: BuildingIncome) => {
@@ -523,9 +540,16 @@ export function BuildingIncomeReport() {
                   if (showBuildingColumn) {
                     row.push(building.edificio_nombre)
                   }
+                  
+                  // Solo mostrar ventas/arriendos si están incluidos en el filtro
+                  if (filterTransactionType === 'all' || filterTransactionType === 'venta') {
+                    row.push(building.total_ventas.toString())
+                  }
+                  if (filterTransactionType === 'all' || filterTransactionType === 'arriendo') {
+                    row.push(building.total_arriendos.toString())
+                  }
+                  
                   row.push(
-                    building.total_ventas.toString(),
-                    building.total_arriendos.toString(),
                     formatCurrency(building.valor_total_transacciones),
                     formatCurrency(building.total_comisiones),
                     formatCurrency(building.total_homestate),
@@ -553,9 +577,16 @@ export function BuildingIncomeReport() {
               if (showBuildingColumn) {
                 totalRow.push('TOTAL')
               }
+              
+              // Solo incluir totales de ventas/arriendos según el filtro
+              if (filterTransactionType === 'all' || filterTransactionType === 'venta') {
+                totalRow.push(totalSales.toString())
+              }
+              if (filterTransactionType === 'all' || filterTransactionType === 'arriendo') {
+                totalRow.push(totalRentals.toString())
+              }
+              
               totalRow.push(
-                totalSales.toString(),
-                totalRentals.toString(),
                 formatCurrency(totalValue),
                 formatCurrency(totalCommissions),
                 formatCurrency(totalHomeState),
@@ -572,9 +603,16 @@ export function BuildingIncomeReport() {
               if (showBuildingColumn) {
                 headers.push('Edificio')
               }
+              
+              // Solo incluir headers de ventas/arriendos según el filtro
+              if (filterTransactionType === 'all' || filterTransactionType === 'venta') {
+                headers.push('Ventas')
+              }
+              if (filterTransactionType === 'all' || filterTransactionType === 'arriendo') {
+                headers.push('Arriendos')
+              }
+              
               headers.push(
-                'Ventas',
-                'Arriendos',
                 'Valor Total',
                 'Total Comisiones',
                 'HomeState',
@@ -714,9 +752,33 @@ export function BuildingIncomeReport() {
                         ${tableData.map(row => `
                           <tr class="${row[0] === 'TOTAL' ? 'total-row' : ''}">
                             ${row.map((cell, index) => {
-                              const isCurrency = index >= 3 && index <= 6 && row[0] !== 'TOTAL'
-                              const isNumber = index >= 1 && index <= 2
-                              const isPercentage = index >= 7
+                              let isCurrency = false
+                              let isNumber = false
+                              let isPercentage = false
+                              
+                              // Calcular índices dinámicamente según columnas presentes
+                              let ventasColIndex = showBuildingColumn ? 1 : 0
+                              let arriendosColIndex = ventasColIndex + (filterTransactionType === 'all' || filterTransactionType === 'venta' ? 1 : 0)
+                              let valorTotalIndex = arriendosColIndex + (filterTransactionType === 'all' || filterTransactionType === 'arriendo' ? 1 : 0)
+                              
+                              // Determinar si es columna numérica (ventas/arriendos)
+                              if (filterTransactionType === 'all' || filterTransactionType === 'venta') {
+                                if (index === ventasColIndex) isNumber = true
+                              }
+                              if (filterTransactionType === 'all' || filterTransactionType === 'arriendo') {
+                                if (index === arriendosColIndex) isNumber = true
+                              }
+                              
+                              // Columnas de moneda (desde Valor Total hasta Admin Edificio)
+                              if (index >= valorTotalIndex && index <= valorTotalIndex + 4 && row[0] !== 'TOTAL') {
+                                isCurrency = true
+                              }
+                              
+                              // Columnas de porcentaje (las últimas 3)
+                              if (index >= valorTotalIndex + 5) {
+                                isPercentage = true
+                              }
+                              
                               const className = isCurrency ? 'currency' : isNumber ? 'number' : isPercentage ? 'percentage' : ''
                               return `<td class="${className}">${cell}</td>`
                             }).join('')}
@@ -792,7 +854,7 @@ export function BuildingIncomeReport() {
                  const headers = ['Edificio', 'Ventas', 'Arriendos', 'Administración Edificio']
                  
                  // Crear HTML del reporte para todos los edificios
-                 const htmlContent = createAdminReportHTML(title, headers, tableData, true, dateRange.from, dateRange.to)
+                 const htmlContent = createAdminReportHTML(title, headers, tableData, true, dateRange.from, dateRange.to, true)
                  
                  // Abrir en nueva ventana
                  const newWindow = window.open('', '_blank')
@@ -808,6 +870,10 @@ export function BuildingIncomeReport() {
                     console.log('🔍 Before append - selectedBuilding:', selectedBuilding)
                     deptParams.append('buildingId', selectedBuilding)
                     console.log('🔍 After append - deptParams.get("buildingId"):', deptParams.get('buildingId'))
+                    
+                    if (filterTransactionType && filterTransactionType !== 'all') {
+                      deptParams.append('transactionType', filterTransactionType)
+                    }
                     
                     if (dateRange.from) {
                       deptParams.append('dateFrom', dateRange.from)
@@ -841,7 +907,10 @@ export function BuildingIncomeReport() {
                     
                     console.log('🔍 Raw department data:', departmentData)
                     
-                    // Crear tabla con datos reales (sin columna de comisión)
+                    // Determinar si mostrar la columna Tipo según el filtro
+                    const showTipoColumn = filterTransactionType === 'all'
+                    
+                    // Crear tabla con datos reales 
                     const tableData = departmentData.map((dept: any) => {
                       console.log('🏠 Processing dept:', dept)
                       console.log('🏠 All dept keys:', Object.keys(dept))
@@ -854,14 +923,21 @@ export function BuildingIncomeReport() {
                       const fechaEstado = formatDate(dept.fecha_estado)
                       console.log('🏠 Fecha estado found:', dept.fecha_estado, 'formatted:', fechaEstado)
                       
-                      return [
+                      const row = [
                         dept.departamento_nombre || dept.nombre || `Depto ${dept.numero}`,
                         fechaEstado,
                         dept.piso || '',
-                        dept.numero || '',
-                        dept.tipo_transaccion || dept.tipo_principal || 'N/A',
-                        formatCurrency(parseFloat(adminValue) || 0)
+                        dept.numero || ''
                       ]
+                      
+                      // Solo incluir tipo si se están mostrando todas las transacciones
+                      if (showTipoColumn) {
+                        row.push(dept.tipo_transaccion || dept.tipo_principal || 'N/A')
+                      }
+                      
+                      row.push(formatCurrency(parseFloat(adminValue) || 0))
+                      
+                      return row
                     })
                     
                     // Calcular total de administración de edificio
@@ -873,15 +949,23 @@ export function BuildingIncomeReport() {
                     
                     console.log('💰 Final total admin edificio:', totalAdminEdificio)
                     
-                    // Agregar fila de totales (solo administración edificio)
-                    const totalRow = ['TOTAL', '', '', '', '', formatCurrency(totalAdminEdificio)]
+                    // Agregar fila de totales
+                    const totalRow = ['TOTAL', '', '', '']
+                    if (showTipoColumn) {
+                      totalRow.push('')
+                    }
+                    totalRow.push(formatCurrency(totalAdminEdificio))
                     tableData.push(totalRow)
                     
-                    // Headers para reporte por departamentos (sin comisiones)
-                    const headers = ['Departamento', 'Fecha', 'Piso', 'Número', 'Tipo', 'Administración Edificio']
+                    // Headers para reporte por departamentos
+                    const headers = ['Departamento', 'Fecha', 'Piso', 'Número']
+                    if (showTipoColumn) {
+                      headers.push('Tipo')
+                    }
+                    headers.push('Administración Edificio')
                     
                     // Crear HTML del reporte por departamentos
-                    const htmlContent = createAdminReportHTML(title, headers, tableData, false, dateRange.from, dateRange.to)
+                    const htmlContent = createAdminReportHTML(title, headers, tableData, false, dateRange.from, dateRange.to, showTipoColumn)
                     
                     // Abrir en nueva ventana
                     const newWindow = window.open('', '_blank')

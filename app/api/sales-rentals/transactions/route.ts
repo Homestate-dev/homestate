@@ -56,9 +56,9 @@ export async function GET(request: Request) {
       }, { status: 500 })
     }
 
-    // Usar la tabla que existe
-    const tableName = hasTransaccionesDepartamentos ? 'transacciones_departamentos' : 'transacciones_ventas_arriendos'
-    const tableAlias = hasTransaccionesDepartamentos ? 'td' : 'tv'
+    // Usar la tabla que existe - priorizar transacciones_ventas_arriendos (tiene campos adicionales)
+    const tableName = hasTransaccionesVentasArriendos ? 'transacciones_ventas_arriendos' : 'transacciones_departamentos'
+    const tableAlias = hasTransaccionesVentasArriendos ? 'tv' : 'td'
 
     let whereConditions = ['1=1']
     let queryParams: any[] = []
@@ -274,8 +274,8 @@ export async function POST(request: Request) {
       }, { status: 500 })
     }
 
-    // Usar la tabla que existe
-    const tableName = hasTransaccionesDepartamentos ? 'transacciones_departamentos' : 'transacciones_ventas_arriendos'
+    // Usar la tabla que existe - priorizar transacciones_ventas_arriendos (tiene campos adicionales)
+    const tableName = hasTransaccionesVentasArriendos ? 'transacciones_ventas_arriendos' : 'transacciones_departamentos'
     
     // Validar cliente_nombre solo si se usa la tabla antigua (transacciones_ventas_arriendos)
     if (tableName === 'transacciones_ventas_arriendos' && !data.cliente_nombre) {

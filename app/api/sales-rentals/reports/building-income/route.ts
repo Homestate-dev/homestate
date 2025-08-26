@@ -5,6 +5,9 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
     const buildingId = searchParams.get('buildingId')
+    const transactionType = searchParams.get('transactionType')
+    const dateFrom = searchParams.get('dateFrom')
+    const dateTo = searchParams.get('dateTo')
     
     const buildingIdNumber = buildingId ? parseInt(buildingId) : undefined
     
@@ -15,13 +18,21 @@ export async function GET(request: Request) {
       )
     }
 
-    const incomeData = await getBuildingIncomeReport(buildingIdNumber)
+    const incomeData = await getBuildingIncomeReport(
+      buildingIdNumber,
+      transactionType || undefined,
+      dateFrom || undefined,
+      dateTo || undefined
+    )
 
     return NextResponse.json({
       success: true,
       data: incomeData,
       filters: {
-        buildingId: buildingIdNumber
+        buildingId: buildingIdNumber,
+        transactionType: transactionType || 'all',
+        dateFrom,
+        dateTo
       }
     })
 
