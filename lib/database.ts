@@ -632,7 +632,11 @@ export async function getDepartmentsByBuilding(edificio_id: number) {
     imagenes: safeJsonParse(row.imagenes, []),
     ambientes_y_adicionales: safeJsonParse(row.ambientes_y_adicionales, []),
     videos_url: safeJsonParse(row.videos_url, []),
-    descripcion: row.descripcion || ''
+    descripcion: row.descripcion || '',
+    // Asegurar que los campos de área sean números o null, no undefined
+    area_cubierta: row.area_cubierta === null ? null : Number(row.area_cubierta),
+    area_descubierta: row.area_descubierta === null ? null : Number(row.area_descubierta),
+    area_total: row.area_total === null ? null : Number(row.area_total)
   }))
 }
 

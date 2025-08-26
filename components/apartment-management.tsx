@@ -206,9 +206,9 @@ export function ApartmentManagement({ buildingId, buildingName, buildingPermalin
   }
 
   const handleEditDepartment = (department: Department) => {
-    // Asegurar que los valores de área sean números válidos
-    const areaCubierta = typeof department.area_cubierta === 'number' ? department.area_cubierta : 0
-    const areaDescubierta = typeof department.area_descubierta === 'number' ? department.area_descubierta : 0
+    // Preservar los valores reales de la base de datos, solo convertir null/undefined a 0
+    const areaCubierta = department.area_cubierta ?? 0  // Solo si es null o undefined
+    const areaDescubierta = department.area_descubierta ?? 0  // Solo si es null o undefined
     const areaTotal = areaCubierta + areaDescubierta
     
     setEditingDepartment({ 
@@ -1136,7 +1136,7 @@ export function ApartmentManagement({ buildingId, buildingName, buildingPermalin
                       id="edit-area-cubierta"
                       type="number"
                       step="0.1"
-                      value={editingDepartment.area_cubierta === 0 ? '0' : (editingDepartment.area_cubierta || '')}
+                      value={editingDepartment.area_cubierta !== null && editingDepartment.area_cubierta !== undefined ? editingDepartment.area_cubierta.toString() : ''}
                       onChange={(e) => {
                         const areaCubierta = e.target.value === '' ? 0 : parseFloat(e.target.value) || 0
                         const areaDescubierta = editingDepartment?.area_descubierta || 0
@@ -1154,7 +1154,7 @@ export function ApartmentManagement({ buildingId, buildingName, buildingPermalin
                       id="edit-area-descubierta"
                       type="number"
                       step="0.1"
-                      value={editingDepartment.area_descubierta === 0 ? '0' : (editingDepartment.area_descubierta || '')}
+                      value={editingDepartment.area_descubierta !== null && editingDepartment.area_descubierta !== undefined ? editingDepartment.area_descubierta.toString() : ''}
                       onChange={(e) => {
                         const areaDescubierta = e.target.value === '' ? 0 : parseFloat(e.target.value) || 0
                         const areaCubierta = editingDepartment?.area_cubierta || 0
