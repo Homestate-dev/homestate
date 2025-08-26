@@ -28,7 +28,7 @@ export async function executeQuery(query: string, params: any[] = []) {
 export const query = executeQuery
 
 export async function getAdmins() {
-  const query = `
+  const sql = `
     SELECT 
       id,
       firebase_uid,
@@ -42,7 +42,7 @@ export async function getAdmins() {
     FROM administradores 
     ORDER BY fecha_creacion DESC
   `
-  const result = await executeQuery(query)
+  const result = await executeQuery(sql)
   return result.rows
 }
 
@@ -1173,7 +1173,7 @@ export async function getBuildingTransactionsReport(buildingId?: number) {
   const whereClause = buildingId ? 'WHERE e.id = $1' : ''
   const params = buildingId ? [buildingId] : []
   
-  const query = `
+  const sql = `
     SELECT 
       e.id as edificio_id,
       e.nombre as edificio_nombre,
@@ -1204,7 +1204,7 @@ export async function getBuildingTransactionsReport(buildingId?: number) {
     ORDER BY e.nombre, t.fecha_transaccion DESC
   `
   
-  const result = await executeQuery(query, params)
+  const result = await executeQuery(sql, params)
   return result.rows
 }
 
@@ -1251,7 +1251,7 @@ export async function getBuildingIncomeReport(
   // Construir cláusula WHERE solo si hay condiciones
   const whereClause = whereConditions.length > 0 ? `WHERE ${whereConditions.join(' AND ')}` : ''
   
-  const query = `
+  const sql = `
     SELECT 
       e.id as edificio_id,
       e.nombre as edificio_nombre,
@@ -1277,7 +1277,7 @@ export async function getBuildingIncomeReport(
     ORDER BY total_comisiones DESC, e.nombre
   `
   
-  const result = await executeQuery(query, params)
+  const result = await executeQuery(sql, params)
   return result.rows
 }
 
