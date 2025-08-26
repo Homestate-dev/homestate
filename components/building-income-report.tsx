@@ -739,6 +739,7 @@ export function BuildingIncomeReport() {
                     
                     <div class="info">
                       <p><strong>Fecha de generación:</strong> ${new Date().toLocaleDateString('es-CO')} a las ${new Date().toLocaleTimeString('es-CO')}</p>
+                      ${dateRange.from && dateRange.to ? `<p><strong>Rango de fechas:</strong> ${new Date(dateRange.from).toLocaleDateString('es-CO')} - ${new Date(dateRange.to).toLocaleDateString('es-CO')}</p>` : ''}
                       <p><strong>Total de edificios con transacciones:</strong> ${processedIncomeData.filter(b => b.total_transacciones > 0).length}</p>
                     </div>
                     
