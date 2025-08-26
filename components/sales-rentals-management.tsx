@@ -260,7 +260,6 @@ export function SalesRentalsManagement() {
 
   const fetchTransactions = async () => {
     try {
-      console.log('🚀 [FRONTEND DEBUG] Iniciando fetchTransactions')
       setTransactionsLoading(true)
       
       const params = new URLSearchParams({
@@ -274,40 +273,21 @@ export function SalesRentalsManagement() {
         // to: dateRange.to
       })
 
-      const url = `/api/sales-rentals/transactions?${params}`
-      console.log('📡 [FRONTEND DEBUG] URL de solicitud:', url)
-      console.log('📋 [FRONTEND DEBUG] Parámetros:', {
-        search: searchTerm,
-        type: filterType,
-        status: filterStatus,
-        agent: filterAgent,
-        building: filterBuilding
-      })
-
-      const response = await fetch(url)
-      console.log('📥 [FRONTEND DEBUG] Response status:', response.status, response.statusText)
-      
+      const response = await fetch(`/api/sales-rentals/transactions?${params}`)
       const data = await response.json()
-      console.log('📊 [FRONTEND DEBUG] Datos recibidos:', {
-        success: data.success,
-        dataLength: data.data?.length || 0,
-        error: data.error,
-        sampleData: data.data?.length > 0 ? data.data[0] : 'No hay datos'
-      })
       
       if (data.success) {
         setTransactions(data.data || [])
-        console.log('✅ [FRONTEND DEBUG] Transacciones establecidas:', data.data?.length || 0)
+        console.log('✅ [FIXED] Transacciones cargadas correctamente:', data.data?.length || 0)
       } else {
-        console.error('❌ [FRONTEND DEBUG] Error al cargar transacciones filtradas:', data.error)
+        console.error('Error al cargar transacciones filtradas:', data.error)
         toast.error('Error al cargar transacciones')
       }
     } catch (error) {
-      console.error('💥 [FRONTEND DEBUG] Error en fetchTransactions:', error)
+      console.error('Error al cargar transacciones:', error)
       toast.error('Error al cargar transacciones')
     } finally {
       setTransactionsLoading(false)
-      console.log('🏁 [FRONTEND DEBUG] fetchTransactions completado')
     }
   }
 

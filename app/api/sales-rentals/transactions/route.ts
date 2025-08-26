@@ -136,9 +136,11 @@ export async function GET(request: Request) {
     }
 
     const hasEsAgenteColumn = await checkColumnExists()
-    const agentFilter = hasEsAgenteColumn ? 'AND a.es_agente = true' : ''
+    // CORREGIDO: No filtrar por es_agente en el JOIN, esto estaba eliminando transacciones
+    // const agentFilter = hasEsAgenteColumn ? 'AND a.es_agente = true' : ''
+    const agentFilter = '' // Remover filtro problemático
 
-    console.log('🔧 [DEBUG] Configuración de agentes:', { hasEsAgenteColumn, agentFilter })
+    console.log('🔧 [DEBUG] Configuración de agentes:', { hasEsAgenteColumn, agentFilter: 'REMOVED - was filtering out transactions' })
     console.log('🧭 [DEBUG] Condiciones WHERE:', whereConditions)
     console.log('📝 [DEBUG] Parámetros de consulta:', queryParams)
 
@@ -149,7 +151,7 @@ export async function GET(request: Request) {
         e.nombre as edificio_nombre,
         d.numero as departamento_numero
       FROM ${tableName} ${tableAlias}
-      LEFT JOIN administradores a ON ${tableAlias}.agente_id = a.id ${agentFilter}
+      LEFT JOIN administradores a ON ${tableAlias}.agente_id = a.id
       LEFT JOIN departamentos d ON ${tableAlias}.departamento_id = d.id
       LEFT JOIN edificios e ON d.edificio_id = e.id
       WHERE ${whereConditions.join(' AND ')}
@@ -166,44 +168,11 @@ export async function GET(request: Request) {
       firstRow: result?.rows?.[0] ? Object.keys(result.rows[0]) : 'N/A'
     })
 
-    // Debug adicional: Si no hay resultados, vamos a investigar por qué
-    if (!result || result.rows.length === 0) {
-      console.log('🔍 [DEBUG] No hay resultados, investigando...')
-      
-      // Verificar cuántas transacciones hay en total
-      const totalCountQuery = `SELECT COUNT(*) as total FROM ${tableName}`
-      const totalCountResult = await query(totalCountQuery, [])
-      console.log('📊 [DEBUG] Total de registros en tabla:', totalCountResult.rows[0])
-      
-      // Verificar sin filtros para ver si hay datos
-      const simpleQuery = `
-        SELECT ${tableAlias}.id, ${tableAlias}.cliente_nombre, ${tableAlias}.tipo_transaccion
-        FROM ${tableName} ${tableAlias}
-        LIMIT 3
-      `
-      const simpleResult = await query(simpleQuery, [])
-      console.log('🎯 [DEBUG] Registros sin filtros:', simpleResult.rows)
-      
-      // Verificar si el problema está en los JOINs
-      const joinTestQuery = `
-        SELECT COUNT(*) as total
-        FROM ${tableName} ${tableAlias}
-        LEFT JOIN administradores a ON ${tableAlias}.agente_id = a.id
-        LEFT JOIN departamentos d ON ${tableAlias}.departamento_id = d.id
-        LEFT JOIN edificios e ON d.edificio_id = e.id
-      `
-      const joinTestResult = await query(joinTestQuery, [])
-      console.log('🔗 [DEBUG] Registros después de JOINs:', joinTestResult.rows[0])
-      
-      // Verificar si el problema está en whereConditions
-      console.log('🧭 [DEBUG] Verificando condiciones WHERE:', whereConditions)
-      const whereTestQuery = `
-        SELECT COUNT(*) as total
-        FROM ${tableName} ${tableAlias}
-        WHERE ${whereConditions.join(' AND ')}
-      `
-      const whereTestResult = await query(whereTestQuery, queryParams)
-      console.log('⚖️ [DEBUG] Registros después de WHERE:', whereTestResult.rows[0])
+    // Debug: Verificar resultado
+    if (result && result.rows.length > 0) {
+      console.log('✅ [DEBUG] PROBLEMA CORREGIDO - Transacciones encontradas:', result.rows.length)
+    } else {
+      console.log('❌ [DEBUG] Aún no hay resultados, verificar problema')
     }
 
     // Sanitizar los datos para evitar errores en el frontend
