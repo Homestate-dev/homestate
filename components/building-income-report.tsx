@@ -488,19 +488,91 @@ export function BuildingIncomeReport() {
             />
           </div>
           
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="bg-orange-500 hover:bg-orange-600 text-white border-orange-500 hover:border-orange-600"
-            onClick={() => {
-              setDateRange({
-                from: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-                to: new Date().toISOString().split('T')[0]
-              })
-            }}
-          >
-            Últimos 30 días
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="bg-orange-500 hover:bg-orange-600 text-white border-orange-500 hover:border-orange-600"
+              onClick={() => {
+                setDateRange({
+                  from: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                  to: new Date().toISOString().split('T')[0]
+                })
+              }}
+            >
+              Última semana
+            </Button>
+            
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="bg-orange-500 hover:bg-orange-600 text-white border-orange-500 hover:border-orange-600"
+              onClick={() => {
+                setDateRange({
+                  from: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                  to: new Date().toISOString().split('T')[0]
+                })
+              }}
+            >
+              Últimos 30 días
+            </Button>
+            
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="bg-orange-500 hover:bg-orange-600 text-white border-orange-500 hover:border-orange-600"
+              onClick={() => {
+                setDateRange({
+                  from: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                  to: new Date().toISOString().split('T')[0]
+                })
+              }}
+            >
+              Últimos 3 meses
+            </Button>
+            
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="bg-orange-500 hover:bg-orange-600 text-white border-orange-500 hover:border-orange-600"
+              onClick={() => {
+                setDateRange({
+                  from: new Date(Date.now() - 120 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                  to: new Date().toISOString().split('T')[0]
+                })
+              }}
+            >
+              Últimos 4 meses
+            </Button>
+            
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="bg-orange-500 hover:bg-orange-600 text-white border-orange-500 hover:border-orange-600"
+              onClick={() => {
+                setDateRange({
+                  from: new Date(Date.now() - 180 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                  to: new Date().toISOString().split('T')[0]
+                })
+              }}
+            >
+              Últimos 6 meses
+            </Button>
+            
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="bg-orange-500 hover:bg-orange-600 text-white border-orange-500 hover:border-orange-600"
+              onClick={() => {
+                setDateRange({
+                  from: new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                  to: new Date().toISOString().split('T')[0]
+                })
+              }}
+            >
+              Último año
+            </Button>
+          </div>
         </div>
         
         {/* Cartel de aviso para reporte de administrador */}
