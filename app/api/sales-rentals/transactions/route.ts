@@ -285,18 +285,8 @@ export async function POST(request: Request) {
       )
     }
 
-    // Verificar que el departamento no tenga una transacción activa del mismo tipo
-    const existingTransaction = await query(
-      `SELECT id FROM ${tableName} WHERE departamento_id = $1 AND tipo_transaccion = $2 AND estado_actual IN ($3, $4)`,
-      [data.departamento_id, data.tipo_transaccion, 'reservado', 'promesa_compra_venta']
-    )
-
-    if (existingTransaction.rows.length > 0) {
-      return NextResponse.json(
-        { success: false, error: 'El departamento ya tiene una transacción activa de este tipo' },
-        { status: 400 }
-      )
-    }
+    // NOTA: Eliminada validación de transacciones duplicadas del mismo tipo
+    // Un departamento puede tener múltiples transacciones del mismo tipo simultáneamente
 
     // Construir la query según la tabla que existe
     let sql: string
