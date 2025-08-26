@@ -4,20 +4,17 @@ import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Progress } from "@/components/ui/progress"
 import { toast } from "sonner"
 import { 
   DollarSign, 
-  Calendar,
-  User,
-  Download,
   BarChart3,
   TrendingUp,
-  PieChart
+  PieChart,
+  ChevronLeft,
+  ChevronRight
 } from "lucide-react"
 
 interface CommissionTransaction {
@@ -56,22 +53,14 @@ interface CommissionSummary {
   porcentaje_total_admin_edificio: number
 }
 
-interface Agent {
-  id: number
-  nombre: string
-  email: string
-}
-
 export function CommissionDistributionReport() {
   const [transactions, setTransactions] = useState<CommissionTransaction[]>([])
   const [summary, setSummary] = useState<CommissionSummary | null>(null)
-  const [agents, setAgents] = useState<Agent[]>([])
   const [loading, setLoading] = useState(true)
-  const [filters, setFilters] = useState({
-    startDate: '',
-    endDate: '',
-    agentId: 'all'
-  })
+  
+  // Estado para el paginador
+  const [currentPage, setCurrentPage] = useState(1)
+  const [itemsPerPage, setItemsPerPage] = useState(10)
 
   // Función auxiliar para manejar valores numéricos de forma segura
   const safeNumberFormat = (value: any, decimals: number = 1): string => {
@@ -148,39 +137,14 @@ export function CommissionDistributionReport() {
     )
   }
 
-  const exportReport = () => {
-    // Implementar exportación
-    toast.info('Función de exportación en desarrollo')
-  }
-
   useEffect(() => {
-    fetchAgents()
     fetchCommissionData()
-  }, [filters])
-
-  const fetchAgents = async () => {
-    try {
-      const response = await fetch('/api/agents')
-      const data = await response.json()
-      if (data.success) {
-        setAgents(data.data)
-      }
-    } catch (error) {
-      console.error('Error al cargar agentes:', error)
-      toast.error('Error al cargar agentes')
-    }
-  }
+  }, [])
 
   const fetchCommissionData = async () => {
     try {
       setLoading(true)
-      const params = new URLSearchParams()
-      
-      if (filters.startDate) params.append('startDate', filters.startDate)
-      if (filters.endDate) params.append('endDate', filters.endDate)
-      if (filters.agentId !== 'all') params.append('agentId', filters.agentId)
-      
-      const url = `/api/sales-rentals/reports/commission-distribution?${params.toString()}`
+      const url = `/api/sales-rentals/reports/commission-distribution`
       const response = await fetch(url)
       const data = await response.json()
       
@@ -207,64 +171,15 @@ export function CommissionDistributionReport() {
     )
   }
 
+  // Lógica de paginación
+  const totalItems = processedTransactions.length
+  const totalPages = Math.ceil(totalItems / itemsPerPage)
+  const startIndex = (currentPage - 1) * itemsPerPage
+  const endIndex = startIndex + itemsPerPage
+  const paginatedTransactions = processedTransactions.slice(startIndex, endIndex)
+
   return (
     <div className="space-y-6">
-      {/* Filtros */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <BarChart3 className="h-5 w-5" />
-            Filtros del Reporte
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="startDate">Fecha Inicio</Label>
-              <Input
-                id="startDate"
-                type="date"
-                value={filters.startDate}
-                onChange={(e) => setFilters(prev => ({ ...prev, startDate: e.target.value }))}
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="endDate">Fecha Fin</Label>
-              <Input
-                id="endDate"
-                type="date"
-                value={filters.endDate}
-                onChange={(e) => setFilters(prev => ({ ...prev, endDate: e.target.value }))}
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="agent">Agente</Label>
-              <Select value={filters.agentId} onValueChange={(value) => setFilters(prev => ({ ...prev, agentId: value }))}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Todos los agentes" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos los agentes</SelectItem>
-                  {agents.map((agent) => (
-                    <SelectItem key={agent.id} value={agent.id.toString()}>
-                      {agent.nombre}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="flex items-end">
-              <Button variant="outline" onClick={exportReport}>
-                <Download className="h-4 w-4 mr-2" />
-                Exportar
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
 
       {/* Resumen general */}
       {processedSummary && (
@@ -409,86 +324,138 @@ export function CommissionDistributionReport() {
         <CardContent>
           {processedTransactions.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
-              No se encontraron transacciones con los filtros seleccionados
+              No se encontraron transacciones
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>ID</TableHead>
-                    <TableHead>Tipo</TableHead>
-                    <TableHead>Cliente</TableHead>
-                    <TableHead>Agente</TableHead>
-                    <TableHead>Propiedad</TableHead>
-                    <TableHead>Valor</TableHead>
-                    <TableHead>Comisión Total</TableHead>
-                    <TableHead>HomeState</TableHead>
-                    <TableHead>Bienes Raíces</TableHead>
-                    <TableHead>Admin Edificio</TableHead>
-                    <TableHead>Fecha</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {processedTransactions.map((transaction) => (
-                    <TableRow key={transaction.transaccion_id}>
-                      <TableCell className="font-medium">
-                        #{transaction.transaccion_id}
-                      </TableCell>
-                      <TableCell>{getTypeBadge(transaction.tipo_transaccion)}</TableCell>
-                      <TableCell>
-                        <div>
-                          <div className="font-medium">{transaction.cliente_nombre}</div>
-                        </div>
-                      </TableCell>
-                      <TableCell>{transaction.agente_nombre}</TableCell>
-                      <TableCell>
-                        <div>
-                          <div className="font-medium">{transaction.edificio_nombre}</div>
-                          <div className="text-sm text-gray-500">Depto {transaction.departamento_numero}</div>
-                        </div>
-                      </TableCell>
-                      <TableCell className="font-medium">
-                        {formatCurrency(transaction.precio_final)}
-                      </TableCell>
-                      <TableCell className="font-medium text-green-600">
-                        {formatCurrency(transaction.comision_valor)}
-                      </TableCell>
-                      <TableCell>
-                        <div className="text-sm">
-                          <div className="font-medium text-blue-600">
-                            {formatCurrency(transaction.valor_homestate)}
-                          </div>
-                          <div className="text-gray-500">
-                            {transaction.porcentaje_homestate}%
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="text-sm">
-                          <div className="font-medium text-green-600">
-                            {formatCurrency(transaction.valor_bienes_raices)}
-                          </div>
-                          <div className="text-gray-500">
-                            {transaction.porcentaje_bienes_raices}%
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="text-sm">
-                          <div className="font-medium text-purple-600">
-                            {formatCurrency(transaction.valor_admin_edificio)}
-                          </div>
-                          <div className="text-gray-500">
-                            {transaction.porcentaje_admin_edificio}%
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>{formatDate(transaction.fecha_transaccion)}</TableCell>
+            <div className="space-y-6">
+              {/* Paginador */}
+              {totalItems > 0 && (
+                <div className="flex items-center justify-between mb-4 p-4 bg-orange-50 border border-orange-200 rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-orange-700">Elementos por página:</span>
+                    <Select
+                      value={itemsPerPage.toString()}
+                      onValueChange={(value) => {
+                        setItemsPerPage(Number(value));
+                        setCurrentPage(1);
+                      }}
+                    >
+                      <SelectTrigger className="w-20 h-8 bg-orange-100 border-orange-300 text-orange-800">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="5">5</SelectItem>
+                        <SelectItem value="10">10</SelectItem>
+                        <SelectItem value="25">25</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-orange-700">
+                      {startIndex + 1}-{Math.min(endIndex, totalItems)} de {totalItems}
+                    </span>
+                    <div className="flex gap-1">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage(currentPage - 1)}
+                        disabled={currentPage === 1}
+                        className="h-8 w-8 p-0 border-orange-300 text-orange-700 hover:bg-orange-100"
+                      >
+                        <ChevronLeft className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage(currentPage + 1)}
+                        disabled={currentPage === totalPages}
+                        className="h-8 w-8 p-0 border-orange-300 text-orange-700 hover:bg-orange-100"
+                      >
+                        <ChevronRight className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>ID</TableHead>
+                      <TableHead>Tipo</TableHead>
+                      <TableHead>Cliente</TableHead>
+                      <TableHead>Agente</TableHead>
+                      <TableHead>Propiedad</TableHead>
+                      <TableHead>Valor</TableHead>
+                      <TableHead>Comisión Total</TableHead>
+                      <TableHead>HomeState</TableHead>
+                      <TableHead>Bienes Raíces</TableHead>
+                      <TableHead>Admin Edificio</TableHead>
+                      <TableHead>Fecha</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {paginatedTransactions.map((transaction) => (
+                      <TableRow key={transaction.transaccion_id}>
+                        <TableCell className="font-medium">
+                          #{transaction.transaccion_id}
+                        </TableCell>
+                        <TableCell>{getTypeBadge(transaction.tipo_transaccion)}</TableCell>
+                        <TableCell>
+                          <div>
+                            <div className="font-medium">{transaction.cliente_nombre}</div>
+                          </div>
+                        </TableCell>
+                        <TableCell>{transaction.agente_nombre}</TableCell>
+                        <TableCell>
+                          <div>
+                            <div className="font-medium">{transaction.edificio_nombre}</div>
+                            <div className="text-sm text-gray-500">Depto {transaction.departamento_numero}</div>
+                          </div>
+                        </TableCell>
+                        <TableCell className="font-medium">
+                          {formatCurrency(transaction.precio_final)}
+                        </TableCell>
+                        <TableCell className="font-medium text-green-600">
+                          {formatCurrency(transaction.comision_valor)}
+                        </TableCell>
+                        <TableCell>
+                          <div className="text-sm">
+                            <div className="font-medium text-blue-600">
+                              {formatCurrency(transaction.valor_homestate)}
+                            </div>
+                            <div className="text-gray-500">
+                              {transaction.porcentaje_homestate}%
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="text-sm">
+                            <div className="font-medium text-green-600">
+                              {formatCurrency(transaction.valor_bienes_raices)}
+                            </div>
+                            <div className="text-gray-500">
+                              {transaction.porcentaje_bienes_raices}%
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="text-sm">
+                            <div className="font-medium text-purple-600">
+                              {formatCurrency(transaction.valor_admin_edificio)}
+                            </div>
+                            <div className="text-gray-500">
+                              {transaction.porcentaje_admin_edificio}%
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>{formatDate(transaction.fecha_transaccion)}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
             </div>
           )}
         </CardContent>
