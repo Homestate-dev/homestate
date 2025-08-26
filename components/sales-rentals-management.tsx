@@ -1323,6 +1323,15 @@ export function SalesRentalsManagement() {
               <DialogDescription>
                 Información completa de la transacción #{selectedTransaction.id}
               </DialogDescription>
+              {/* Debug: Mostrar campos adicionales en consola */}
+              {console.log('🔍 DEBUG - Datos adicionales de transacción:', {
+                id: selectedTransaction.id,
+                referido_por: selectedTransaction.referido_por,
+                canal_captacion: selectedTransaction.canal_captacion,
+                fecha_primer_contacto: selectedTransaction.fecha_primer_contacto,
+                notas: selectedTransaction.notas,
+                observaciones: selectedTransaction.observaciones
+              })}
             </DialogHeader>
             
             <div className="space-y-4">

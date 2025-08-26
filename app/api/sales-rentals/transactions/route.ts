@@ -182,6 +182,17 @@ export async function GET(request: Request) {
       return safeRow
     })
 
+    // Debug: Log de los primeros campos adicionales en la respuesta
+    if (safeData.length > 0) {
+      console.log('Primer registro - campos adicionales en respuesta:', {
+        referido_por: safeData[0].referido_por,
+        canal_captacion: safeData[0].canal_captacion,
+        fecha_primer_contacto: safeData[0].fecha_primer_contacto,
+        notas: safeData[0].notas,
+        observaciones: safeData[0].observaciones
+      })
+    }
+
     return NextResponse.json({
       success: true,
       data: safeData
@@ -217,6 +228,15 @@ export async function POST(request: Request) {
     
     // Debug: Log completo de los datos
     console.log('Datos completos recibidos:', JSON.stringify(data, null, 2))
+    
+    // Debug: Log específico de campos adicionales
+    console.log('Campos adicionales recibidos:', {
+      referido_por: data.referido_por,
+      canal_captacion: data.canal_captacion,
+      fecha_primer_contacto: data.fecha_primer_contacto,
+      notas: data.notas,
+      observaciones: data.observaciones
+    })
 
     // Validaciones básicas
     if (!data.departamento_id || !data.agente_id || !data.tipo_transaccion || !data.valor_transaccion) {
