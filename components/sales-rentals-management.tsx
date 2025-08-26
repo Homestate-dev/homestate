@@ -72,6 +72,7 @@ interface Transaction {
   notas?: string
   fecha_registro: string
   // Campos adicionales de transacción
+  referido_por?: string
   canal_captacion?: string
   fecha_primer_contacto?: string
   observaciones?: string
@@ -1417,10 +1418,17 @@ export function SalesRentalsManagement() {
               </div>
 
               {/* Datos Adicionales de la Transacción */}
-              {(selectedTransaction.canal_captacion || selectedTransaction.fecha_primer_contacto || selectedTransaction.notas || selectedTransaction.observaciones) && (
+              {(selectedTransaction.referido_por || selectedTransaction.canal_captacion || selectedTransaction.fecha_primer_contacto || selectedTransaction.notas || selectedTransaction.observaciones) && (
                 <div className="border-t pt-4">
                   <Label className="text-sm font-medium text-gray-500 mb-3 block">Información Adicional</Label>
                   <div className="space-y-3">
+                    {selectedTransaction.referido_por && (
+                      <div className="grid grid-cols-3 gap-2">
+                        <Label className="text-xs font-medium text-gray-500">Referido por:</Label>
+                        <p className="text-sm col-span-2">{selectedTransaction.referido_por}</p>
+                      </div>
+                    )}
+                    
                     {selectedTransaction.canal_captacion && (
                       <div className="grid grid-cols-3 gap-2">
                         <Label className="text-xs font-medium text-gray-500">Canal de Captación:</Label>
