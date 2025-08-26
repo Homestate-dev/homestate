@@ -36,6 +36,8 @@ async function tableExists(tableName: string): Promise<boolean> {
 
 export async function GET(request: Request) {
   try {
+    console.log('🚀 [DEBUG] Iniciando GET /api/sales-rentals/transactions')
+    
     const { searchParams } = new URL(request.url)
     const search = searchParams.get('search') || ''
     const type = searchParams.get('type') || 'all'
@@ -45,9 +47,17 @@ export async function GET(request: Request) {
     const from = searchParams.get('from') || ''
     const to = searchParams.get('to') || ''
 
+    console.log('📋 [DEBUG] Parámetros de consulta:', { search, type, status, agent, building, from, to })
+
     // Verificar qué tabla de transacciones existe
+    console.log('🔍 [DEBUG] Verificando tablas existentes...')
     const hasTransaccionesDepartamentos = await tableExists('transacciones_departamentos')
     const hasTransaccionesVentasArriendos = await tableExists('transacciones_ventas_arriendos')
+    
+    console.log('📊 [DEBUG] Tablas encontradas:', {
+      hasTransaccionesDepartamentos,
+      hasTransaccionesVentasArriendos
+    })
     
     if (!hasTransaccionesDepartamentos && !hasTransaccionesVentasArriendos) {
       return NextResponse.json({
@@ -59,6 +69,8 @@ export async function GET(request: Request) {
     // Usar la tabla que existe - priorizar transacciones_ventas_arriendos (tiene campos adicionales)
     const tableName = hasTransaccionesVentasArriendos ? 'transacciones_ventas_arriendos' : 'transacciones_departamentos'
     const tableAlias = hasTransaccionesVentasArriendos ? 'tv' : 'td'
+
+    console.log('🏗️ [DEBUG] Configuración de tabla:', { tableName, tableAlias })
 
     let whereConditions = ['1=1']
     let queryParams: any[] = []
@@ -120,6 +132,10 @@ export async function GET(request: Request) {
     const hasEsAgenteColumn = await checkColumnExists()
     const agentFilter = hasEsAgenteColumn ? 'AND a.es_agente = true' : ''
 
+    console.log('🔧 [DEBUG] Configuración de agentes:', { hasEsAgenteColumn, agentFilter })
+    console.log('🧭 [DEBUG] Condiciones WHERE:', whereConditions)
+    console.log('📝 [DEBUG] Parámetros de consulta:', queryParams)
+
     const sql = `
       SELECT 
         ${tableAlias}.*,
@@ -134,9 +150,15 @@ export async function GET(request: Request) {
       ORDER BY ${tableAlias}.fecha_transaccion DESC
     `
 
-    console.log('Ejecutando query de transacciones:', sql, 'con parámetros:', queryParams)
+    console.log('🔍 [DEBUG] SQL completo:', sql)
+    console.log('📊 [DEBUG] Parámetros finales:', queryParams)
     
     const result = await query(sql, queryParams)
+    console.log('✅ [DEBUG] Resultado de consulta:', {
+      success: !!result,
+      rowCount: result?.rows?.length || 0,
+      firstRow: result?.rows?.[0] ? Object.keys(result.rows[0]) : 'N/A'
+    })
 
     // Sanitizar los datos para evitar errores en el frontend
     const safeData = result.rows.map(row => {
@@ -183,20 +205,29 @@ export async function GET(request: Request) {
     })
 
     // Debug: Log de los primeros campos adicionales en la respuesta
-    if (safeData.length > 0) {
-      console.log('Primer registro - campos adicionales en respuesta:', {
-        referido_por: safeData[0].referido_por,
-        canal_captacion: safeData[0].canal_captacion,
-        fecha_primer_contacto: safeData[0].fecha_primer_contacto,
-        notas: safeData[0].notas,
-        observaciones: safeData[0].observaciones
-      })
-    }
+    console.log('🎯 [DEBUG] Datos procesados:', {
+      totalProcessed: safeData.length,
+      sampleData: safeData.length > 0 ? {
+        id: safeData[0].id,
+        cliente_nombre: safeData[0].cliente_nombre,
+        tipo_transaccion: safeData[0].tipo_transaccion,
+        agente_nombre: safeData[0].agente_nombre,
+        edificio_nombre: safeData[0].edificio_nombre
+      } : 'No hay datos'
+    })
 
-    return NextResponse.json({
+    const responseData = {
       success: true,
       data: safeData
+    }
+
+    console.log('📤 [DEBUG] Respuesta final:', {
+      success: responseData.success,
+      dataLength: responseData.data.length,
+      timestamp: new Date().toISOString()
     })
+
+    return NextResponse.json(responseData)
 
   } catch (error) {
     console.error('Error al obtener transacciones:', error)

@@ -15,10 +15,23 @@ const dbConfig = {
 const pool = new Pool(dbConfig)
 
 export async function executeQuery(query: string, params: any[] = []) {
+  console.log('🔧 [DATABASE DEBUG] Ejecutando consulta:', {
+    query: query.substring(0, 100) + '...',
+    paramsCount: params.length,
+    params: params
+  })
+  
   const client = await pool.connect()
   try {
     const result = await client.query(query, params)
+    console.log('✅ [DATABASE DEBUG] Consulta exitosa:', {
+      rowCount: result.rowCount,
+      fieldsCount: result.fields?.length || 0
+    })
     return result
+  } catch (error) {
+    console.error('❌ [DATABASE DEBUG] Error en consulta:', error)
+    throw error
   } finally {
     client.release()
   }
