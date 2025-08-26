@@ -43,6 +43,7 @@ async function tableExists(tableName: string): Promise<boolean> {
 export async function GET(request: Request) {
   try {
     console.log('🚀 [DEBUG] Iniciando GET /api/sales-rentals/transactions')
+    console.log('🌐 [DEBUG] URL completa:', request.url)
     
     const { searchParams } = new URL(request.url)
     const search = searchParams.get('search') || ''
@@ -54,6 +55,15 @@ export async function GET(request: Request) {
     const to = searchParams.get('to') || ''
 
     console.log('📋 [DEBUG] Parámetros de consulta:', { search, type, status, agent, building, from, to })
+    console.log('🔍 [DEBUG] Valores exactos:', {
+      search: `"${search}"`,
+      type: `"${type}"`, 
+      status: `"${status}"`,
+      agent: `"${agent}"`,
+      building: `"${building}"`,
+      from: `"${from}"`,
+      to: `"${to}"`
+    })
 
     // Verificar qué tabla de transacciones existe
     console.log('🔍 [DEBUG] Verificando tablas existentes...')
@@ -72,11 +82,12 @@ export async function GET(request: Request) {
       }, { status: 500 })
     }
 
-    // Usar la tabla que existe - priorizar transacciones_ventas_arriendos (tiene campos adicionales)
-    const tableName = hasTransaccionesVentasArriendos ? 'transacciones_ventas_arriendos' : 'transacciones_departamentos'
-    const tableAlias = hasTransaccionesVentasArriendos ? 'tv' : 'td'
+    // FORZAR EL USO DE LA MISMA TABLA QUE LOS REPORTES
+    const tableName = 'transacciones_departamentos'  // Usar la misma que reportes
+    const tableAlias = 'td'
 
-    console.log('🏗️ [DEBUG] Configuración de tabla:', { tableName, tableAlias })
+    console.log('🏗️ [DEBUG] FORZADO: Usando la misma tabla que reportes:', { tableName, tableAlias })
+    console.log('🔍 [DEBUG] Tablas disponibles (ignoradas):', { hasTransaccionesVentasArriendos, hasTransaccionesDepartamentos })
 
     let whereConditions = ['1=1']
     let queryParams: any[] = []
@@ -172,7 +183,26 @@ export async function GET(request: Request) {
     if (result && result.rows.length > 0) {
       console.log('✅ [DEBUG] PROBLEMA CORREGIDO - Transacciones encontradas:', result.rows.length)
     } else {
-      console.log('❌ [DEBUG] Aún no hay resultados, verificar problema')
+      console.log('❌ [DEBUG] Aún no hay resultados, comparando con consulta de reportes...')
+      
+      // Hacer la misma consulta que usan los reportes para comparar
+      const reportQuery = `
+        SELECT COUNT(*) as total
+        FROM transacciones_departamentos t
+        JOIN departamentos d ON t.departamento_id = d.id
+        JOIN edificios e ON d.edificio_id = e.id
+        JOIN administradores a ON t.agente_id = a.id
+      `
+      const reportResult = await query(reportQuery, [])
+      console.log('📊 [DEBUG] Consulta tipo reporte encuentra:', reportResult.rows[0])
+      
+      // Probar consulta sin ningún filtro
+      const simpleQuery = `
+        SELECT COUNT(*) as total
+        FROM ${tableName} ${tableAlias}
+      `
+      const simpleResult = await query(simpleQuery, [])
+      console.log('🔢 [DEBUG] Total sin filtros en tabla principal:', simpleResult.rows[0])
     }
 
     // Sanitizar los datos para evitar errores en el frontend
