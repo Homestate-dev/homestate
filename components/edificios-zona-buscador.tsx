@@ -34,7 +34,7 @@ export default function EdificiosZonaBuscador({ edificios }: { edificios: any[] 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredEdificios.map((edificio: any) => (
           <Card key={edificio.id} className="rounded-lg border bg-card text-card-foreground shadow-sm overflow-hidden hover:shadow-lg transition-shadow">
-            <div className="relative h-96 w-full">
+            <div className="relative h-[28rem] w-full">
               {edificio.url_imagen_principal && (
                 <img
                   alt={edificio.nombre}
