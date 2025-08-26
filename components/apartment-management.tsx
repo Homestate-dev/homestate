@@ -89,7 +89,9 @@ export function ApartmentManagement({ buildingId, buildingName, buildingPermalin
   const [isTransactionDialogOpen, setIsTransactionDialogOpen] = useState(false)
   const [agents, setAgents] = useState([])
   const [isDragActive, setIsDragActive] = useState(false)
+  const [isEditDragActive, setIsEditDragActive] = useState(false)
   const dropRef = useRef<HTMLDivElement>(null)
+  const editDropRef = useRef<HTMLDivElement>(null)
   
   // Función para filtrar departamentos
   const filteredDepartamentos = departamentos.filter(dept => {
@@ -573,6 +575,28 @@ export function ApartmentManagement({ buildingId, buildingName, buildingPermalin
     event.preventDefault()
     event.stopPropagation()
     setIsDragActive(false)
+  }
+
+  // Manejadores de drag & drop para la edición
+  const handleEditDrop = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault()
+    event.stopPropagation()
+    setIsEditDragActive(false)
+    if (event.dataTransfer.files && event.dataTransfer.files.length > 0) {
+      setEditUploadedImages((prev) => [...prev, ...Array.from(event.dataTransfer.files)])
+    }
+  }
+
+  const handleEditDragOver = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault()
+    event.stopPropagation()
+    setIsEditDragActive(true)
+  }
+
+  const handleEditDragLeave = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault()
+    event.stopPropagation()
+    setIsEditDragActive(false)
   }
 
   if (loading) {
@@ -1492,7 +1516,13 @@ export function ApartmentManagement({ buildingId, buildingName, buildingPermalin
                 <div className="space-y-4 border-t pt-4">
                   <h4 className="text-md font-medium text-gray-900">Agregar Nuevas Imágenes</h4>
                   
-                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                  <div 
+                    ref={editDropRef}
+                    className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${isEditDragActive ? 'border-blue-400 bg-blue-50' : 'border-gray-300'}`}
+                    onDrop={handleEditDrop}
+                    onDragOver={handleEditDragOver}
+                    onDragLeave={handleEditDragLeave}
+                  >
                     <Upload className="h-8 w-8 mx-auto text-gray-400 mb-2" />
                     <p className="text-sm text-gray-600 mb-2">Arrastra imágenes aquí o</p>
                     <Label htmlFor="edit-apartment-images" className="cursor-pointer">
