@@ -71,6 +71,10 @@ interface Transaction {
   entidad_financiera?: string
   notas?: string
   fecha_registro: string
+  // Campos adicionales de transacción
+  canal_captacion?: string
+  fecha_primer_contacto?: string
+  observaciones?: string
 }
 
 interface AdminAgent {
@@ -1412,10 +1416,39 @@ export function SalesRentalsManagement() {
                 </div>
               </div>
 
-              {selectedTransaction.notas && (
-                <div>
-                  <Label className="text-sm font-medium text-gray-500">Notas</Label>
-                  <p className="mt-1 p-3 bg-gray-50 rounded-lg text-sm">{selectedTransaction.notas}</p>
+              {/* Datos Adicionales de la Transacción */}
+              {(selectedTransaction.canal_captacion || selectedTransaction.fecha_primer_contacto || selectedTransaction.notas || selectedTransaction.observaciones) && (
+                <div className="border-t pt-4">
+                  <Label className="text-sm font-medium text-gray-500 mb-3 block">Información Adicional</Label>
+                  <div className="space-y-3">
+                    {selectedTransaction.canal_captacion && (
+                      <div className="grid grid-cols-3 gap-2">
+                        <Label className="text-xs font-medium text-gray-500">Canal de Captación:</Label>
+                        <p className="text-sm col-span-2 capitalize">{selectedTransaction.canal_captacion}</p>
+                      </div>
+                    )}
+                    
+                    {selectedTransaction.fecha_primer_contacto && (
+                      <div className="grid grid-cols-3 gap-2">
+                        <Label className="text-xs font-medium text-gray-500">Fecha Primer Contacto:</Label>
+                        <p className="text-sm col-span-2">{new Date(selectedTransaction.fecha_primer_contacto).toLocaleDateString('es-CO')}</p>
+                      </div>
+                    )}
+                    
+                    {selectedTransaction.notas && (
+                      <div>
+                        <Label className="text-xs font-medium text-gray-500">Nota de Transacción:</Label>
+                        <p className="mt-1 p-2 bg-gray-50 rounded-lg text-sm">{selectedTransaction.notas}</p>
+                      </div>
+                    )}
+                    
+                    {selectedTransaction.observaciones && (
+                      <div>
+                        <Label className="text-xs font-medium text-gray-500">Observaciones Generales:</Label>
+                        <p className="mt-1 p-2 bg-gray-50 rounded-lg text-sm">{selectedTransaction.observaciones}</p>
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
 
