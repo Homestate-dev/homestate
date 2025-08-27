@@ -1,23 +1,8 @@
 import { NextResponse } from 'next/server'
 import { query, logAdminAction } from '@/lib/database'
 
-// Función auxiliar para verificar si la columna es_agente existe
-async function checkColumnExists(): Promise<boolean> {
-  try {
-    console.log('🔍 [DEBUG] Verificando columna es_agente en tabla administradores')
-    const result = await query(`
-      SELECT column_name 
-      FROM information_schema.columns 
-      WHERE table_name = 'administradores' AND column_name = 'es_agente'
-    `)
-    const exists = result.rows.length > 0
-    console.log(`📋 [DEBUG] Columna es_agente existe: ${exists}`)
-    return exists
-  } catch (error) {
-    console.error('❌ [DEBUG] Error checking column existence:', error)
-    return false
-  }
-}
+// ELIMINADO: Función checkColumnExists ya no es necesaria
+// El filtro es_agente causaba problemas al cargar transacciones
 
 // Helper: verifica si una tabla existe en la BD
 async function tableExists(tableName: string): Promise<boolean> {
@@ -145,12 +130,12 @@ export async function GET(request: Request) {
       queryParams.push(to)
     }
 
-    const hasEsAgenteColumn = await checkColumnExists()
-    // CORREGIDO: No filtrar por es_agente en el JOIN, esto estaba eliminando transacciones
+    // CORREGIDO: Eliminado filtro es_agente que causaba problemas
+    // const hasEsAgenteColumn = await checkColumnExists()
     // const agentFilter = hasEsAgenteColumn ? 'AND a.es_agente = true' : ''
-    const agentFilter = '' // Remover filtro problemático
+    const agentFilter = '' // Filtro eliminado completamente
 
-    console.log('🔧 [DEBUG] Configuración de agentes:', { hasEsAgenteColumn, agentFilter: 'REMOVED - was filtering out transactions' })
+    console.log('🔧 [DEBUG] Filtro es_agente eliminado para corregir carga de transacciones')
     console.log('🧭 [DEBUG] Condiciones WHERE:', whereConditions)
     console.log('📝 [DEBUG] Parámetros de consulta:', queryParams)
 
@@ -473,8 +458,9 @@ export async function POST(request: Request) {
 
     // Registrar la actividad
     try {
-      const hasEsAgenteColumn = await checkColumnExists()
-      const agentFilter = hasEsAgenteColumn ? 'AND a.es_agente = true' : ''
+      // CORREGIDO: No filtrar por es_agente, esto impedía registrar transacciones
+      // const hasEsAgenteColumn = await checkColumnExists()
+      // const agentFilter = hasEsAgenteColumn ? 'AND a.es_agente = true' : ''
       
       const transactionInfo = await query(`
         SELECT 
@@ -484,7 +470,7 @@ export async function POST(request: Request) {
           a.nombre as agente_nombre
         FROM departamentos d
         JOIN edificios e ON d.edificio_id = e.id
-        JOIN administradores a ON a.id = $2 ${agentFilter}
+        JOIN administradores a ON a.id = $2
         WHERE d.id = $1
       `, [data.departamento_id, data.agente_id])
 
