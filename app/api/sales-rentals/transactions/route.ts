@@ -71,7 +71,7 @@ export async function GET(request: Request) {
     const tableAlias = 'td'
 
     console.log('🏗️ [DEBUG] FORZADO: Usando la misma tabla que reportes:', { tableName, tableAlias })
-    console.log('🔍 [DEBUG] Tablas disponibles (ignoradas):', { hasTransaccionesVentasArriendos, hasTransaccionesDepartamentos })
+    console.log('🔍 [DEBUG] Tabla verificada:', { hasTransaccionesDepartamentos })
 
     let whereConditions = ['1=1']
     let queryParams: any[] = []
