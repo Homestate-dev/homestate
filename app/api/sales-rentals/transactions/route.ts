@@ -241,7 +241,12 @@ export async function GET(request: Request) {
         cliente_nombre: safeData[0].cliente_nombre,
         tipo_transaccion: safeData[0].tipo_transaccion,
         agente_nombre: safeData[0].agente_nombre,
-        edificio_nombre: safeData[0].edificio_nombre
+        edificio_nombre: safeData[0].edificio_nombre,
+        // Campos adicionales
+        referido_por: safeData[0].referido_por,
+        canal_captacion: safeData[0].canal_captacion,
+        fecha_primer_contacto: safeData[0].fecha_primer_contacto,
+        observaciones: safeData[0].observaciones
       } : 'No hay datos'
     })
 
@@ -289,14 +294,22 @@ export async function POST(request: Request) {
     // Debug: Log completo de los datos
     console.log('Datos completos recibidos:', JSON.stringify(data, null, 2))
     
-    // Debug: Log específico de campos adicionales
-    console.log('Campos adicionales recibidos:', {
-      referido_por: data.referido_por,
-      canal_captacion: data.canal_captacion,
-      fecha_primer_contacto: data.fecha_primer_contacto,
-      notas: data.notas,
-      observaciones: data.observaciones
-    })
+          // Debug: Log específico de campos adicionales
+      console.log('Campos adicionales recibidos:', {
+        referido_por: data.referido_por,
+        canal_captacion: data.canal_captacion,
+        fecha_primer_contacto: data.fecha_primer_contacto,
+        notas: data.notas,
+        observaciones: data.observaciones
+      })
+      
+      // Debug: Log de campos adicionales que se van a insertar
+      console.log('Campos adicionales a insertar:', {
+        referido_por: data.referido_por || null,
+        canal_captacion: data.canal_captacion || null,
+        fecha_primer_contacto: data.fecha_primer_contacto || null,
+        observaciones: data.observaciones || null
+      })
 
     // Validaciones básicas
     if (!data.departamento_id || !data.agente_id || !data.tipo_transaccion || !data.valor_transaccion) {
@@ -361,8 +374,9 @@ export async function POST(request: Request) {
           porcentaje_homestate, porcentaje_bienes_raices, porcentaje_admin_edificio,
           valor_homestate, valor_bienes_raices, valor_admin_edificio,
           cliente_nombre, cliente_email, cliente_telefono, cliente_cedula, cliente_tipo_documento,
-          notas, fecha_transaccion, estado_actual, datos_estado, fecha_ultimo_estado, fecha_registro, creado_por
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26)
+          notas, fecha_transaccion, estado_actual, datos_estado, fecha_ultimo_estado, fecha_registro, creado_por,
+          referido_por, canal_captacion, fecha_primer_contacto, observaciones
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30)
         RETURNING *
       `
       
@@ -413,7 +427,12 @@ export async function POST(request: Request) {
         data.datos_estado || '{}',
         new Date().toISOString(),
         data.fecha_registro || new Date().toISOString().split('T')[0],
-        data.currentUserUid || 'system'
+        data.currentUserUid || 'system',
+        // Campos adicionales
+        data.referido_por || null,
+        data.canal_captacion || null,
+        data.fecha_primer_contacto || null,
+        data.observaciones || null
       ]
       
       // Debug: Log de los parámetros que se van a insertar

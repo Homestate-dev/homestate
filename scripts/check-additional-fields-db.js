@@ -1,6 +1,5 @@
 const { Pool } = require('pg');
 
-// Configuración exacta de la base de datos de Heroku (igual que tus otros scripts)
 const pool = new Pool({
   host: 'c2hbg00ac72j9d.cluster-czrs8kj4isg7.us-east-1.rds.amazonaws.com',
   database: 'dauaho3sghau5i',
@@ -13,120 +12,93 @@ const pool = new Pool({
 });
 
 async function checkAdditionalFields() {
-  const client = await pool.connect();
-  
   try {
-    console.log('✅ Conectado a la base de datos');
-
-    // 1. Verificar que las columnas existen
-    console.log('\n🔍 1. Verificando estructura de columnas...');
-    const columnsQuery = `
-      SELECT column_name, data_type, is_nullable
+    console.log('🔍 VERIFICANDO CAMPOS ADICIONALES EN TRANSACCIONES_DEPARTAMENTOS');
+    console.log('================================================================\n');
+    
+    const client = await pool.connect();
+    
+    // Verificar estructura de la tabla
+    const columns = await client.query(`
+      SELECT column_name, data_type, is_nullable, column_default
       FROM information_schema.columns 
-      WHERE table_name = 'transacciones_ventas_arriendos'
-      AND column_name IN ('referido_por', 'canal_captacion', 'fecha_primer_contacto', 'notas', 'observaciones')
-      ORDER BY column_name;
-    `;
+      WHERE table_name = 'transacciones_departamentos'
+      ORDER BY ordinal_position
+    `);
     
-    const columnsResult = await client.query(columnsQuery);
-    console.log('📋 Columnas encontradas:');
-    columnsResult.rows.forEach(row => {
-      console.log(`  ✅ ${row.column_name}: ${row.data_type} (nullable: ${row.is_nullable})`);
+    console.log('📋 Estructura actual de la tabla:');
+    columns.rows.forEach((col, index) => {
+      console.log(`   ${index + 1}. ${col.column_name} (${col.data_type}) - ${col.is_nullable === 'YES' ? 'NULL' : 'NOT NULL'} - Default: ${col.column_default || 'none'}`);
     });
-
-    if (columnsResult.rows.length < 5) {
-      console.log('❌ Faltan columnas! Esperadas: 5, encontradas:', columnsResult.rows.length);
-    }
-
-    // 2. Verificar la transacción específica (ID 103)
-    console.log('\n🔍 2. Verificando transacción ID 103...');
-    const specificQuery = `
-      SELECT 
-        id,
-        cliente_nombre,
-        referido_por,
-        canal_captacion,
-        fecha_primer_contacto,
-        notas,
-        observaciones,
-        fecha_registro
-      FROM transacciones_ventas_arriendos 
-      WHERE id = 103;
-    `;
     
-    const specificResult = await client.query(specificQuery);
-    if (specificResult.rows.length > 0) {
-      const row = specificResult.rows[0];
-      console.log('📄 Datos de transacción ID 103:');
-      console.log(`  Cliente: ${row.cliente_nombre}`);
-      console.log(`  Referido por: ${row.referido_por || 'NULL'}`);
-      console.log(`  Canal captación: ${row.canal_captacion || 'NULL'}`);
-      console.log(`  Fecha primer contacto: ${row.fecha_primer_contacto || 'NULL'}`);
-      console.log(`  Notas: ${row.notas || 'NULL'}`);
-      console.log(`  Observaciones: ${row.observaciones || 'NULL'}`);
-      console.log(`  Fecha registro: ${row.fecha_registro}`);
+    // Verificar si existen los campos adicionales
+    const additionalFields = ['referido_por', 'canal_captacion', 'fecha_primer_contacto', 'observaciones'];
+    console.log('\n🔍 Verificando campos adicionales:');
+    
+    for (const field of additionalFields) {
+      const exists = columns.rows.some(col => col.column_name === field);
+      console.log(`   ${field}: ${exists ? '✅ EXISTE' : '❌ FALTA'}`);
+    }
+    
+    // Si faltan campos, mostrar SQL para agregarlos
+    const missingFields = additionalFields.filter(field => 
+      !columns.rows.some(col => col.column_name === field)
+    );
+    
+    if (missingFields.length > 0) {
+      console.log('\n🚨 CAMPOS FALTANTES DETECTADOS');
+      console.log('SQL para agregar campos faltantes:');
+      console.log('ALTER TABLE transacciones_departamentos');
+      
+      missingFields.forEach((field, index) => {
+        let fieldType = 'VARCHAR(200)';
+        if (field === 'fecha_primer_contacto') fieldType = 'DATE';
+        if (field === 'observaciones') fieldType = 'TEXT';
+        
+        const comma = index < missingFields.length - 1 ? ',' : ';';
+        console.log(`ADD COLUMN IF NOT EXISTS ${field} ${fieldType}${comma}`);
+      });
+      
+      // Ejecutar la alteración automáticamente
+      console.log('\n🔧 Agregando campos faltantes automáticamente...');
+      
+      const alterSQL = `
+        ALTER TABLE transacciones_departamentos
+        ${missingFields.map(field => {
+          let fieldType = 'VARCHAR(200)';
+          if (field === 'fecha_primer_contacto') fieldType = 'DATE';
+          if (field === 'observaciones') fieldType = 'TEXT';
+          return `ADD COLUMN IF NOT EXISTS ${field} ${fieldType}`;
+        }).join(',\n        ')};
+      `;
+      
+      await client.query(alterSQL);
+      console.log('✅ Campos agregados exitosamente!');
+      
+      // Verificar nuevamente
+      const newColumns = await client.query(`
+        SELECT column_name, data_type, is_nullable
+        FROM information_schema.columns 
+        WHERE table_name = 'transacciones_departamentos'
+        AND column_name IN (${additionalFields.map(f => `'${f}'`).join(', ')})
+        ORDER BY column_name
+      `);
+      
+      console.log('\n✅ Verificación final de campos adicionales:');
+      newColumns.rows.forEach(col => {
+        console.log(`   ${col.column_name} (${col.data_type}) - ${col.is_nullable === 'YES' ? 'NULL' : 'NOT NULL'}`);
+      });
     } else {
-      console.log('❌ No se encontró la transacción ID 103');
+      console.log('\n✅ Todos los campos adicionales ya existen en la tabla');
     }
-
-    // 3. Verificar las últimas 3 transacciones
-    console.log('\n🔍 3. Verificando últimas 3 transacciones...');
-    const recentQuery = `
-      SELECT 
-        id,
-        cliente_nombre,
-        referido_por,
-        canal_captacion,
-        fecha_primer_contacto,
-        notas,
-        observaciones,
-        fecha_registro
-      FROM transacciones_ventas_arriendos 
-      ORDER BY fecha_registro DESC 
-      LIMIT 3;
-    `;
     
-    const recentResult = await client.query(recentQuery);
-    console.log('📊 Últimas 3 transacciones:');
-    recentResult.rows.forEach((row, index) => {
-      console.log(`\n--- Transacción ${index + 1} (ID: ${row.id}) ---`);
-      console.log(`  Cliente: ${row.cliente_nombre}`);
-      console.log(`  Referido por: ${row.referido_por || 'NULL'}`);
-      console.log(`  Canal captación: ${row.canal_captacion || 'NULL'}`);
-      console.log(`  Fecha primer contacto: ${row.fecha_primer_contacto || 'NULL'}`);
-      console.log(`  Notas: ${row.notas || 'NULL'}`);
-      console.log(`  Observaciones: ${row.observaciones || 'NULL'}`);
-    });
-
-    // 4. Estadísticas de campos adicionales
-    console.log('\n📈 4. Estadísticas de campos adicionales...');
-    const statsQuery = `
-      SELECT 
-        COUNT(*) as total_transacciones,
-        COUNT(referido_por) as con_referido,
-        COUNT(canal_captacion) as con_canal,
-        COUNT(fecha_primer_contacto) as con_fecha_contacto,
-        COUNT(notas) as con_notas,
-        COUNT(observaciones) as con_observaciones
-      FROM transacciones_ventas_arriendos;
-    `;
+    await client.release();
     
-    const statsResult = await client.query(statsQuery);
-    const stats = statsResult.rows[0];
-    console.log(`Total transacciones: ${stats.total_transacciones}`);
-    console.log(`Con referido por: ${stats.con_referido}`);
-    console.log(`Con canal captación: ${stats.con_canal}`);
-    console.log(`Con fecha primer contacto: ${stats.con_fecha_contacto}`);
-    console.log(`Con notas: ${stats.con_notas}`);
-    console.log(`Con observaciones: ${stats.con_observaciones}`);
-
   } catch (error) {
-    console.error('❌ Error:', error.message);
-    console.error('Stack:', error.stack);
+    console.error('❌ Error:', error);
   } finally {
-    client.release();
+    await pool.end();
   }
 }
 
-checkAdditionalFields().catch(console.error);
-
+checkAdditionalFields();

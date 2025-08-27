@@ -1,6 +1,5 @@
 const { Pool } = require('pg');
 
-// Configuración exacta de la base de datos de Heroku
 const pool = new Pool({
   host: 'c2hbg00ac72j9d.cluster-czrs8kj4isg7.us-east-1.rds.amazonaws.com',
   database: 'dauaho3sghau5i',
@@ -12,148 +11,126 @@ const pool = new Pool({
   }
 });
 
-async function migrateTransactions() {
-  const client = await pool.connect();
-  
+async function migrateTransactionsTable() {
   try {
-    console.log('✅ Conectado a la base de datos');
-
-    // 1. Verificar estado actual
-    console.log('\n🔍 1. Verificando estado actual...');
+    console.log('🚀 MIGRACIÓN DE TABLA TRANSACCIONES_DEPARTAMENTOS');
+    console.log('=================================================\n');
     
-    const oldTableCount = await client.query('SELECT COUNT(*) as total FROM transacciones_departamentos');
-    const newTableCount = await client.query('SELECT COUNT(*) as total FROM transacciones_ventas_arriendos');
+    const client = await pool.connect();
     
-    console.log(`📊 transacciones_departamentos: ${oldTableCount.rows[0].total} registros`);
-    console.log(`📊 transacciones_ventas_arriendos: ${newTableCount.rows[0].total} registros`);
-
-    if (oldTableCount.rows[0].total === 0) {
-      console.log('⚠️ No hay transacciones para migrar');
-      return;
-    }
-
-    // 2. Migrar transacciones
-    console.log('\n🚀 2. Iniciando migración...');
-    
-    // Obtener todas las transacciones de la tabla antigua
-    const oldTransactions = await client.query(`
-      SELECT 
-        departamento_id,
-        agente_id,
-        tipo_transaccion,
-        precio_final as valor_transaccion,
-        precio_original,
-        comision_agente as comision_valor,
-        cliente_nombre,
-        cliente_email,
-        cliente_telefono,
-        cliente_cedula,
-        cliente_tipo_documento,
-        notas,
-        fecha_transaccion,
-        fecha_registro,
-        creado_por,
-        comision_porcentaje,
-        porcentaje_homestate,
-        porcentaje_bienes_raices,
-        porcentaje_admin_edificio,
-        valor_homestate,
-        valor_bienes_raices,
-        valor_admin_edificio,
-        estado_actual,
-        datos_estado,
-        fecha_ultimo_estado
-      FROM transacciones_departamentos
-      ORDER BY id
+    // 1. Verificar estructura actual
+    console.log('🔍 1. Verificando estructura actual...');
+    const currentColumns = await client.query(`
+      SELECT column_name, data_type, is_nullable
+      FROM information_schema.columns 
+      WHERE table_name = 'transacciones_departamentos'
+      ORDER BY ordinal_position
     `);
-
-    console.log(`📋 Migrando ${oldTransactions.rows.length} transacciones...`);
-
-    // Insertar cada transacción en la nueva tabla
-    for (let i = 0; i < oldTransactions.rows.length; i++) {
-      const transaction = oldTransactions.rows[i];
+    
+    console.log(`   Columnas actuales: ${currentColumns.rows.length}`);
+    
+    // 2. Agregar campos adicionales si faltan
+    console.log('\n🔧 2. Agregando campos adicionales...');
+    const additionalFields = ['referido_por', 'canal_captacion', 'fecha_primer_contacto', 'observaciones'];
+    
+    const missingFields = additionalFields.filter(field => 
+      !currentColumns.rows.some(col => col.column_name === field)
+    );
+    
+    if (missingFields.length > 0) {
+      console.log(`   Campos faltantes detectados: ${missingFields.join(', ')}`);
       
-      try {
-        const insertQuery = `
-          INSERT INTO transacciones_ventas_arriendos (
-            departamento_id, agente_id, tipo_transaccion, valor_transaccion, 
-            comision_porcentaje, comision_valor, fecha_transaccion, fecha_registro,
-            cliente_nombre, cliente_email, cliente_telefono, cliente_cedula, cliente_tipo_documento,
-            notas, estado_actual, datos_estado, fecha_ultimo_estado,
-            porcentaje_homestate, porcentaje_bienes_raices, porcentaje_admin_edificio,
-            valor_homestate, valor_bienes_raices, valor_admin_edificio
-          ) VALUES (
-            $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23
-          )
-        `;
-        
-        await client.query(insertQuery, [
-          transaction.departamento_id,
-          transaction.agente_id,
-          transaction.tipo_transaccion,
-          transaction.valor_transaccion,
-          transaction.comision_porcentaje || 3.0,
-          transaction.comision_valor,
-          transaction.fecha_transaccion,
-          transaction.fecha_registro,
-          transaction.cliente_nombre,
-          transaction.cliente_email,
-          transaction.cliente_telefono,
-          transaction.cliente_cedula,
-          transaction.cliente_tipo_documento,
-          transaction.notas,
-          transaction.estado_actual || 'reservado',
-          transaction.datos_estado,
-          transaction.fecha_ultimo_estado,
-          transaction.porcentaje_homestate,
-          transaction.porcentaje_bienes_raices,
-          transaction.porcentaje_admin_edificio,
-          transaction.valor_homestate,
-          transaction.valor_bienes_raices,
-          transaction.valor_admin_edificio
-        ]);
-        
-        console.log(`  ✅ Migrada transacción ${i + 1}/${oldTransactions.rows.length} - Cliente: ${transaction.cliente_nombre}`);
-        
-      } catch (error) {
-        console.error(`  ❌ Error en transacción ${i + 1} - Cliente: ${transaction.cliente_nombre}:`, error.message);
-      }
+      const alterSQL = `
+        ALTER TABLE transacciones_departamentos
+        ${missingFields.map(field => {
+          let fieldType = 'VARCHAR(200)';
+          if (field === 'fecha_primer_contacto') fieldType = 'DATE';
+          if (field === 'observaciones') fieldType = 'TEXT';
+          return `ADD COLUMN IF NOT EXISTS ${field} ${fieldType}`;
+        }).join(',\n        ')};
+      `;
+      
+      await client.query(alterSQL);
+      console.log('   ✅ Campos agregados exitosamente!');
+    } else {
+      console.log('   ✅ Todos los campos ya existen');
     }
-
-    // 3. Verificar migración
-    console.log('\n🔍 3. Verificando migración...');
     
-    const finalCount = await client.query('SELECT COUNT(*) as total FROM transacciones_ventas_arriendos');
-    console.log(`📊 transacciones_ventas_arriendos después de migración: ${finalCount.rows[0].total} registros`);
-
-    // Mostrar algunas transacciones migradas
-    const sampleQuery = `
-      SELECT id, cliente_nombre, notas, referido_por, canal_captacion, observaciones
-      FROM transacciones_ventas_arriendos 
-      ORDER BY fecha_registro DESC 
-      LIMIT 3
-    `;
+    // 3. Verificar estructura final
+    console.log('\n📋 3. Verificando estructura final...');
+    const finalColumns = await client.query(`
+      SELECT column_name, data_type, is_nullable
+      FROM information_schema.columns 
+      WHERE table_name = 'transacciones_departamentos'
+      ORDER BY ordinal_position
+    `);
     
-    const sampleResult = await client.query(sampleQuery);
-    console.log('\n📄 Muestra de transacciones migradas:');
-    sampleResult.rows.forEach((row, index) => {
-      console.log(`  ${index + 1}. ID: ${row.id} - Cliente: ${row.cliente_nombre}`);
-      console.log(`     Notas: ${row.notas || 'NULL'}`);
-      console.log(`     Referido por: ${row.referido_por || 'NULL'}`);
-      console.log(`     Canal captación: ${row.canal_captacion || 'NULL'}`);
-      console.log(`     Observaciones: ${row.observaciones || 'NULL'}`);
+    console.log(`   Total columnas: ${finalColumns.rows.length}`);
+    
+    // Mostrar campos adicionales
+    const additionalFieldsCheck = await client.query(`
+      SELECT column_name, data_type, is_nullable
+      FROM information_schema.columns 
+      WHERE table_name = 'transacciones_departamentos'
+      AND column_name IN ('referido_por', 'canal_captacion', 'fecha_primer_contacto', 'observaciones')
+      ORDER BY column_name
+    `);
+    
+    console.log('\n   Campos adicionales confirmados:');
+    additionalFieldsCheck.rows.forEach(col => {
+      console.log(`   ✅ ${col.column_name} (${col.data_type})`);
     });
-
-    console.log('\n🎉 ¡Migración completada!');
-    console.log('💡 Ahora las nuevas transacciones se guardarán en transacciones_ventas_arriendos con todos los campos adicionales');
+    
+    // 4. Contar registros existentes
+    console.log('\n📊 4. Verificando datos existentes...');
+    const count = await client.query('SELECT COUNT(*) as total FROM transacciones_departamentos');
+    console.log(`   Total de transacciones: ${count.rows[0].total}`);
+    
+    // 5. Mostrar algunas transacciones recientes
+    if (parseInt(count.rows[0].total) > 0) {
+      console.log('\n   Últimas 3 transacciones:');
+      const recent = await client.query(`
+        SELECT 
+          id,
+          tipo_transaccion,
+          cliente_nombre,
+          referido_por,
+          canal_captacion,
+          fecha_primer_contacto,
+          observaciones,
+          fecha_transaccion
+        FROM transacciones_departamentos 
+        ORDER BY id DESC 
+        LIMIT 3
+      `);
+      
+      recent.rows.forEach((row, index) => {
+        console.log(`   ${index + 1}. ID: ${row.id} | Cliente: ${row.cliente_nombre} | Tipo: ${row.tipo_transaccion}`);
+        console.log(`      Referido: ${row.referido_por || 'No especificado'}`);
+        console.log(`      Canal: ${row.canal_captacion || 'No especificado'}`);
+        console.log(`      Fecha Contacto: ${row.fecha_primer_contacto || 'No especificado'}`);
+        console.log(`      Observaciones: ${row.observaciones ? 'Sí' : 'No'}`);
+      });
+    }
+    
+    await client.release();
+    
+    console.log('\n🎉 MIGRACIÓN COMPLETADA EXITOSAMENTE');
+    console.log('=====================================');
+    console.log('✅ Tabla transacciones_departamentos actualizada');
+    console.log('✅ Campos adicionales disponibles');
+    console.log('✅ API preparada para recibir campos adicionales');
+    console.log('\nLos siguientes campos están ahora disponibles:');
+    console.log('- referido_por (VARCHAR)');
+    console.log('- canal_captacion (VARCHAR)');
+    console.log('- fecha_primer_contacto (DATE)');
+    console.log('- observaciones (TEXT)');
 
   } catch (error) {
-    console.error('❌ Error en migración:', error.message);
-    console.error('Stack:', error.stack);
+    console.error('❌ Error en la migración:', error);
   } finally {
-    client.release();
+    await pool.end();
   }
 }
 
-migrateTransactions().catch(console.error);
-
+migrateTransactionsTable();
