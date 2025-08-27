@@ -5,11 +5,11 @@ export async function GET(request: NextRequest) {
   try {
     console.log('Checking table structure...')
 
-    // 1. Verificar la estructura de la tabla transacciones_ventas_arriendos
+    // 1. Verificar la estructura de la tabla transacciones_departamentos
     const tableStructureQuery = `
       SELECT column_name, data_type, is_nullable
       FROM information_schema.columns 
-      WHERE table_name = 'transacciones_ventas_arriendos'
+      WHERE table_name = 'transacciones_departamentos'
       ORDER BY ordinal_position
     `
     const structureResult = await query(tableStructureQuery, [])
@@ -20,19 +20,19 @@ export async function GET(request: NextRequest) {
       SELECT EXISTS (
         SELECT FROM information_schema.tables 
         WHERE table_schema = 'public' 
-        AND table_name = 'transacciones_ventas_arriendos'
+        AND table_name = 'transacciones_departamentos'
       )
     `
     const existsResult = await query(tableExistsQuery, [])
     console.log('Table exists:', existsResult.rows[0])
 
     // 3. Verificar si hay datos en la tabla
-    const countQuery = `SELECT COUNT(*) as total FROM transacciones_ventas_arriendos`
+    const countQuery = `SELECT COUNT(*) as total FROM transacciones_departamentos`
     const countResult = await query(countQuery, [])
     console.log('Total records:', countResult.rows[0])
 
     // 4. Verificar las primeras filas para entender la estructura
-    const sampleQuery = `SELECT * FROM transacciones_ventas_arriendos LIMIT 3`
+    const sampleQuery = `SELECT * FROM transacciones_departamentos LIMIT 3`
     const sampleResult = await query(sampleQuery, [])
     console.log('Sample data:', sampleResult.rows)
 

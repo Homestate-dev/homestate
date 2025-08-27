@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
     console.log('🏠 Total departments:', results.totalDepartments)
 
     // 3. Count total transactions
-    const transCount = await query('SELECT COUNT(*) as count FROM transacciones_ventas_arriendos', [])
+    const transCount = await query('SELECT COUNT(*) as count FROM transacciones_departamentos', [])
     results.totalTransactions = transCount.rows[0]?.count
     console.log('💼 Total transactions:', results.totalTransactions)
 
@@ -46,7 +46,7 @@ export async function GET(request: NextRequest) {
     // 6. Check transactions for these buildings
     const transCheck = await query(`
       SELECT d.edificio_id, COUNT(*) as trans_count
-      FROM transacciones_ventas_arriendos t
+      FROM transacciones_departamentos t
       INNER JOIN departamentos d ON d.id = t.departamento_id
       WHERE d.edificio_id IN (67, 100, 167)
       GROUP BY d.edificio_id
@@ -65,7 +65,7 @@ export async function GET(request: NextRequest) {
         d.numero as dept_numero,
         d.edificio_id,
         e.nombre as edificio_nombre
-      FROM transacciones_ventas_arriendos t
+      FROM transacciones_departamentos t
       INNER JOIN departamentos d ON d.id = t.departamento_id
       INNER JOIN edificios e ON e.id = d.edificio_id
       LIMIT 5

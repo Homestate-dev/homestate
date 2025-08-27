@@ -132,3 +132,4 @@ async function checkAllTransactionTables() {
 }
 
 checkAllTransactionTables().catch(console.error);
+

@@ -109,15 +109,7 @@ interface Department {
   cantidad_habitaciones: string
 }
 
-interface SalesRentalsStats {
-  total_transacciones: number
-  ventas_completadas: number
-  arriendos_completados: number
-  valor_total_ventas: number
-  valor_total_arriendos: number
-  comisiones_generadas: number
-  transacciones_mes_actual: number
-}
+
 
 export function SalesRentalsManagement() {
   const { user } = useAuth()
@@ -125,7 +117,7 @@ export function SalesRentalsManagement() {
   const [agents, setAgents] = useState<AdminAgent[]>([])
   const [buildings, setBuildings] = useState<Building[]>([])
   const [departments, setDepartments] = useState<Department[]>([])
-  const [stats, setStats] = useState<SalesRentalsStats | null>(null)
+
   const [loading, setLoading] = useState(true)
   const [transactionsLoading, setTransactionsLoading] = useState(false)
   const [initialLoadComplete, setInitialLoadComplete] = useState(false)
@@ -219,18 +211,16 @@ export function SalesRentalsManagement() {
 
   const fetchInitialData = async () => {
     try {
-      const [agentsRes, buildingsRes, departmentsRes, statsRes] = await Promise.all([
+      const [agentsRes, buildingsRes, departmentsRes] = await Promise.all([
         fetch('/api/admins'),
         fetch('/api/buildings'),
-        fetch('/api/sales-rentals/departments'),
-        fetch('/api/sales-rentals/stats')
+        fetch('/api/sales-rentals/departments')
       ])
 
-      const [agentsData, buildingsData, departmentsData, statsData] = await Promise.all([
+      const [agentsData, buildingsData, departmentsData] = await Promise.all([
         agentsRes.json(),
         buildingsRes.json(),
-        departmentsRes.json(),
-        statsRes.json()
+        departmentsRes.json()
       ])
       
       if (agentsData.success) {
@@ -245,9 +235,7 @@ export function SalesRentalsManagement() {
         setDepartments(departmentsData.data || [])
       }
       
-      if (statsData.success) {
-        setStats(statsData.data)
-      }
+
       
     } catch (error) {
       console.error('Error al cargar datos:', error)
@@ -631,17 +619,7 @@ export function SalesRentalsManagement() {
     return isNaN(num) ? 0 : num
   }
 
-  // Procesar estadísticas para asegurar que los valores numéricos sean correctos
-  const processedStats = stats ? {
-    ...stats,
-    total_transacciones: safeNumber(stats.total_transacciones),
-    ventas_completadas: safeNumber(stats.ventas_completadas),
-    arriendos_completados: safeNumber(stats.arriendos_completados),
-    valor_total_ventas: safeNumber(stats.valor_total_ventas),
-    valor_total_arriendos: safeNumber(stats.valor_total_arriendos),
-    comisiones_generadas: safeNumber(stats.comisiones_generadas),
-    transacciones_mes_actual: safeNumber(stats.transacciones_mes_actual)
-  } : null
+
 
   if (loading) {
     return (
@@ -1324,15 +1302,6 @@ export function SalesRentalsManagement() {
               <DialogDescription>
                 Información completa de la transacción #{selectedTransaction.id}
               </DialogDescription>
-              {/* Debug: Mostrar campos adicionales en consola */}
-              {console.log('🔍 DEBUG - Datos adicionales de transacción:', {
-                id: selectedTransaction.id,
-                referido_por: selectedTransaction.referido_por,
-                canal_captacion: selectedTransaction.canal_captacion,
-                fecha_primer_contacto: selectedTransaction.fecha_primer_contacto,
-                notas: selectedTransaction.notas,
-                observaciones: selectedTransaction.observaciones
-              })}
             </DialogHeader>
             
             <div className="space-y-4">

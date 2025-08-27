@@ -42,7 +42,7 @@ export async function GET() {
       WHERE table_schema = 'public' 
       AND table_name IN (
         'departamentos', 'edificios', 'administradores', 
-        'transacciones_departamentos', 'transacciones_ventas_arriendos'
+        'transacciones_departamentos'
       )
     `)
     

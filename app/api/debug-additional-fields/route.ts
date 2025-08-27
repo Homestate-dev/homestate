@@ -7,7 +7,7 @@ export async function GET() {
     const structureQuery = `
       SELECT column_name, data_type, is_nullable
       FROM information_schema.columns 
-      WHERE table_name = 'transacciones_ventas_arriendos'
+      WHERE table_name = 'transacciones_departamentos'
       AND column_name IN ('referido_por', 'canal_captacion', 'fecha_primer_contacto', 'notas', 'observaciones')
       ORDER BY column_name;
     `
@@ -25,7 +25,7 @@ export async function GET() {
         notas,
         observaciones,
         fecha_registro
-      FROM transacciones_ventas_arriendos 
+      FROM transacciones_departamentos 
       ORDER BY fecha_registro DESC 
       LIMIT 3;
     `
@@ -41,7 +41,7 @@ export async function GET() {
         COUNT(fecha_primer_contacto) as con_fecha_contacto,
         COUNT(notas) as con_notas,
         COUNT(observaciones) as con_observaciones
-      FROM transacciones_ventas_arriendos;
+      FROM transacciones_departamentos;
     `
     
     const statsResult = await query(statsQuery)

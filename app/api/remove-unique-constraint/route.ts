@@ -9,7 +9,7 @@ export async function POST() {
         constraint_name,
         constraint_type
       FROM information_schema.table_constraints 
-      WHERE table_name = 'transacciones_ventas_arriendos' 
+      WHERE table_name = 'transacciones_departamentos' 
       AND constraint_type = 'UNIQUE';
     `
     
@@ -27,7 +27,7 @@ export async function POST() {
     const results = []
     for (const constraint of constraintsResult.rows) {
       try {
-        const dropQuery = `ALTER TABLE transacciones_ventas_arriendos DROP CONSTRAINT ${constraint.constraint_name};`
+        const dropQuery = `ALTER TABLE transacciones_departamentos DROP CONSTRAINT ${constraint.constraint_name};`
         await query(dropQuery)
         results.push({
           constraint: constraint.constraint_name,

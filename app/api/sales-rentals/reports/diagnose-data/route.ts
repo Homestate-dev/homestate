@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
 
     // 3. Verificar total de transacciones en el sistema
     console.log('💼 Checking total transactions...')
-    const totalTransQuery = `SELECT COUNT(*) as total FROM transacciones_ventas_arriendos`
+    const totalTransQuery = `SELECT COUNT(*) as total FROM transacciones_departamentos`
     const totalTransResult = await query(totalTransQuery, [])
     console.log('💼 Total transactions in system:', totalTransResult.rows[0]?.total)
 
@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
     const structureQuery = `
       SELECT column_name, data_type, is_nullable 
       FROM information_schema.columns 
-      WHERE table_name = 'transacciones_ventas_arriendos' 
+      WHERE table_name = 'transacciones_departamentos' 
       ORDER BY ordinal_position
     `
     const structureResult = await query(structureQuery, [])
@@ -54,7 +54,7 @@ export async function GET(request: NextRequest) {
         d.numero as dept_numero,
         d.edificio_id,
         e.nombre as edificio_nombre
-      FROM transacciones_ventas_arriendos t
+      FROM transacciones_departamentos t
       LEFT JOIN departamentos d ON d.id = t.departamento_id
       LEFT JOIN edificios e ON e.id = d.edificio_id
       ORDER BY t.fecha_transaccion DESC
@@ -68,7 +68,7 @@ export async function GET(request: NextRequest) {
     console.log('⚠️ Checking transactions with invalid departamento_id...')
     const invalidDeptQuery = `
       SELECT COUNT(*) as invalid_dept_count
-      FROM transacciones_ventas_arriendos t
+      FROM transacciones_departamentos t
       WHERE t.departamento_id IS NULL 
          OR t.departamento_id NOT IN (SELECT id FROM departamentos)
     `
@@ -81,7 +81,7 @@ export async function GET(request: NextRequest) {
       console.log(`🔍 Checking transactions for building ${buildingId}...`)
       const buildingTransQuery = `
         SELECT COUNT(*) as count
-        FROM transacciones_ventas_arriendos t
+        FROM transacciones_departamentos t
         INNER JOIN departamentos d ON d.id = t.departamento_id
         WHERE d.edificio_id = $1
       `

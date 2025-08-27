@@ -65,17 +65,16 @@ export async function GET(request: Request) {
       to: `"${to}"`
     })
 
-    // Verificar qué tabla de transacciones existe
-    console.log('🔍 [DEBUG] Verificando tablas existentes...')
+    // Verificar tabla de transacciones
+    console.log('🔍 [DEBUG] Verificando tabla transacciones_departamentos...')
     const hasTransaccionesDepartamentos = await tableExists('transacciones_departamentos')
-    const hasTransaccionesVentasArriendos = await tableExists('transacciones_ventas_arriendos')
+    // const hasTransaccionesVentasArriendos = await tableExists('transacciones_ventas_arriendos') // TABLA ELIMINADA
     
-    console.log('📊 [DEBUG] Tablas encontradas:', {
-      hasTransaccionesDepartamentos,
-      hasTransaccionesVentasArriendos
+    console.log('📊 [DEBUG] Tabla encontrada:', {
+      hasTransaccionesDepartamentos
     })
     
-    if (!hasTransaccionesDepartamentos && !hasTransaccionesVentasArriendos) {
+    if (!hasTransaccionesDepartamentos) {
       return NextResponse.json({
         success: false,
         error: 'No se encontró tabla de transacciones'
@@ -339,22 +338,22 @@ export async function POST(request: Request) {
       )
     }
 
-    // Verificar qué tabla de transacciones existe
+    // Verificar tabla de transacciones
     const hasTransaccionesDepartamentos = await tableExists('transacciones_departamentos')
-    const hasTransaccionesVentasArriendos = await tableExists('transacciones_ventas_arriendos')
+    // const hasTransaccionesVentasArriendos = await tableExists('transacciones_ventas_arriendos') // TABLA ELIMINADA
     
-    if (!hasTransaccionesDepartamentos && !hasTransaccionesVentasArriendos) {
+    if (!hasTransaccionesDepartamentos) {
       return NextResponse.json({
         success: false,
         error: 'No se encontró tabla de transacciones'
       }, { status: 500 })
     }
 
-    // Usar la tabla que existe - priorizar transacciones_ventas_arriendos (tiene campos adicionales)
-    const tableName = hasTransaccionesVentasArriendos ? 'transacciones_ventas_arriendos' : 'transacciones_departamentos'
+    // Usar solo transacciones_departamentos
+    const tableName = 'transacciones_departamentos'
     
-    // Validar cliente_nombre solo si se usa la tabla antigua (transacciones_ventas_arriendos)
-    if (tableName === 'transacciones_ventas_arriendos' && !data.cliente_nombre) {
+    // Cliente nombre es requerido
+    if (!data.cliente_nombre) {
       return NextResponse.json(
         { success: false, error: 'Falta el nombre del cliente' },
         { status: 400 }
@@ -458,49 +457,8 @@ export async function POST(request: Request) {
       console.log(sql)
       console.log('📋 Parámetros de la consulta:')
       console.log(queryParams.map((param, index) => `${index + 1}: ${param}`).join('\n'))
-    } else {
-      // Usar la tabla antigua
-      sql = `
-        INSERT INTO transacciones_ventas_arriendos (
-          departamento_id, agente_id, tipo_transaccion, valor_transaccion, 
-          comision_porcentaje, fecha_transaccion, fecha_registro, fecha_firma_contrato,
-          cliente_nombre, cliente_email, cliente_telefono, cliente_cedula, cliente_tipo_documento,
-          duracion_contrato_meses, deposito_garantia, valor_administracion,
-          forma_pago, entidad_financiera, valor_credito, valor_inicial,
-          estado_actual, notas, referido_por, canal_captacion, fecha_primer_contacto, observaciones
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26)
-        RETURNING *
-      `
-
-      queryParams = [
-        data.departamento_id,
-        data.agente_id,
-        data.tipo_transaccion,
-        valorTransaccion,
-        data.comision_porcentaje || 3.0,
-        data.fecha_transaccion,
-        data.fecha_registro || new Date().toISOString().split('T')[0],
-        data.fecha_firma_contrato || null,
-        data.cliente_nombre,
-        data.cliente_email || null,
-        data.cliente_telefono || null,
-        data.cliente_cedula || null,
-        data.cliente_tipo_documento || 'CC',
-        data.duracion_contrato_meses || null,
-        data.deposito_garantia || null,
-        data.valor_administracion || null,
-        data.forma_pago || null,
-        data.entidad_financiera || null,
-        data.valor_credito || null,
-        data.valor_inicial || null,
-        data.estado_actual || 'reservado',
-        data.notas || null,
-        data.referido_por || null,
-        data.canal_captacion || null,
-        data.fecha_primer_contacto || null,
-        data.observaciones || null
-      ]
     }
+    // NOTA: Solo se usa transacciones_departamentos ahora
 
     const result = await query(sql, queryParams)
 

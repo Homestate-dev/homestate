@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
     // 3. Verificar que hay transacciones para estos departamentos
     const transQuery = `
       SELECT t.id, t.fecha_transaccion, t.tipo_transaccion, t.comision_total, t.valor_admin_edificio, d.numero
-      FROM transacciones_ventas_arriendos t
+      FROM transacciones_departamentos t
       INNER JOIN departamentos d ON d.id = t.departamento_id
       WHERE d.edificio_id = $1
       ORDER BY t.fecha_transaccion DESC
@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
         t.fecha_transaccion,
         pg_typeof(t.fecha_transaccion) as fecha_tipo,
         t.fecha_transaccion::text as fecha_texto
-      FROM transacciones_ventas_arriendos t
+      FROM transacciones_departamentos t
       INNER JOIN departamentos d ON d.id = t.departamento_id
       WHERE d.edificio_id = $1
       LIMIT 3

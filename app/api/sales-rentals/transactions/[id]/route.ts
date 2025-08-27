@@ -55,7 +55,7 @@ export async function PATCH(
 
     // Obtener la transacción actual
     const currentTransaction = await query(
-      'SELECT * FROM transacciones_ventas_arriendos WHERE id = $1',
+      'SELECT * FROM transacciones_departamentos WHERE id = $1',
       [transactionId]
     )
 
@@ -92,7 +92,7 @@ export async function PATCH(
     updateValues.push(transactionId)
 
     const sql = `
-      UPDATE transacciones_ventas_arriendos 
+      UPDATE transacciones_departamentos 
       SET ${updateFields.join(', ')}
       WHERE id = $${paramCount}
       RETURNING *
@@ -147,7 +147,7 @@ export async function DELETE(
 
     // Obtener información de la transacción antes de eliminarla
     const transactionResult = await query(
-      'SELECT departamento_id, estado, tipo_transaccion FROM transacciones_ventas_arriendos WHERE id = $1',
+      'SELECT departamento_id, estado_actual, tipo_transaccion FROM transacciones_departamentos WHERE id = $1',
       [transactionId]
     )
 
@@ -161,10 +161,10 @@ export async function DELETE(
     const transaction = transactionResult.rows[0]
 
     // Eliminar la transacción
-    await query('DELETE FROM transacciones_ventas_arriendos WHERE id = $1', [transactionId])
+    await query('DELETE FROM transacciones_departamentos WHERE id = $1', [transactionId])
 
     // Si la transacción estaba completada, revertir el estado del departamento
-    if (transaction.estado === 'completada') {
+    if (transaction.estado_actual === 'completada') {
       await query(
         'UPDATE departamentos SET estado = $1 WHERE id = $2',
         ['disponible', transaction.departamento_id]
