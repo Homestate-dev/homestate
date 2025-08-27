@@ -136,6 +136,12 @@ export function SalesRentalsManagement() {
   const [itemsPerPage, setItemsPerPage] = useState(10)
   const isMobile = useIsMobile()
 
+  // Estados para confirmación de eliminación
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+  const [showSecondConfirmDialog, setShowSecondConfirmDialog] = useState(false)
+  const [transactionToDelete, setTransactionToDelete] = useState<Transaction | null>(null)
+  const [deletingTransaction, setDeletingTransaction] = useState(false)
+
   // Nuevo estado para el formulario
   const [formData, setFormData] = useState({
     edificio_id: "",
@@ -352,6 +358,53 @@ export function SalesRentalsManagement() {
     } catch (error) {
       console.error('Error al actualizar estado:', error)
       toast.error('Error al actualizar el estado')
+    }
+  }
+
+  // Funciones para eliminación con doble confirmación
+  const handleDeleteClick = (transaction: Transaction) => {
+    setTransactionToDelete(transaction)
+    setShowDeleteDialog(true)
+  }
+
+  const handleFirstConfirmation = () => {
+    setShowDeleteDialog(false)
+    setShowSecondConfirmDialog(true)
+  }
+
+  const handleCancelDelete = () => {
+    setShowDeleteDialog(false)
+    setShowSecondConfirmDialog(false)
+    setTransactionToDelete(null)
+  }
+
+  const handleFinalDelete = async () => {
+    if (!transactionToDelete) return
+
+    try {
+      setDeletingTransaction(true)
+      
+      const response = await fetch(`/api/sales-rentals/transactions/${transactionToDelete.id}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' }
+      })
+
+      const data = await response.json()
+      
+      if (data.success) {
+        toast.success('Transacción eliminada exitosamente')
+        fetchTransactions()
+        fetchInitialData() // Recargar stats
+        setShowSecondConfirmDialog(false)
+        setTransactionToDelete(null)
+      } else {
+        toast.error(data.error || 'Error al eliminar la transacción')
+      }
+    } catch (error) {
+      console.error('Error al eliminar transacción:', error)
+      toast.error('Error al eliminar la transacción')
+    } finally {
+      setDeletingTransaction(false)
     }
   }
 
@@ -851,8 +904,18 @@ export function SalesRentalsManagement() {
                                 variant="outline"
                                 size="sm"
                                 onClick={() => setSelectedTransaction(transaction)}
+                                title="Ver detalles"
                               >
                                 <Eye className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleDeleteClick(transaction)}
+                                className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                title="Eliminar transacción"
+                              >
+                                <Trash2 className="h-4 w-4" />
                               </Button>
                             </div>
                           </TableCell>
@@ -1459,6 +1522,85 @@ export function SalesRentalsManagement() {
           </DialogContent>
         </Dialog>
       )}
+
+      {/* Dialog de primera confirmación para eliminar */}
+      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-red-600">
+              <AlertTriangle className="h-5 w-5" />
+              Confirmar Eliminación
+            </DialogTitle>
+            <DialogDescription>
+              ¿Estás seguro de que deseas eliminar esta transacción?
+              {transactionToDelete && (
+                <div className="mt-3 p-3 bg-gray-50 rounded-lg">
+                  <p className="font-medium">{transactionToDelete.cliente_nombre}</p>
+                  <p className="text-sm text-gray-600">
+                    {transactionToDelete.edificio_nombre} - Depto. {transactionToDelete.departamento_numero}
+                  </p>
+                  <p className="text-sm text-gray-600">
+                    {transactionToDelete.tipo_transaccion === 'venta' ? 'Venta' : 'Arriendo'} - {formatCurrency(transactionToDelete.valor_transaccion)}
+                  </p>
+                </div>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={handleCancelDelete}>
+              Cancelar
+            </Button>
+            <Button variant="destructive" onClick={handleFirstConfirmation}>
+              Continuar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog de segunda confirmación para eliminar */}
+      <Dialog open={showSecondConfirmDialog} onOpenChange={setShowSecondConfirmDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-red-600">
+              <AlertTriangle className="h-5 w-5" />
+              ⚠️ Confirmación Final
+            </DialogTitle>
+            <DialogDescription>
+              <div className="space-y-3">
+                <p className="font-medium text-red-800">
+                  Esta acción NO se puede deshacer.
+                </p>
+                <p>
+                  La transacción será eliminada permanentemente del sistema junto con:
+                </p>
+                <ul className="list-disc list-inside text-sm space-y-1 text-gray-600">
+                  <li>Historial de estados</li>
+                  <li>Información del cliente</li>
+                  <li>Datos de comisiones</li>
+                  <li>Toda la información asociada</li>
+                </ul>
+                <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-red-800 font-medium text-sm">
+                    ¿Confirmas que quieres eliminar definitivamente esta transacción?
+                  </p>
+                </div>
+              </div>
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={handleCancelDelete}>
+              No, Cancelar
+            </Button>
+            <Button 
+              variant="destructive" 
+              onClick={handleFinalDelete}
+              disabled={deletingTransaction}
+            >
+              {deletingTransaction ? 'Eliminando...' : 'Sí, Eliminar Definitivamente'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 } 
