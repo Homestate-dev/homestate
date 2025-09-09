@@ -1,19 +1,23 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { Settings, Phone, Link } from "lucide-react"
+import { useState, useEffect, useRef } from "react"
+import { Settings, Phone, Link, QrCode, Download } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { toast } from "sonner"
+import QRCodeLib from "qrcode"
 
 export function PageConfiguration() {
   const [whatsappNumber, setWhatsappNumber] = useState("")
   const [tallyLink, setTallyLink] = useState("")
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [qrGenerated, setQrGenerated] = useState(false)
+  const [qrDataUrl, setQrDataUrl] = useState("")
+  const canvasRef = useRef<HTMLCanvasElement>(null)
   const isMobile = useIsMobile()
 
   // Cargar configuración existente al montar el componente
@@ -86,6 +90,245 @@ export function PageConfiguration() {
     })
   }
 
+  // Función para combinar QR con logo
+  const combineQRWithLogo = async (qrDataUrl: string, logoUrl: string = '/logo-qr.png'): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const canvas = document.createElement('canvas')
+      const ctx = canvas.getContext('2d')
+      if (!ctx) {
+        reject(new Error('No se pudo obtener el contexto del canvas'))
+        return
+      }
+
+      const qrImage = new Image()
+      const logoImage = new Image()
+
+      qrImage.onload = () => {
+        // Configurar canvas con el tamaño del QR
+        canvas.width = qrImage.width
+        canvas.height = qrImage.height
+
+        // Dibujar el QR
+        ctx.drawImage(qrImage, 0, 0)
+
+        // Cargar y dibujar el logo
+        logoImage.onload = () => {
+          // Tamaño fijo del logo: 64x64 píxeles
+          const logoSize = 64
+          const logoX = (canvas.width - logoSize) / 2
+          const logoY = (canvas.height - logoSize) / 2
+
+          // Crear un fondo circular blanco para el logo
+          ctx.save()
+          ctx.beginPath()
+          ctx.arc(logoX + logoSize/2, logoY + logoSize/2, logoSize/2 + 6, 0, 2 * Math.PI)
+          ctx.fillStyle = 'white'
+          ctx.fill()
+          ctx.restore()
+
+          // Dibujar el logo redimensionado a 64x64
+          ctx.drawImage(logoImage, logoX, logoY, logoSize, logoSize)
+
+          // Convertir a data URL
+          resolve(canvas.toDataURL('image/png'))
+        }
+
+        logoImage.onerror = () => {
+          // Si no se puede cargar el logo, devolver solo el QR
+          console.warn('No se pudo cargar el logo, usando QR sin logo')
+          resolve(qrDataUrl)
+        }
+
+        logoImage.src = logoUrl
+      }
+
+      qrImage.onerror = () => {
+        reject(new Error('No se pudo cargar el QR'))
+      }
+
+      qrImage.src = qrDataUrl
+    })
+  }
+
+  const generateTallyQR = async () => {
+    if (!tallyLink.trim()) {
+      toast.error("Por favor, ingresa un link de Tally válido")
+      return
+    }
+
+    try {
+      // Generar QR con la biblioteca qrcode en color naranja mandarina
+      const dataUrl = await QRCodeLib.toDataURL(tallyLink, {
+        width: 256,
+        margin: 2,
+        color: {
+          dark: '#FF6B35', // Naranja mandarina
+          light: '#ffffff'
+        }
+      })
+      
+      // Combinar con logo si existe
+      const qrWithLogo = await combineQRWithLogo(dataUrl)
+      setQrDataUrl(qrWithLogo)
+      setQrGenerated(true)
+      
+      toast.success("Código QR generado", {
+        description: "El código QR para el link de Tally ha sido generado exitosamente.",
+      })
+    } catch (error) {
+      console.error('Error generando QR:', error)
+      toast.error("Error al generar el código QR")
+    }
+  }
+
+  const downloadTallyQR = async (format: 'png') => {
+    try {
+      if (format === 'png') {
+        // Descargar PNG con logo
+        const link = document.createElement('a')
+        link.href = qrDataUrl
+        link.download = `qr-tally-homestate.png`
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+        
+        toast.success("QR descargado", {
+          description: "El código QR PNG ha sido descargado exitosamente.",
+        })
+      }
+    } catch (error) {
+      console.error('Error descargando QR:', error)
+      toast.error("Error al descargar el código QR")
+    }
+  }
+
+  const downloadTallyEPS = async () => {
+    if (!tallyLink.trim()) {
+      toast.error("Por favor, ingresa un link de Tally válido")
+      return
+    }
+
+    try {
+      // Generar estructura QR y acceder a la matriz de módulos
+      const qr = QRCodeLib.create(tallyLink, {
+        errorCorrectionLevel: 'M'
+      }) as any
+
+      const bitMatrix = qr.modules
+      const moduleCount: number = bitMatrix.size || bitMatrix.length
+
+      const quietZone = 4
+      const total = moduleCount + quietZone * 2
+
+      const epsHeader = `%!PS-Adobe-3.0 EPSF-3.0
+%%Title: QR Code - Tally HomeState
+%%Creator: HomeState QR Generator
+%%BoundingBox: 0 0 ${total} ${total}
+%%Pages: 1
+%%LanguageLevel: 2
+%%EndComments
+
+%%Page: 1 1
+gsave
+0 setgray
+`;
+
+      let epsBody = '';
+
+      const isDark = (x: number, y: number): boolean => {
+        if (typeof bitMatrix.get === 'function') {
+          return bitMatrix.get(x, y)
+        }
+        return !!bitMatrix[y][x]
+      }
+
+      // Dibujar el QR en color naranja
+      epsBody += `% QR Code in orange color\n`
+      epsBody += `1 0.42 0.21 setrgbcolor\n` // Color naranja mandarina #FF6B35
+      
+      for (let y = 0; y < moduleCount; y++) {
+        for (let x = 0; x < moduleCount; x++) {
+          if (isDark(x, y)) {
+            const psX = x + quietZone
+            const psY = total - (y + quietZone) - 1
+            epsBody += `${psX} ${psY} 1 1 rectfill\n`
+          }
+        }
+      }
+
+      // Crear fondo circular blanco para el logo (sin logo dentro)
+      const logoSize = Math.floor(moduleCount * 0.25) // 25% del tamaño del QR
+      const centerX = quietZone + moduleCount / 2
+      const centerY = total - (quietZone + moduleCount / 2)
+      const circleRadius = logoSize / 2 + 2
+
+      epsBody += `\n% Logo background circle (white) - sin logo\n`
+      epsBody += `1 1 1 setrgbcolor\n` // Color blanco
+      epsBody += `${centerX} ${centerY} ${circleRadius} 0 360 arc\n`
+      epsBody += `fill\n`
+
+      const epsFooter = `grestore
+showpage
+%%EOF`
+
+      const epsContent = epsHeader + epsBody + epsFooter
+
+      // Descargar el archivo EPS
+      const epsBlob = new Blob([epsContent], { type: 'application/postscript' })
+      const epsLink = document.createElement('a')
+      epsLink.href = URL.createObjectURL(epsBlob)
+      epsLink.download = `qr-tally-homestate.eps`
+      document.body.appendChild(epsLink)
+      epsLink.click()
+      document.body.removeChild(epsLink)
+      URL.revokeObjectURL(epsLink.href)
+      
+      toast.success("QR EPS descargado", {
+        description: "El código QR EPS para diseñadores ha sido descargado exitosamente.",
+      })
+    } catch (error) {
+      console.error('Error generando/descargando QR en EPS:', error)
+      toast.error("Error al generar/descargar el QR EPS")
+    }
+  }
+
+  const downloadLogoAI = async () => {
+    try {
+      // Abrir la URL directamente en una nueva pestaña para evitar problemas de CORS
+      const logoUrl = 'https://firebasestorage.googleapis.com/v0/b/homestate-web.firebasestorage.app/o/logo%20Homestate.ai?alt=media&token=47b43834-b82f-4666-b10d-4da6fcc07f07'
+      
+      // Crear un enlace temporal y abrirlo en nueva pestaña
+      const link = document.createElement('a')
+      link.href = logoUrl
+      link.target = '_blank'
+      link.rel = 'noopener noreferrer'
+      link.download = 'logo-homestate.ai'
+      
+      // Agregar el enlace al DOM, hacer clic y remover
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      
+      toast.success("Logo AI descargado", {
+        description: "El logo en formato Adobe Illustrator ha sido abierto para descarga.",
+      })
+      
+    } catch (error) {
+      console.error('Error abriendo logo AI desde Firebase Storage:', error)
+      
+      // Fallback: abrir directamente en nueva pestaña
+      try {
+        window.open('https://firebasestorage.googleapis.com/v0/b/homestate-web.firebasestorage.app/o/logo%20Homestate.ai?alt=media&token=47b43834-b82f-4666-b10d-4da6fcc07f07', '_blank')
+        toast.info("Logo AI abierto", {
+          description: "El logo se abrió en una nueva pestaña para descarga.",
+        })
+      } catch (fallbackError) {
+        console.error('Error en fallback:', fallbackError)
+        toast.error("Error al abrir el logo AI")
+      }
+    }
+  }
+
   return (
     <div className="space-y-6">
       <div>
@@ -153,6 +396,70 @@ export function PageConfiguration() {
                 Enlace completo del formulario de Tally
               </p>
             </div>
+
+            {/* Generar QR para Tally */}
+            <div className="border-t pt-4">
+              <div className="flex items-center gap-2 mb-3">
+                <QrCode className="h-4 w-4 text-blue-600" />
+                <h4 className="font-medium text-gray-900">Código QR para Tally</h4>
+              </div>
+              
+              <Button 
+                onClick={generateTallyQR}
+                disabled={!tallyLink.trim() || loading}
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white mb-3"
+              >
+                <QrCode className="h-4 w-4 mr-2" />
+                Generar QR del Link Tally
+              </Button>
+
+              {qrGenerated && (
+                <div className="space-y-3">
+                  {/* Vista previa del QR */}
+                  <div className="flex justify-center">
+                    <div className="p-3 bg-white border border-gray-300 rounded-lg">
+                      <img 
+                        src={qrDataUrl} 
+                        alt="Código QR para formulario Tally"
+                        className="w-32 h-32"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Opciones de descarga */}
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium text-gray-900">Descargar en diferentes formatos:</p>
+                    
+                    <Button 
+                      onClick={() => downloadTallyQR('png')} 
+                      size="sm"
+                      className="w-full bg-green-600 hover:bg-green-700 text-white"
+                    >
+                      <Download className="h-4 w-4 mr-2" />
+                      PNG con logo (folletería)
+                    </Button>
+
+                    <Button 
+                      onClick={downloadTallyEPS} 
+                      size="sm"
+                      className="w-full bg-red-600 hover:bg-red-700 text-white"
+                    >
+                      <Download className="h-4 w-4 mr-2" />
+                      EPS para Adobe (vectorizado)
+                    </Button>
+
+                    <Button 
+                      onClick={downloadLogoAI} 
+                      size="sm"
+                      className="w-full bg-purple-600 hover:bg-purple-700 text-white"
+                    >
+                      <Download className="h-4 w-4 mr-2" />
+                      Logo AI (solo logo)
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -191,6 +498,43 @@ export function PageConfiguration() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Información sobre formatos QR */}
+      {qrGenerated && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <QrCode className="h-5 w-5 text-blue-600" />
+              Información sobre formatos de descarga QR
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+              <div>
+                <h4 className="font-semibold text-green-600 mb-2">PNG con Logo</h4>
+                <p className="text-gray-600">
+                  Incluye el logo de HomEstate en el centro (64x64 píxeles) y QR en color naranja mandarina. 
+                  Ideal para folletería digital, redes sociales y sitios web.
+                </p>
+              </div>
+              <div>
+                <h4 className="font-semibold text-red-600 mb-2">EPS para Adobe</h4>
+                <p className="text-gray-600">
+                  Código QR en formato PostScript vectorial con área circular blanca en el centro (para que el diseñador coloque el logo). 
+                  Compatible con Adobe Illustrator, InDesign y software de diseño profesional.
+                </p>
+              </div>
+              <div>
+                <h4 className="font-semibold text-purple-600 mb-2">Logo AI</h4>
+                <p className="text-gray-600">
+                  Logo de HomEstate en formato Adobe Illustrator (.ai) para uso profesional. 
+                  El diseñador puede usar este archivo junto con el EPS para crear el QR final.
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   )
 } 

@@ -183,3 +183,7 @@ DELETE /api/sales-rentals/transactions/${transactionId}
 ---
 
 **✅ IMPLEMENTACIÓN COMPLETA**: El botón de eliminar con confirmación doble está funcionando completamente.
+
+
+
+
