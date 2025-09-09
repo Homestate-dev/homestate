@@ -157,7 +157,7 @@ export function PageConfiguration() {
     }
 
     try {
-      // Generar QR con la biblioteca qrcode en color naranja mandarina
+      // Generar QR con la biblioteca qrcode en color naranja mandarina (SIN LOGO)
       const dataUrl = await QRCodeLib.toDataURL(tallyLink, {
         width: 256,
         margin: 2,
@@ -167,13 +167,12 @@ export function PageConfiguration() {
         }
       })
       
-      // Combinar con logo si existe
-      const qrWithLogo = await combineQRWithLogo(dataUrl)
-      setQrDataUrl(qrWithLogo)
+      // Para Tally NO combinar con logo - usar el QR directamente
+      setQrDataUrl(dataUrl)
       setQrGenerated(true)
       
       toast.success("Código QR generado", {
-        description: "El código QR para el link de Tally ha sido generado exitosamente.",
+        description: "El código QR para el link de Tally ha sido generado exitosamente (sin logo).",
       })
     } catch (error) {
       console.error('Error generando QR:', error)
@@ -184,16 +183,16 @@ export function PageConfiguration() {
   const downloadTallyQR = async (format: 'png') => {
     try {
       if (format === 'png') {
-        // Descargar PNG con logo
+        // Descargar PNG sin logo
         const link = document.createElement('a')
         link.href = qrDataUrl
-        link.download = `qr-tally-homestate.png`
+        link.download = `qr-tally-homestate-sin-logo.png`
         document.body.appendChild(link)
         link.click()
         document.body.removeChild(link)
         
         toast.success("QR descargado", {
-          description: "El código QR PNG ha sido descargado exitosamente.",
+          description: "El código QR PNG (sin logo) ha sido descargado exitosamente.",
         })
       }
     } catch (error) {
@@ -242,8 +241,8 @@ gsave
         return !!bitMatrix[y][x]
       }
 
-      // Dibujar el QR en color naranja
-      epsBody += `% QR Code in orange color\n`
+      // Dibujar el QR en color naranja (SIN espacio para logo)
+      epsBody += `% QR Code in orange color - sin logo\n`
       epsBody += `1 0.42 0.21 setrgbcolor\n` // Color naranja mandarina #FF6B35
       
       for (let y = 0; y < moduleCount; y++) {
@@ -256,17 +255,6 @@ gsave
         }
       }
 
-      // Crear fondo circular blanco para el logo (sin logo dentro)
-      const logoSize = Math.floor(moduleCount * 0.25) // 25% del tamaño del QR
-      const centerX = quietZone + moduleCount / 2
-      const centerY = total - (quietZone + moduleCount / 2)
-      const circleRadius = logoSize / 2 + 2
-
-      epsBody += `\n% Logo background circle (white) - sin logo\n`
-      epsBody += `1 1 1 setrgbcolor\n` // Color blanco
-      epsBody += `${centerX} ${centerY} ${circleRadius} 0 360 arc\n`
-      epsBody += `fill\n`
-
       const epsFooter = `grestore
 showpage
 %%EOF`
@@ -277,14 +265,14 @@ showpage
       const epsBlob = new Blob([epsContent], { type: 'application/postscript' })
       const epsLink = document.createElement('a')
       epsLink.href = URL.createObjectURL(epsBlob)
-      epsLink.download = `qr-tally-homestate.eps`
+      epsLink.download = `qr-tally-homestate-sin-logo.eps`
       document.body.appendChild(epsLink)
       epsLink.click()
       document.body.removeChild(epsLink)
       URL.revokeObjectURL(epsLink.href)
       
       toast.success("QR EPS descargado", {
-        description: "El código QR EPS para diseñadores ha sido descargado exitosamente.",
+        description: "El código QR EPS (sin logo) para diseñadores ha sido descargado exitosamente.",
       })
     } catch (error) {
       console.error('Error generando/descargando QR en EPS:', error)
@@ -436,7 +424,7 @@ showpage
                       className="w-full bg-green-600 hover:bg-green-700 text-white"
                     >
                       <Download className="h-4 w-4 mr-2" />
-                      PNG con logo (folletería)
+                      PNG sin logo (folletería)
                     </Button>
 
                     <Button 
@@ -445,7 +433,7 @@ showpage
                       className="w-full bg-red-600 hover:bg-red-700 text-white"
                     >
                       <Download className="h-4 w-4 mr-2" />
-                      EPS para Adobe (vectorizado)
+                      EPS sin logo (vectorizado)
                     </Button>
 
                     <Button 
@@ -511,16 +499,16 @@ showpage
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
               <div>
-                <h4 className="font-semibold text-green-600 mb-2">PNG con Logo</h4>
+                <h4 className="font-semibold text-green-600 mb-2">PNG sin Logo</h4>
                 <p className="text-gray-600">
-                  Incluye el logo de HomEstate en el centro (64x64 píxeles) y QR en color naranja mandarina. 
-                  Ideal para folletería digital, redes sociales y sitios web.
+                  Código QR en color naranja mandarina sin logo central. 
+                  Ideal para folletería digital, redes sociales y sitios web donde se prefiera un QR limpio.
                 </p>
               </div>
               <div>
-                <h4 className="font-semibold text-red-600 mb-2">EPS para Adobe</h4>
+                <h4 className="font-semibold text-red-600 mb-2">EPS sin Logo</h4>
                 <p className="text-gray-600">
-                  Código QR en formato PostScript vectorial con área circular blanca en el centro (para que el diseñador coloque el logo). 
+                  Código QR en formato PostScript vectorial completamente limpio, sin espacios reservados. 
                   Compatible con Adobe Illustrator, InDesign y software de diseño profesional.
                 </p>
               </div>
@@ -528,7 +516,7 @@ showpage
                 <h4 className="font-semibold text-purple-600 mb-2">Logo AI</h4>
                 <p className="text-gray-600">
                   Logo de HomEstate en formato Adobe Illustrator (.ai) para uso profesional. 
-                  El diseñador puede usar este archivo junto con el EPS para crear el QR final.
+                  Disponible por separado para uso en otros materiales de diseño.
                 </p>
               </div>
             </div>
